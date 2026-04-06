@@ -1,0 +1,173 @@
+# generated: 2026-03-14
+# project: nathanblottiaux
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-14
+project: nathanblottiaux
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1 : Fondations & Identite Verifiee (12 stories)
+  epic-1: backlog
+  1-1a-setup-monorepo-build: backlog
+  1-1b-tooling-dx: backlog
+  1-1c-connexion-brownfield-supabase: backlog
+  1-2-inscription-email-mot-de-passe: backlog
+  1-3-authentification-magic-link: backlog
+  1-4-verification-rpps-automatique: backlog
+  1-5-recherche-rpps-par-nom-prenom-ville: backlog
+  1-6-profil-en-lecture-seule-rpps-non-enregistre: backlog
+  1-7-gestion-de-profil: backlog
+  1-8-deconnexion-permission-push: backlog
+  1-9-policies-rls-de-base: backlog
+  1-10-consentement-cgu-politique-de-confidentialite: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2 : Publication & Gestion d'Annonces (5 stories)
+  epic-2: backlog
+  2-1-publication-annonce-de-remplacement: backlog
+  2-2-annonce-urgente: backlog
+  2-3-modification-fermeture-manuelle-annonce: backlog
+  2-4-republication-annonce-passee: backlog
+  2-5-statuts-annonces-temps-reel-cycle-de-vie: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3 : Agregation d'Annonces Externes (5 stories)
+  epic-3: backlog
+  3-1-pipeline-agregation-interface-source: backlog
+  3-2-import-batch-initial-script-one-shot: backlog
+  3-3-source-automatisee-rempleo: backlog
+  3-4-deduplication-stricte: backlog
+  3-5-affichage-cta-annonces-agregees: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4 : Recherche & Decouverte d'Annonces (6 stories)
+  epic-4: backlog
+  4-1-ecran-accueil-par-role: backlog
+  4-2-liste-annonces-filtrable: backlog
+  4-3-carte-interactive: backlog
+  4-4-detail-annonce: backlog
+  4-5-cache-local-mode-offline: backlog
+  4-6-empty-states-engageants: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5 : Candidatures & Selection (10 stories)
+  epic-5: backlog
+  5-1-candidature-en-1-tap-avec-message-optionnel: backlog
+  5-2-avertissement-incompatibilite: backlog
+  5-3-suivi-des-candidatures-en-temps-reel: backlog
+  5-4-candidature-offline: backlog
+  5-5-consultation-evaluation-des-candidatures-titulaire: backlog
+  5-6-accepter-refuser-une-candidature: backlog
+  5-7-notification-auto-des-non-retenus: backlog
+  5-8-retrait-de-candidature: backlog
+  5-9-carnet-de-favoris-titulaire: backlog
+  5-10-annonces-alternatives-si-annulation: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6 : Messagerie Integree (5 stories)
+  epic-6: backlog
+  6-1-conversations-liste-de-messages: backlog
+  6-2-chat-temps-reel: backlog
+  6-3-masquage-des-coordonnees: backlog
+  6-4-anti-phishing-securite-messagerie: backlog
+  6-5-messages-offline-synchronisation: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7 : Notifications & Calendrier (6 stories)
+  epic-7: backlog
+  7-1-dispatcher-multi-canal-push-email: backlog
+  7-2-notifications-annonces-matchantes: backlog
+  7-3-notifications-candidatures-messages: backlog
+  7-4-preferences-de-notifications-3-toggles: backlog
+  7-5-relances-automatiques: backlog
+  7-6-calendrier-de-disponibilites: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8 : Contrats IA (4 stories)
+  epic-8: backlog
+  8-1-generation-de-contrat-pre-rempli: backlog
+  8-2-resume-visuel-in-app-5-points: backlog
+  8-3-confirmation-double-edition-clauses-optionnelles: backlog
+  8-4-telechargement-pdf: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9 : Paiement Securise Stripe Connect (6 stories)
+  epic-9: backlog
+  9-1-onboarding-stripe-connect-remplacant: backlog
+  9-2-onboarding-stripe-connect-titulaire: backlog
+  9-3-calcul-initiation-du-paiement-de-retrocession: backlog
+  9-4-traitement-du-paiement-confirmation: backlog
+  9-5-mediation-litiges: backlog
+  9-6-abonnement-pro: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10 : Conformite RGPD & Securite (6 stories)
+  epic-10: backlog
+  10-1-export-des-donnees-personnelles-rgpd: backlog
+  10-2-suppression-de-compte-droit-a-loubli: backlog
+  10-3-rate-limiting-protection-contre-les-abus: backlog
+  10-4-detection-mots-cles-sensibles: backlog
+  10-5-logs-daudit: backlog
+  10-6-detection-comptes-en-double: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11 : Reputation, Parrainage & Extensions de Profil (5 stories)
+  epic-11: backlog
+  11-1-notation-mutuelle-post-remplacement: backlog
+  11-2-consultation-des-avis-score-de-fiabilite: backlog
+  11-3-parrainage-badge-ambassadeur: backlog
+  11-4-changement-de-role: backlog
+  11-5-proposition-directe-via-favoris: backlog
+  epic-11-retrospective: optional
+
+  # Epic 12 : Administration & Moderation (5 stories)
+  epic-12: backlog
+  12-1-dashboard-admin-operationnel: backlog
+  12-2-signalement-de-contenu-ou-comportement: backlog
+  12-3-suspension-de-compte-moderation: backlog
+  12-4-alertes-automatisations: backlog
+  12-5-formulaire-de-support-integre: backlog
+  epic-12-retrospective: optional
+
+  # Epic 13 : Landing Page Web & Outils Gratuits (5 stories)
+  epic-13: backlog
+  13-1-landing-page-hero-section: backlog
+  13-2-pages-marketing-fonctionnalites-tarifs-a-propos: backlog
+  13-3-deep-links-annonces-publiques-seo: backlog
+  13-4-calculateur-de-retrocession-connecte: backlog
+  13-5-header-footer-navigation-web: backlog
+  epic-13-retrospective: optional

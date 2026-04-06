@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JIM — Le remplacement kiné, enfin simple</title>
+<meta name="description" content="Trouvez ou publiez un remplacement kinésithérapeute en 30 secondes. Vérifié RPPS. Contrat intégré. Paiement sécurisé.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & TOKENS ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+  --primary: #E8844A;
+  --primary-mid: #F0A07A;
+  --primary-soft: #F7C5A0;
+  --primary-pale: #FDEADE;
+  --accent: #D4603A;
+  --accent-warm: #F5B86A;
+  --bg: #FEF9F5;
+  --surface: #FFFFFF;
+  --surface-alt: #FBF0E8;
+  --beige-light: #F7EDE0;
+  --beige-mid: #EDD9C4;
+  --text: #3A1F08;
+  --text-body: #5A3418;
+  --muted: #96694A;
+  --border: #EDD9C4;
+  --success: #6B9E72;
+  --success-bg: #EAF3EB;
+  --warning: #C8882A;
+  --destructive: #C45040;
+  --shadow: 0 2px 16px rgba(58,31,8,0.08);
+  --shadow-md: 0 4px 28px rgba(58,31,8,0.12);
+  --shadow-lg: 0 8px 48px rgba(58,31,8,0.16);
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 36px;
+}
+html{scroll-behavior:smooth}
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none}
+img{max-width:100%;display:block}
+
+/* ===== UTILITIES ===== */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+@media(min-width:768px){.container{padding:0 32px}}
+
+/* ===== FADE-IN ANIMATION ===== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-in.delay-1{transition-delay:0.1s}
+.fade-in.delay-2{transition-delay:0.2s}
+.fade-in.delay-3{transition-delay:0.3s}
+.fade-in.delay-4{transition-delay:0.4s}
+.fade-in.delay-5{transition-delay:0.5s}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.navbar.scrolled {
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 12px rgba(58,31,8,0.06);
+}
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--primary);
+  letter-spacing: -0.04em;
+}
+.logo-mark {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-warm) 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #FFF7F0;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(232,132,74,0.30);
+}
+.nav-links {
+  display: none;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-body);
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a:hover{color:var(--primary)}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.nav-links a:hover::after{transform:scaleX(1)}
+
+.nav-actions{display:none;align-items:center;gap:10px}
+.btn-outline {
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  border: 1.5px solid var(--primary-soft);
+  background: transparent;
+  transition: all 0.2s;
+}
+.btn-outline:hover{background:var(--primary-pale);border-color:var(--primary)}
+.btn-primary {
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  box-shadow: 0 4px 14px rgba(232,132,74,0.30);
+  transition: all 0.2s;
+}
+.btn-primary:hover{background:var(--accent);box-shadow:0 6px 22px rgba(232,132,74,0.40);transform:translateY(-1px)}
+
+/* Mobile hamburger */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  padding: 8px;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 68px; left: 0; right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px 24px;
+  box-shadow: var(--shadow-md);
+}
+.mobile-menu.open{display:block}
+.mobile-menu a {
+  display: block;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-body);
+  border-bottom: 1px solid var(--beige-light);
+}
+.mobile-menu-actions{display:flex;gap:10px;margin-top:16px}
+.mobile-menu-actions .btn-outline,
+.mobile-menu-actions .btn-primary{flex:1;text-align:center;padding:12px}
+
+@media(min-width:768px){
+  .nav-links{display:flex}
+  .nav-actions{display:flex}
+  .hamburger{display:none}
+}
+
+/* ===== HERO ===== */
+.hero {
+  padding: 64px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute;
+  top:-200px; right:-200px;
+  width:600px; height:600px;
+  border-radius:50%;
+  background: radial-gradient(circle, rgba(232,132,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content:'';
+  position:absolute;
+  bottom:-150px; left:-150px;
+  width:500px; height:500px;
+  border-radius:50%;
+  background: radial-gradient(circle, rgba(245,184,106,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-content{position:relative;z-index:1;text-align:center}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: var(--primary-pale);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.hero h1 {
+  font-size: clamp(36px, 5.5vw, 64px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.hero h1 .highlight {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-warm) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-subtitle {
+  font-size: clamp(16px, 2vw, 20px);
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 auto 40px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Search Bar — Airbnb style */
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow), 0 0 0 1px var(--border);
+  max-width: 760px;
+  margin: 0 auto;
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+.search-bar:focus-within {
+  box-shadow: var(--shadow-lg), 0 0 0 2px var(--primary-soft);
+}
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--beige-light);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.search-field:last-of-type{border-bottom:none}
+.search-field:hover{background:var(--surface-alt)}
+.search-field-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--primary-pale);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.search-field-content{flex:1;text-align:left}
+.search-field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:2px}
+.search-field input {
+  width:100%;
+  border:none;
+  outline:none;
+  background:transparent;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:500;
+  color:var(--text);
+}
+.search-field input::placeholder{color:var(--beige-dark);font-weight:400}
+.search-btn {
+  margin: 12px 16px 16px;
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  box-shadow: 0 6px 24px rgba(232,132,74,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s;
+  letter-spacing: -0.01em;
+}
+.search-btn:hover{box-shadow:0 8px 32px rgba(232,132,74,0.45);transform:translateY(-2px)}
+.search-btn svg{flex-shrink:0}
+
+@media(min-width:768px){
+  .search-bar {
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 60px;
+    padding: 6px;
+  }
+  .search-field {
+    flex: 1;
+    padding: 12px 20px;
+    border-bottom: none;
+    border-right: 1px solid var(--beige-light);
+    border-radius: 50px;
+  }
+  .search-field:last-of-type{border-right:none}
+  .search-field-icon{display:none}
+  .search-btn {
+    margin: 0;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-size: 15px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* Trust badges under search */
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 28px;
+}
+.hero-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.hero-trust-item .check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  color: var(--success);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ===== MISSIONS SECTION ===== */
+.missions-section{padding:80px 0}
+.section-header{text-align:center;margin-bottom:48px}
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+}
+.section-subtitle {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 520px;
+  margin: 12px auto 0;
+  font-weight: 400;
+}
+.missions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media(min-width:640px){.missions-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.missions-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* Mission Card */
+.mission-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s;
+  cursor: pointer;
+}
+.mission-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+.mission-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  position: relative;
+  overflow: hidden;
+}
+.mission-card-img-inner {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, var(--primary-pale) 0%, var(--beige-light) 50%, var(--surface-alt) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  position: relative;
+}
+.mission-card-img-inner::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(254,249,245,0.4), transparent);
+}
+.mission-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  color: var(--success);
+}
+.mission-card-urgent {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(196,80,64,0.12);
+  color: var(--destructive);
+}
+.mission-card-body{padding:16px 20px 20px}
+.mission-card-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.mission-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.mission-card-dates {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.mission-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mission-card-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.mission-card-price span{font-size:13px;font-weight:400;color:var(--muted)}
+.mission-card-specs {
+  display: flex;
+  gap: 6px;
+}
+.mission-card-spec {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--primary-pale);
+  color: var(--primary);
+}
+
+/* ===== COMMENT CA MARCHE ===== */
+.steps-section{padding:80px 0;background:var(--surface)}
+.steps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 56px;
+}
+@media(min-width:768px){.steps-grid{grid-template-columns:repeat(3,1fr);gap:40px}}
+
+.step {
+  text-align: center;
+  position: relative;
+}
+.step-number {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-warm) 100%);
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 6px 20px rgba(232,132,74,0.28);
+}
+.step-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+.step h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.step p {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 300px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Arrow connector between steps (desktop only) */
+@media(min-width:768px){
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 28px;
+    right: -20px;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-soft), var(--beige-mid));
+    border-radius: 2px;
+  }
+}
+
+/* ===== SOCIAL PROOF ===== */
+.social-section{padding:80px 0}
+
+/* Counters */
+.counters {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto 56px;
+}
+@media(min-width:640px){.counters{grid-template-columns:repeat(4,1fr)}}
+.counter-item{text-align:center}
+.counter-number {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.counter-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Testimonials */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media(min-width:768px){.testimonials-grid{grid-template-columns:repeat(3,1fr)}}
+
+.testimonial-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.testimonial-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.testimonial-stars{color:var(--accent-warm);font-size:16px;letter-spacing:2px;margin-bottom:14px}
+.testimonial-text {
+  font-size: 15px;
+  color: var(--text-body);
+  line-height: 1.65;
+  margin-bottom: 18px;
+}
+.testimonial-author{display:flex;align-items:center;gap:12px}
+.testimonial-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--primary-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary);
+}
+.testimonial-name{font-size:14px;font-weight:600;color:var(--text)}
+.testimonial-role{font-size:12px;color:var(--muted);font-weight:400}
+
+/* ===== PRICING TEASER ===== */
+.pricing-section{padding:80px 0;background:var(--surface)}
+.pricing-cards{display:grid;grid-template-columns:1fr;gap:24px;max-width:800px;margin:0 auto}
+@media(min-width:640px){.pricing-cards{grid-template-columns:repeat(2,1fr)}}
+
+.pricing-card {
+  border-radius: var(--radius-lg);
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.pricing-card:hover{transform:translateY(-4px)}
+.pricing-card-free {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.pricing-card-pro {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+.pricing-card-pro:hover{box-shadow:0 12px 48px rgba(232,132,74,0.35)}
+.pricing-popular {
+  position: absolute;
+  top: 16px; right: 16px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.22);
+  color: white;
+}
+.pricing-label{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.pricing-card-free .pricing-label{color:var(--muted)}
+.pricing-card-pro .pricing-label{color:rgba(255,255,255,0.7)}
+.pricing-price{font-size:42px;font-weight:800;letter-spacing:-0.04em;line-height:1;margin-bottom:4px}
+.pricing-price-sub{font-size:14px;font-weight:400;margin-bottom:24px}
+.pricing-card-free .pricing-price-sub{color:var(--muted)}
+.pricing-card-pro .pricing-price-sub{color:rgba(255,255,255,0.65)}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.pricing-features .check-icon{flex-shrink:0;font-size:15px}
+.pricing-card-free .check-icon{color:var(--success)}
+.pricing-card-pro .check-icon{color:rgba(255,255,255,0.85)}
+
+.pricing-cta {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.2s;
+}
+.pricing-cta-free {
+  background: var(--beige-light);
+  color: var(--text);
+}
+.pricing-cta-free:hover{background:var(--beige-mid)}
+.pricing-cta-pro {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1.5px solid rgba(255,255,255,0.35);
+}
+.pricing-cta-pro:hover{background:rgba(255,255,255,0.3)}
+
+/* ===== FINAL CTA ===== */
+.cta-section {
+  padding: 100px 0;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-pale) 0%, var(--beige-light) 40%, var(--surface-alt) 100%);
+}
+.cta-section::before {
+  content:'';
+  position:absolute;
+  top:50%;left:50%;
+  width:800px;height:800px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(232,132,74,0.10) 0%,transparent 60%);
+  pointer-events:none;
+}
+.cta-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.cta-content h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.cta-content p {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 480px;
+  margin: 0 auto 36px;
+}
+.cta-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+@media(min-width:480px){.cta-buttons{flex-direction:row;justify-content:center}}
+.cta-btn-primary {
+  padding: 16px 36px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  box-shadow: 0 6px 28px rgba(232,132,74,0.35);
+  transition: all 0.25s;
+}
+.cta-btn-primary:hover{box-shadow:0 8px 36px rgba(232,132,74,0.45);transform:translateY(-2px)}
+.cta-btn-secondary {
+  padding: 16px 36px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--surface);
+  border: 1.5px solid var(--primary-soft);
+  box-shadow: var(--shadow);
+  transition: all 0.25s;
+}
+.cta-btn-secondary:hover{background:var(--primary-pale);border-color:var(--primary)}
+.cta-note {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ===== FOOTER ===== */
+.site-footer {
+  background: var(--text);
+  color: rgba(255,255,255,0.65);
+  padding: 56px 0 32px;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+@media(min-width:768px){.footer-grid{grid-template-columns:2fr 1fr 1fr 1fr}}
+.footer-brand .logo{color:#FFF7F0;margin-bottom:12px}
+.footer-brand .logo .logo-mark{box-shadow:none}
+.footer-brand p{font-size:14px;line-height:1.6;max-width:260px}
+.footer-col-title{font-size:13px;font-weight:700;color:white;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
+.footer-col a{display:block;font-size:14px;padding:4px 0;transition:color 0.2s}
+.footer-col a:hover{color:white}
+.footer-bottom {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar" id="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark">J</div>
+      JIM
+    </a>
+    <ul class="nav-links">
+      <li><a href="#missions">Missions</a></li>
+      <li><a href="#comment-ca-marche">Comment ca marche</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="#temoignages">Avis</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="#cta" class="btn-outline">Publier un remplacement</a>
+      <a href="#cta" class="btn-primary">S'inscrire</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#missions">Missions</a>
+    <a href="#comment-ca-marche">Comment ca marche</a>
+    <a href="#tarifs">Tarifs</a>
+    <a href="#temoignages">Avis</a>
+    <div class="mobile-menu-actions">
+      <a href="#cta" class="btn-outline">Publier</a>
+      <a href="#cta" class="btn-primary">S'inscrire</a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-badge fade-in">
+      <span class="hero-badge-dot"></span>
+      2 847 remplacements trouves
+    </div>
+    <h1 class="fade-in delay-1">
+      Le remplacement kine,<br><span class="highlight">enfin simple.</span>
+    </h1>
+    <p class="hero-subtitle fade-in delay-2">
+      Trouvez ou publiez un remplacement en quelques minutes. Profils verifies RPPS. Contrat integre. Paiement securise.
+    </p>
+
+    <!-- Search Bar -->
+    <div class="search-bar fade-in delay-3">
+      <div class="search-field">
+        <div class="search-field-icon">📍</div>
+        <div class="search-field-content">
+          <div class="search-field-label">Ville</div>
+          <input type="text" placeholder="Paris, Lyon, Marseille...">
+        </div>
+      </div>
+      <div class="search-field">
+        <div class="search-field-icon">📅</div>
+        <div class="search-field-content">
+          <div class="search-field-label">Dates</div>
+          <input type="text" placeholder="Quand ?">
+        </div>
+      </div>
+      <div class="search-field">
+        <div class="search-field-icon">🩺</div>
+        <div class="search-field-content">
+          <div class="search-field-label">Specialite</div>
+          <input type="text" placeholder="Ortho, neuro, respi...">
+        </div>
+      </div>
+      <button class="search-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Rechercher
+      </button>
+    </div>
+
+    <div class="hero-trust fade-in delay-4">
+      <div class="hero-trust-item"><span class="check">✓</span> Verifie RPPS</div>
+      <div class="hero-trust-item"><span class="check">✓</span> Contrat integre</div>
+      <div class="hero-trust-item"><span class="check">✓</span> Paiement securise</div>
+      <div class="hero-trust-item"><span class="check">✓</span> 100% gratuit au lancement</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MISSIONS ===== -->
+<section class="missions-section" id="missions">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Missions disponibles</div>
+      <h2 class="section-title">Des remplacements pres de chez vous</h2>
+      <p class="section-subtitle">Annonces fraiches, zero annonce morte. Mises a jour en temps reel.</p>
+    </div>
+
+    <div class="missions-grid">
+
+      <div class="mission-card fade-in delay-1">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">🏥</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Paris 11e</div>
+          <div class="mission-card-title">Cabinet Saint-Ambroise</div>
+          <div class="mission-card-dates">12 mai → 30 mai 2026 · 3 semaines</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">320€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Ortho</span>
+              <span class="mission-card-spec">Neuro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card fade-in delay-2">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">🏢</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+          <div class="mission-card-urgent">Urgent</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Lyon 3e</div>
+          <div class="mission-card-title">Centre Kine Part-Dieu</div>
+          <div class="mission-card-dates">5 mai → 16 mai 2026 · 2 semaines</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">290€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Respi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card fade-in delay-3">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">🌊</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Marseille 8e</div>
+          <div class="mission-card-title">Cabinet Corniche Kennedy</div>
+          <div class="mission-card-dates">1 juin → 30 juin 2026 · 1 mois</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">340€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Sport</span>
+              <span class="mission-card-spec">Ortho</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card fade-in delay-1">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">🏠</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Bordeaux centre</div>
+          <div class="mission-card-title">Cabinet des Chartrons</div>
+          <div class="mission-card-dates">20 mai → 7 juin 2026 · 3 semaines</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">280€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Geriatrie</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card fade-in delay-2">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">⛰️</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Annecy</div>
+          <div class="mission-card-title">Kine du Lac</div>
+          <div class="mission-card-dates">15 mai → 29 mai 2026 · 2 semaines</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">310€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Sport</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-card fade-in delay-3">
+        <div class="mission-card-img">
+          <div class="mission-card-img-inner">🌻</div>
+          <div class="mission-card-badge">✓ RPPS</div>
+          <div class="mission-card-urgent">Urgent</div>
+        </div>
+        <div class="mission-card-body">
+          <div class="mission-card-location">📍 Toulouse</div>
+          <div class="mission-card-title">Cabinet Capitole Sante</div>
+          <div class="mission-card-dates">8 mai → 22 mai 2026 · 2 semaines</div>
+          <div class="mission-card-footer">
+            <div class="mission-card-price">300€ <span>/jour</span></div>
+            <div class="mission-card-specs">
+              <span class="mission-card-spec">Pediatrie</span>
+              <span class="mission-card-spec">Respi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMMENT CA MARCHE ===== -->
+<section class="steps-section" id="comment-ca-marche">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Comment ca marche</div>
+      <h2 class="section-title">3 etapes, c'est tout</h2>
+      <p class="section-subtitle">De l'inscription a la mission, tout se fait en quelques minutes.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step fade-in delay-1">
+        <div class="step-number">1</div>
+        <div class="step-icon">📱</div>
+        <h3>Creez votre profil</h3>
+        <p>Inscription en 30 secondes. Verification RPPS automatique via l'Annuaire Sante.</p>
+      </div>
+      <div class="step fade-in delay-2">
+        <div class="step-number">2</div>
+        <div class="step-icon">🔍</div>
+        <h3>Trouvez une mission</h3>
+        <p>Recherchez par ville, dates et specialite. Recevez des alertes personnalisees.</p>
+      </div>
+      <div class="step fade-in delay-3">
+        <div class="step-number">3</div>
+        <div class="step-icon">🤝</div>
+        <h3>Contractualisez en 1 clic</h3>
+        <p>Contrat pre-rempli, signature electronique, paiement securise via Stripe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOCIAL PROOF ===== -->
+<section class="social-section" id="temoignages">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Ils nous font confiance</div>
+      <h2 class="section-title">La communaute kine grandit chaque jour</h2>
+    </div>
+
+    <div class="counters fade-in">
+      <div class="counter-item">
+        <div class="counter-number" data-target="2847" data-suffix="">0</div>
+        <div class="counter-label">Remplacements trouves</div>
+      </div>
+      <div class="counter-item">
+        <div class="counter-number" data-target="1250" data-suffix="+">0</div>
+        <div class="counter-label">Kines inscrits</div>
+      </div>
+      <div class="counter-item">
+        <div class="counter-number" data-target="26" data-suffix="s">0</div>
+        <div class="counter-label">Temps moyen de recherche</div>
+      </div>
+      <div class="counter-item">
+        <div class="counter-number" data-target="98" data-suffix="%">0</div>
+        <div class="counter-label">Satisfaction utilisateurs</div>
+      </div>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card fade-in delay-1">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">J'ai trouve mon premier remplacement en 26 secondes. L'appli est intuitive, tout se fait depuis le telephone. Fini les groupes Facebook.</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">LM</div>
+          <div>
+            <div class="testimonial-name">Lea M.</div>
+            <div class="testimonial-role">Remplacante · Lille</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-in delay-2">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">En tant que titulaire, je trouvais toujours mes remplacants au dernier moment. Avec JIM, j'ai 3 candidatures en moins d'une heure.</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">PD</div>
+          <div>
+            <div class="testimonial-name">Pierre D.</div>
+            <div class="testimonial-role">Titulaire · Lyon 6e</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-in delay-3">
+        <div class="testimonial-stars">★★★★★</div>
+        <div class="testimonial-text">Le contrat pre-rempli et le paiement securise, ca change tout. Plus de problemes d'impayes ou de paperasse. Enfin un outil pro.</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">SC</div>
+          <div>
+            <div class="testimonial-name">Sophie C.</div>
+            <div class="testimonial-role">Remplacante · Bordeaux</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TARIFS ===== -->
+<section class="pricing-section" id="tarifs">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Tarifs</div>
+      <h2 class="section-title">Simple et transparent</h2>
+      <p class="section-subtitle">Gratuit pendant le lancement. Sans engagement. Sans frais caches.</p>
+    </div>
+
+    <div class="pricing-cards">
+      <div class="pricing-card pricing-card-free fade-in delay-1">
+        <div class="pricing-label">Gratuit</div>
+        <div class="pricing-price" style="color:var(--text)">0€</div>
+        <div class="pricing-price-sub">Pendant le lancement</div>
+        <ul class="pricing-features">
+          <li><span class="check-icon">✓</span> Recherche illimitee</li>
+          <li><span class="check-icon">✓</span> Publication d'annonces</li>
+          <li><span class="check-icon">✓</span> Verification RPPS</li>
+          <li><span class="check-icon">✓</span> Contrat integre</li>
+          <li><span class="check-icon">✓</span> Messagerie</li>
+        </ul>
+        <button class="pricing-cta pricing-cta-free">Commencer gratuitement</button>
+      </div>
+
+      <div class="pricing-card pricing-card-pro fade-in delay-2">
+        <div class="pricing-popular">Populaire</div>
+        <div class="pricing-label">JIM Pro</div>
+        <div class="pricing-price">5,90€</div>
+        <div class="pricing-price-sub">/mois · sans engagement</div>
+        <ul class="pricing-features">
+          <li><span class="check-icon">✓</span> Tout le plan gratuit</li>
+          <li><span class="check-icon">✓</span> Badge Pro visible</li>
+          <li><span class="check-icon">✓</span> Priorite dans les resultats</li>
+          <li><span class="check-icon">✓</span> Alertes instantanees</li>
+          <li><span class="check-icon">✓</span> Support prioritaire</li>
+        </ul>
+        <button class="pricing-cta pricing-cta-pro">Passer a JIM Pro</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="cta-section" id="cta">
+  <div class="container cta-content">
+    <div class="section-label fade-in">Pret a commencer ?</div>
+    <h2 class="fade-in delay-1">Simplifiez vos remplacements<br>des aujourd'hui</h2>
+    <p class="fade-in delay-2">Que vous soyez titulaire ou remplacant, JIM est fait pour vous.</p>
+    <div class="cta-buttons fade-in delay-3">
+      <a href="#" class="cta-btn-primary">Je suis titulaire</a>
+      <a href="#" class="cta-btn-secondary">Je suis remplacant</a>
+    </div>
+    <p class="cta-note fade-in delay-4">Gratuit au lancement · Sans engagement · RPPS verifie</p>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="logo">
+          <div class="logo-mark">J</div>
+          JIM
+        </a>
+        <p>La plateforme des kinesitherapeutes. Trouvez ou publiez un remplacement en toute confiance.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Produit</div>
+        <a href="#">Fonctionnalites</a>
+        <a href="#">Tarifs</a>
+        <a href="#">Calculateur</a>
+        <a href="#">App mobile</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Ressources</div>
+        <a href="#">A propos</a>
+        <a href="#">Blog</a>
+        <a href="#">FAQ</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="#">CGU</a>
+        <a href="#">Confidentialite</a>
+        <a href="#">Cookies</a>
+        <a href="#">Mentions legales</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 JIM — Job In Med. Tous droits reserves.</span>
+      <span>Cree avec soin par un kine, pour les kines.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Navbar scroll effect =====
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ===== Mobile menu =====
+const hamburger = document.getElementById('hamburgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('active');
+  mobileMenu.classList.toggle('open');
+});
+mobileMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    hamburger.classList.remove('active');
+    mobileMenu.classList.remove('open');
+  });
+});
+
+// ===== Fade-in on scroll (Intersection Observer) =====
+const fadeEls = document.querySelectorAll('.fade-in');
+const fadeObs = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+fadeEls.forEach(el => fadeObs.observe(el));
+
+// ===== Animated counters =====
+const counterEls = document.querySelectorAll('.counter-number');
+const counterObs = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const duration = 1800;
+      const start = performance.now();
+
+      function update(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(target * ease);
+        el.textContent = current.toLocaleString('fr-FR') + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+      counterObs.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+counterEls.forEach(el => counterObs.observe(el));
+
+// ===== Smooth scroll for anchor links =====
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href');
+    if (id === '#') return;
+    e.preventDefault();
+    const target = document.querySelector(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+</body>
+</html>

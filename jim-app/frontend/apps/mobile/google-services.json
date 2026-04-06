@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "86694877797",
+    "project_id": "jim-app-f807f",
+    "storage_bucket": "jim-app-f807f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86694877797:android:75dcf5fba486e295ac448c",
+        "android_client_info": {
+          "package_name": "com.jimapp.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4ZgYn_g1ts_EFs-LlxWLnJgA71NtXsk4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

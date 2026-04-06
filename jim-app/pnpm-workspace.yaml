@@ -1,0 +1,5 @@
+packages:
+  - 'frontend/apps/*'
+  - 'frontend/packages/*'
+overrides:
+  '@dataconnect/generated': link:src/dataconnect-generated

@@ -1,0 +1,31 @@
+{
+  "name": "jim-app",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "mobile": "pnpm --filter @jim/mobile start",
+    "web": "pnpm --filter @jim/web dev",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "pnpm --filter @jim/shared typecheck && pnpm --filter @jim/ui typecheck",
+    "check-edge-size": "bash backend/scripts/check-edge-function-size.sh"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-import": "^2.32.0",
+    "jsdom": "^29.0.1",
+    "turbo": "^2.9.3",
+    "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "@dataconnect/generated": "link:src/dataconnect-generated"
+  }
+}
