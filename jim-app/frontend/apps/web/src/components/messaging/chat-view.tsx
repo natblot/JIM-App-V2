@@ -1,9 +1,11 @@
 'use client';
 
-// Vue principale du chat — header contact + messages + input
+// Vue principale du chat — header contact + barre contexte contrat/paiement + messages + input
 import { useEffect, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, MoreHorizontal } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Phone, MoreHorizontal, FileText, Banknote, ArrowRight } from 'lucide-react';
 import type { SupabaseClient } from '@jim/shared/adapters/supabase/browser';
 import type { Database } from '@jim/shared/types/database';
 import { useMessages } from '@jim/shared/hooks/useMessages';
@@ -33,6 +35,50 @@ export function ChatView({
   const { data: messages, isLoading } = useMessages(supabase, conversation.id);
   const sendMessage = useSendMessage(supabase);
   const markAsRead = useMarkAsRead(supabase, conversation.id);
+
+  // Recupere contrat + paiement lies a la candidature de la conversation (si existe)
+  const candidatureId = conversation.candidature_id;
+  const { data: context } = useQuery({
+    queryKey: ['chat-context', candidatureId],
+    queryFn: async () => {
+      if (!candidatureId) return null;
+      const { data: contrat } = await supabase
+        .from('contrats')
+        .select('id, statut')
+        .eq('candidature_id', candidatureId)
+        .maybeSingle();
+      if (!contrat) return { contrat: null, paiement: null };
+      const { data: paiement } = await supabase
+        .from('paiements')
+        .select('id, status, montant_net_remplacant_cents')
+        .eq('contrat_id', contrat.id)
+        .maybeSingle();
+      return { contrat, paiement };
+    },
+    enabled: !!candidatureId,
+    staleTime: 30_000,
+  });
+
+  const contrat = context?.contrat;
+  const paiement = context?.paiement;
+
+  // Labels humains pour les statuts
+  const contratLabel = contrat
+    ? contrat.statut === 'confirme'
+      ? 'Contrat signe'
+      : contrat.statut === 'en_attente_remplacant'
+        ? 'Contrat a signer'
+        : 'Contrat en brouillon'
+    : null;
+  const paiementLabel = paiement
+    ? paiement.status === 'confirme'
+      ? 'Paiement confirme'
+      : paiement.status === 'en_attente_validation'
+        ? 'Paiement a valider'
+        : paiement.status === 'conteste'
+          ? 'Paiement conteste'
+          : 'Paiement'
+    : null;
 
   // Marquer comme lu a l'ouverture et quand de nouveaux messages arrivent
   useEffect(() => {
@@ -107,6 +153,51 @@ export function ChatView({
           </button>
         </div>
       </header>
+
+      {/* Barre de contexte contrat / paiement (si applicables) */}
+      {contrat && (
+        <div className="px-8 py-3 bg-white/60 border-b border-jim-border flex flex-wrap items-center gap-2">
+          <Link
+            href={`/contrat/${contrat.id}`}
+            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors ${
+              contrat.statut === 'confirme'
+                ? 'bg-jim-success-bg text-jim-success hover:brightness-95'
+                : contrat.statut === 'en_attente_remplacant'
+                  ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <FileText size={12} />
+            {contratLabel}
+            <ArrowRight size={11} />
+          </Link>
+          {paiement ? (
+            <Link
+              href="/dashboard?tab=paiements"
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                paiement.status === 'confirme'
+                  ? 'bg-jim-success-bg text-jim-success hover:brightness-95'
+                  : paiement.status === 'conteste'
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+              }`}
+            >
+              <Banknote size={12} />
+              {paiementLabel}
+              <ArrowRight size={11} />
+            </Link>
+          ) : contrat.statut === 'confirme' ? (
+            <Link
+              href="/dashboard?tab=paiements"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full bg-jim-primary-pale text-jim-primary hover:brightness-95 transition-colors"
+            >
+              <Banknote size={12} />
+              Creer le versement
+              <ArrowRight size={11} />
+            </Link>
+          ) : null}
+        </div>
+      )}
 
       {/* Zone de messages */}
       <div

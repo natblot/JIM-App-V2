@@ -2,8 +2,9 @@
 
 // Panneau droit — profil du contact, missions en commun, contrats, signalement
 import { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, MoreHorizontal, FileText, Flag, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, MoreHorizontal, FileText, Flag, CheckCircle, AlertCircle, Loader2, ArrowRight, Banknote } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { ConversationWithParticipant } from '@jim/shared/hooks/useConversations';
 import { useCreateSignalement } from '@jim/shared/hooks/useCreateSignalement';
@@ -188,9 +189,10 @@ export function ContactPanel({ conversation, onClose }: ContactPanelProps) {
                 const fallback = { label: 'Brouillon', bg: 'bg-gray-100', text: 'text-gray-600' };
                 const style = CONTRAT_STATUS_STYLES[contrat.statut] ?? fallback;
                 return (
-                  <div
+                  <Link
                     key={contrat.id}
-                    className="p-4 bg-jim-background rounded-2xl border border-jim-border hover:bg-jim-primary-pale transition-colors"
+                    href={`/contrat/${contrat.id}`}
+                    className="block p-4 bg-jim-background rounded-2xl border border-jim-border hover:bg-jim-primary-pale transition-colors group"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -199,6 +201,7 @@ export function ContactPanel({ conversation, onClose }: ContactPanelProps) {
                           {style.label}
                         </span>
                       </div>
+                      <ArrowRight size={14} className="text-jim-muted group-hover:text-jim-primary transition-colors" />
                     </div>
                     <p className="text-[10px] text-jim-muted">
                       {formatDate(contrat.created_at)}
@@ -208,9 +211,24 @@ export function ContactPanel({ conversation, onClose }: ContactPanelProps) {
                         {formatCents(contrat.montant_total_cents)}
                       </p>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
+              {/* Raccourci vers les paiements si au moins un contrat confirme */}
+              {contrats.data.some((c) => c.statut === 'confirme') && (
+                <Link
+                  href="/dashboard?tab=paiements"
+                  className="flex items-center justify-between p-3 bg-jim-primary-pale rounded-2xl border border-jim-primary/20 hover:bg-jim-primary/10 transition-colors group"
+                >
+                  <div className="flex items-center gap-2">
+                    <Banknote size={14} className="text-jim-primary" />
+                    <span className="text-xs font-semibold text-jim-primary">
+                      Gerer les versements
+                    </span>
+                  </div>
+                  <ArrowRight size={14} className="text-jim-primary group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              )}
             </div>
           )}
         </div>
