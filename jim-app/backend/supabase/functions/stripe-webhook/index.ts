@@ -18,9 +18,10 @@ Deno.serve(async (req: Request) => {
   const body = await req.text();
 
   // Verification de la signature — OBLIGATOIRE (jamais parser le JSON directement)
+  // verifyWebhookSignature est asynchrone en Deno (SubtleCrypto)
   let event;
   try {
-    event = verifyWebhookSignature(body, signature);
+    event = await verifyWebhookSignature(body, signature);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return new Response('Invalid signature', { status: 401 });

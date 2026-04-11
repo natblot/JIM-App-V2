@@ -22,14 +22,32 @@ interface SupabaseAdminClient {
 function getStripe(): Stripe {
   const key = Deno.env.get('STRIPE_SECRET_KEY');
   if (!key) throw new Error('STRIPE_SECRET_KEY manquante');
-  return new Stripe(key, { apiVersion: '2024-12-18.acacia' });
+  return new Stripe(key, {
+    apiVersion: '2024-12-18.acacia',
+    // Deno necessite un HttpClient base Fetch (pas Node http)
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 }
 
-export function verifyWebhookSignature(body: string, signature: string): Stripe.Event {
+// Crypto provider base SubtleCrypto (Web Crypto) — obligatoire en Deno car
+// stripe.webhooks.constructEvent() synchrone utilise node:crypto indisponible.
+// Sans ca, toute verification renvoie "No signatures found matching the expected signature".
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
+
+export async function verifyWebhookSignature(
+  body: string,
+  signature: string,
+): Promise<Stripe.Event> {
   const stripe = getStripe();
   const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
   if (!endpointSecret) throw new Error('STRIPE_WEBHOOK_SECRET manquante');
-  return stripe.webhooks.constructEvent(body, signature, endpointSecret);
+  return await stripe.webhooks.constructEventAsync(
+    body,
+    signature,
+    endpointSecret,
+    undefined,
+    cryptoProvider,
+  );
 }
 
 // Traiter un evenement webhook — retourne true si traite, false si deja vu
