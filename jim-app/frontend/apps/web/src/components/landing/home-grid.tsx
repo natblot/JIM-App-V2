@@ -1,6 +1,7 @@
 'use client';
 
 // Grille d'accueil kanban — 3 colonnes (Urgentes, Pres de moi, Nouveau)
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2, X, SearchX } from 'lucide-react';
 import { useSearchAnnonces } from '@jim/shared';
@@ -12,6 +13,23 @@ import type { AnnonceRow } from '../../lib/supabase-server';
 interface HomeGridProps {
   /** Annonces chargees cote serveur (ISR) */
   initialAnnonces: AnnonceRow[];
+}
+
+// Rayon de la Terre en km — utilise pour le calcul Haversine
+const EARTH_RADIUS_KM = 6371;
+// Seuil "Pres de moi" — 50km autour du user (rayon par defaut + tolerant pour les
+// regions peu denses comme la province)
+const NEARBY_RADIUS_KM = 50;
+
+// Calcul de distance Haversine entre deux points geographiques (km)
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return EARTH_RADIUS_KM * 2 * Math.asin(Math.sqrt(a));
 }
 
 // Transforme une annonce Supabase en ListingData (avec source + rpps)
@@ -112,7 +130,20 @@ function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
 export function HomeGrid({ initialAnnonces }: HomeGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { supabase } = useAuthContext();
+  const { supabase, user } = useAuthContext();
+
+  // Geoloc utilisateur pour la colonne "Pres de moi" (Bug 4.B QA 2026-04-16) —
+  // si refus ou non supportee, la colonne reste vide (pas de blocage UX, pas de
+  // prompt agressif). Demande native du navigateur, traitement silencieux.
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => { /* refus utilisateur ou erreur — on laisse "Pres de moi" vide */ },
+      { timeout: 5000, maximumAge: 5 * 60_000 },
+    );
+  }, []);
 
   // Parametres de recherche geospatiale
   const ville = searchParams.get('ville');
@@ -146,37 +177,67 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
   }
 
   // Donnees a afficher — geo search OU filtrage local
-  let listings: ListingData[];
+  // On garde le tableau d'AnnonceRow non-mappes pour pouvoir lire profile_id +
+  // lat/lng dans la repartition kanban (auto-exclusion + Haversine).
+  let rawAnnonces: AnnonceRow[];
   if (isGeoSearchActive) {
-    let results = search.data ?? [];
-    // Filtrer par type/urgent/cabinet/specialite cote client
+    let results = (search.data ?? []) as unknown as AnnonceRow[];
     if (filters.type) results = results.filter((a) => a.type_annonce === filters.type);
     if (filters.isUrgent === 'true') results = results.filter((a) => a.is_urgent);
     if (filters.typeCabinet) results = results.filter((a) => a.type_cabinet === filters.typeCabinet);
     if (filters.specialite) results = results.filter((a) => a.specialites?.includes(filters.specialite!) ?? false);
-    // Tri
-    if (filters.sort === 'retrocession_desc') results = [...results].sort((a, b) => b.retrocession - a.retrocession);
-    else if (filters.sort === 'retrocession_asc') results = [...results].sort((a, b) => a.retrocession - b.retrocession);
+    if (filters.sort === 'retrocession_desc') results = [...results].sort((a, b) => (b.retrocession ?? 0) - (a.retrocession ?? 0));
+    else if (filters.sort === 'retrocession_asc') results = [...results].sort((a, b) => (a.retrocession ?? 0) - (b.retrocession ?? 0));
     else if (filters.sort === 'date_debut_asc') results = [...results].sort((a, b) => a.date_debut.localeCompare(b.date_debut));
-    listings = results.map(annonceToListing);
+    rawAnnonces = results;
   } else {
-    const filtered = filterAndSortAnnonces(initialAnnonces, filters);
-    listings = filtered.map(annonceToListing);
+    rawAnnonces = filterAndSortAnnonces(initialAnnonces, filters);
   }
+
+  // Self-exclusion silencieuse : un titulaire ne voit pas ses propres annonces
+  // (Bug 4.B QA 2026-04-16). Les annonces du user sont disponibles dans /dashboard.
+  if (user?.id) rawAnnonces = rawAnnonces.filter((a) => a.profile_id !== user.id);
+
+  const listings: ListingData[] = rawAnnonces.map(annonceToListing);
 
   const showBanner = isGeoSearchActive || hasFilters;
   const isLoading = isGeoSearchActive && search.isLoading;
 
-  // Repartir les listings en 3 colonnes kanban
-  const urgentListings = listings.filter((l) => l.isUrgent);
-  const recentListings = [...listings]
-    .filter((l) => !l.isUrgent)
+  // Repartition kanban avec dedup stricte (1 annonce = 1 colonne) :
+  //   - Urgentes : is_urgent = true (priorite max)
+  //   - Pres de moi : !is_urgent + (geoloc user dispo) + distance Haversine < 50km
+  //   - Nouveau : !is_urgent + (pas eligible "Pres de moi") trie par date_debut desc
+  const urgentIds = new Set<string>();
+  const nearbyIds = new Set<string>();
+  const nearbyAnnonces: AnnonceRow[] = [];
+  const recentAnnonces: AnnonceRow[] = [];
+
+  for (const a of rawAnnonces) {
+    if (a.is_urgent) {
+      urgentIds.add(a.id);
+      continue;
+    }
+    if (
+      userCoords &&
+      typeof a.lat === 'number' &&
+      typeof a.lng === 'number' &&
+      haversineKm(userCoords.lat, userCoords.lng, a.lat, a.lng) <= NEARBY_RADIUS_KM
+    ) {
+      nearbyIds.add(a.id);
+      nearbyAnnonces.push(a);
+    } else {
+      recentAnnonces.push(a);
+    }
+  }
+
+  const urgentListings = listings.filter((l) => urgentIds.has(l.id));
+  const nearbyListings = nearbyAnnonces.map(annonceToListing);
+  const recentListings = recentAnnonces
+    .map(annonceToListing)
     .sort((a, b) => {
       if (a.dateDebut && b.dateDebut) return b.dateDebut.localeCompare(a.dateDebut);
       return 0;
     });
-  // "Pres de moi" — toutes les annonces (proximity). On affiche tout.
-  const nearbyListings = listings;
 
   return (
     <div>

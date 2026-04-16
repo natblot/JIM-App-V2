@@ -18,6 +18,8 @@ function isSupabaseConfigured(): boolean {
 // Types pour les annonces retournees par la landing page
 export interface AnnonceRow {
   id: string;
+  // profile_id du titulaire — necessaire pour la self-exclusion cote client (Bug 4.B)
+  profile_id: string | null;
   ville: string | null;
   code_postal: string | null;
   date_debut: string;
@@ -33,6 +35,10 @@ export interface AnnonceRow {
   source_url: string | null;
   created_at: string;
   photo_urls: string[];
+  // Coordonnees PostGIS extraites par la RPC landing_annonces — utilisees pour
+  // le calcul Haversine "Pres de moi" (Bug 4.B)
+  lat: number | null;
+  lng: number | null;
 }
 
 // Profil titulaire simplifie pour l'affichage
@@ -51,27 +57,26 @@ export interface AnnonceDetail extends AnnonceRow {
   titulaire?: TitulaireProfile | null;
 }
 
-// Fetch des annonces actives pour la grille d'accueil — avec pagination
+// Fetch des annonces actives pour la grille d'accueil
+// Migration 078 (Bug 4.B QA 2026-04-16) : passe par la RPC landing_annonces qui
+// expose profile_id (self-exclusion) + lat/lng (Haversine "Pres de moi").
+// Note : la RPC ne supporte pas count(*) exact donc on retourne 0 pour total
+// (la landing kanban ne pagine plus depuis le Sprint P2).
 export async function fetchActiveAnnonces(
-  limit = 20,
-  offset = 0,
+  limit = 50,
+  _offset = 0,
 ): Promise<{ annonces: AnnonceRow[]; total: number }> {
   if (!isSupabaseConfigured()) return { annonces: [], total: 0 };
   const supabase = createServerSupabase();
 
-  // Requete avec count exact pour la pagination
-  const { data, error, count } = await supabase
-    .from('annonces')
-    .select('id, ville, code_postal, date_debut, date_fin, retrocession, description, type_annonce, type_cabinet, specialites, statut, is_urgent, source, source_url, created_at, photo_urls', { count: 'exact' })
-    .in('statut', ['active', 'en_cours'])
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  const { data, error } = await supabase.rpc('landing_annonces', { p_limit: limit });
 
   if (error) {
-    console.error('[supabase-server] fetchActiveAnnonces error:', error.message);
+    console.error('[supabase-server] fetchActiveAnnonces (RPC) error:', error.message);
     return { annonces: [], total: 0 };
   }
-  return { annonces: (data as AnnonceRow[]) ?? [], total: count ?? 0 };
+  const rows = (data as AnnonceRow[]) ?? [];
+  return { annonces: rows, total: rows.length };
 }
 
 // Fetch d'une annonce par ID (detail SSR) — avec profil titulaire
