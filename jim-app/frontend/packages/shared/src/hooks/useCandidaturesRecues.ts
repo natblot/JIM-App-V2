@@ -45,7 +45,7 @@ export function useCandidaturesRecues(supabase: Supabase, annonceId: string) {
         .from('candidatures')
         .select(`
           *,
-          profiles!candidatures_remplacant_id_fkey(
+          profiles!candidatures_remplacant_id_profiles_fkey(
             first_name, last_name, rpps_number, rpps_verified,
             specialites, zone_km, photo_url
           )

@@ -60,7 +60,7 @@ function TitulaireCandidatures({
         .from('candidatures')
         .select(`
           *,
-          profiles!candidatures_remplacant_id_fkey(first_name, last_name),
+          profiles!candidatures_remplacant_id_profiles_fkey(first_name, last_name),
           annonces!inner(profile_id, ville, type_annonce)
         `)
         .order('created_at', { ascending: false });
