@@ -239,9 +239,9 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
         </div>
       )}
 
-      {/* Kanban board */}
+      {/* Kanban board — horizontal sur desktop (lg+), vertical empile sur mobile/tablette */}
       {!isLoading && listings.length > 0 && (
-        <div className="flex gap-4 h-full overflow-x-auto no-scrollbar pb-4">
+        <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
           <KanbanColumn
             title="Urgentes"
             dotColor="bg-orange-500"
@@ -260,9 +260,9 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
         </div>
       )}
 
-      {/* Etat initial sans filtres — kanban complet */}
+      {/* Etat initial sans filtres — kanban complet (memes responsive rules) */}
       {!isLoading && listings.length === 0 && !showBanner && (
-        <div className="flex gap-4 h-full overflow-x-auto no-scrollbar pb-4">
+        <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
           <KanbanColumn
             title="Urgentes"
             dotColor="bg-orange-500"

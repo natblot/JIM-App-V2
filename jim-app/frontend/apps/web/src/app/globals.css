@@ -94,15 +94,24 @@ h3 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 }
 
 /* === Kanban layout === */
+/* Mobile/tablette (<lg) : pleine largeur empilee, hauteur naturelle */
+/* Desktop (>=lg) : largeur fixe 380-420px, hauteur 100% pour scroll vertical interne */
 .kanban-column {
-  min-width: 380px;
-  max-width: 420px;
-  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+@media (min-width: 1024px) {
+  .kanban-column {
+    min-width: 380px;
+    max-width: 420px;
+    width: auto;
+    height: 100%;
+  }
 }
 
 /* Masquer la scrollbar horizontale des categories */
