@@ -88,9 +88,10 @@ export async function generateContrat(
   }
 
   // Récupérer l'annonce avec le profil titulaire (profile_id = auth.users.id du titulaire)
+  // Colonnes reelles : adresse_complete (pas adresse), retrocession (pas taux_retrocession).
   const { data: annonce, error: annonceError } = await supabaseAdmin
     .from('annonces')
-    .select('id, profile_id, date_debut, date_fin, adresse, taux_retrocession')
+    .select('id, profile_id, date_debut, date_fin, adresse_complete, retrocession')
     .eq('id', candidature.annonce_id)
     .single();
 
@@ -99,9 +100,10 @@ export async function generateContrat(
   }
 
   // Récupérer le profil du titulaire — profiles.user_id = annonce.profile_id (auth.users.id)
+  // Colonne reelle : rpps_number (pas rpps).
   const { data: profilTitulaire, error: titulaireError } = await supabaseAdmin
     .from('profiles')
-    .select('first_name, last_name, rpps')
+    .select('first_name, last_name, rpps_number')
     .eq('user_id', annonce.profile_id)
     .single();
 
@@ -112,7 +114,7 @@ export async function generateContrat(
   // Récupérer le profil du remplaçant — candidatures.remplacant_id = auth.users.id
   const { data: profilRemplacant, error: remplacantError } = await supabaseAdmin
     .from('profiles')
-    .select('first_name, last_name, rpps')
+    .select('first_name, last_name, rpps_number')
     .eq('user_id', candidature.remplacant_id)
     .single();
 
@@ -120,24 +122,26 @@ export async function generateContrat(
     throw new Error('REMPLACANT_PROFILE_NOT_FOUND');
   }
 
-  // Construire les données factuelles du contrat
+  // Construire les données factuelles du contrat (snapshot immuable au moment de la
+  // generation — aucun JOIN au runtime cote UI). Cle "rpps" expose vers l'UI car
+  // la valeur RPPS est figee dans le contrat ; la colonne DB reste rpps_number.
   const donnees = {
     titulaire: {
       first_name: profilTitulaire.first_name,
       last_name: profilTitulaire.last_name,
-      rpps: profilTitulaire.rpps,
+      rpps: profilTitulaire.rpps_number,
     },
     remplacant: {
       first_name: profilRemplacant.first_name,
       last_name: profilRemplacant.last_name,
-      rpps: profilRemplacant.rpps,
+      rpps: profilRemplacant.rpps_number,
     },
     dates: {
       debut: annonce.date_debut,
       fin: annonce.date_fin,
     },
-    adresse_cabinet: annonce.adresse,
-    taux_retrocession: annonce.taux_retrocession,
+    adresse_cabinet: annonce.adresse_complete,
+    taux_retrocession: annonce.retrocession,
     template_version: 'v1.0',
   };
 
