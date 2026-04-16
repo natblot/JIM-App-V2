@@ -13,7 +13,7 @@ export default async function Home() {
   const { annonces } = await fetchActiveAnnonces(50, 0);
 
   return (
-    <>
+    <div className="h-screen overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] h-screen pt-[200px] px-6 md:px-10 max-w-[1600px] mx-auto gap-8">
         {/* Sidebar — masquee sur mobile */}
         <aside className="hidden lg:flex flex-col gap-4 overflow-y-auto no-scrollbar pb-24">
@@ -30,6 +30,6 @@ export default async function Home() {
         </main>
       </div>
       <FloatingMapButton />
-    </>
+    </div>
   );
 }

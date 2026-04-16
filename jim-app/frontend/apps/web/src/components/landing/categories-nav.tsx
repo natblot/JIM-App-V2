@@ -48,14 +48,19 @@ export function CategoriesNav() {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1">
+    <nav
+      aria-label="Filtres par categorie"
+      className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1"
+    >
       {CATEGORIES.map((cat) => {
         const active = isActive(cat);
         return (
           <button
             key={cat.label}
+            type="button"
             onClick={() => handleClick(cat)}
-            className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all whitespace-nowrap ${
+            aria-pressed={active ? 'true' : 'false'}
+            className={`min-h-[44px] inline-flex items-center px-4 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all whitespace-nowrap ${
               active
                 ? 'bg-white text-brand shadow-sm'
                 : 'bg-white/60 backdrop-blur text-slate-500 hover:bg-white/80 hover:text-slate-700'
@@ -65,6 +70,6 @@ export function CategoriesNav() {
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

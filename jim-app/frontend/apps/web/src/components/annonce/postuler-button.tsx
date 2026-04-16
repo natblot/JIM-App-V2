@@ -3,7 +3,7 @@
 // Bouton "Postuler" reel — verifie auth, role, deja postule, incompatibilites
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Send, AlertTriangle, CheckCircle, LogIn, Ban } from 'lucide-react';
+import { Loader2, Send, AlertTriangle, CheckCircle, LogIn, Info, PlusCircle } from 'lucide-react';
 import { useCreateCandidature, useIncompatibilityCheck, useCurrentProfile } from '@jim/shared';
 import type { IncompatibilityWarning } from '@jim/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -64,16 +64,31 @@ export function PostulerButton({ annonceId }: PostulerButtonProps) {
     );
   }
 
-  // Check role titulaire — seuls les remplacants peuvent postuler
+  // Check role titulaire — seuls les remplacants peuvent postuler, mais on propose des fallbacks
+  // Un CTA disabled sans issue est un cul-de-sac UX (Nielsen #9 : aider a recuperer d'une erreur).
   const role = profile.data?.role as string | undefined;
   if (role === 'titulaire') {
     return (
-      <button
-        disabled
-        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold bg-neutral-100 text-neutral-500 cursor-not-allowed border border-neutral-200"
-      >
-        <Ban size={16} /> Seuls les remplacants peuvent postuler
-      </button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-start gap-2 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
+          <Info size={16} className="text-neutral-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-neutral-600 leading-relaxed">
+            Vous consultez cette annonce en tant que titulaire. La candidature est reservee aux remplacants.
+          </p>
+        </div>
+        <a
+          href="/publier"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold bg-brand text-white hover:bg-brand-dark transition-colors"
+        >
+          <PlusCircle size={16} /> Publier ma propre annonce
+        </a>
+        <a
+          href="/dashboard"
+          className="text-center text-xs text-neutral-500 hover:text-neutral-900 underline underline-offset-2 py-1"
+        >
+          Retour au tableau de bord
+        </a>
+      </div>
     );
   }
 

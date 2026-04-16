@@ -11,6 +11,7 @@ import { buildAnnonceMetadata, buildJobPostingSchema } from '../../../../lib/seo
 import { StoreButtons } from '../../../../components/landing/store-buttons';
 import { PostulerButton } from '../../../../components/annonce/postuler-button';
 import { SimilarAnnonces } from '../../../../components/annonce/similar-annonces';
+import { MobileCtaBar } from '../../../../components/annonce/mobile-cta-bar';
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -30,7 +31,7 @@ export default async function AnnoncePage({ params }: Props) {
 
   if (!annonce || annonce.statut === 'expiree') {
     return (
-      <main className="flex-grow max-w-[800px] mx-auto px-6 md:px-10 py-16 text-center">
+      <main className="flex-grow max-w-[800px] mx-auto px-6 md:px-10 pt-32 pb-16 text-center">
         <h1 className="text-2xl font-bold text-neutral-900 mb-4">Annonce introuvable</h1>
         <p className="text-neutral-500 mb-8">Cette annonce n&apos;existe plus ou a ete pourvue.</p>
         <Link href="/" className="text-brand hover:underline font-medium">
@@ -56,11 +57,14 @@ export default async function AnnoncePage({ params }: Props) {
   const heroImage = annonce.photo_urls?.[0] ?? placeholderImages[imgIdx];
 
   return (
-    <main className="flex-grow max-w-[1440px] mx-auto w-full px-6 md:px-10 py-6">
+    <main className="max-w-[1200px] mx-auto w-full px-6 md:px-10 pt-32 pb-28 lg:pb-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
-      {/* Navigation */}
-      <Link href="/" className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 mb-6 transition-colors">
+      {/* Navigation — cible 44px cliquable (Fitts) */}
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 mb-6 transition-colors min-h-[44px] -ml-2 px-2 rounded-lg hover:bg-white/50"
+      >
         <ArrowLeft size={16} /> Retour aux annonces
       </Link>
 
@@ -74,6 +78,7 @@ export default async function AnnoncePage({ params }: Props) {
               alt={`Cabinet ${annonce.ville ?? ''}`}
               fill
               priority
+              sizes="(max-width: 1024px) 100vw, 66vw"
               className="object-cover"
             />
             <div className="absolute top-4 left-4 bg-neutral-900/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5">
@@ -88,7 +93,7 @@ export default async function AnnoncePage({ params }: Props) {
 
           {/* Titre + badges */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+            <h1 className="text-2xl lg:text-3xl font-bold text-neutral-900 mb-2 tracking-tight">
               Remplacement kine {annonce.ville && `a ${annonce.ville}`}
             </h1>
             <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
@@ -101,6 +106,8 @@ export default async function AnnoncePage({ params }: Props) {
                   <span className="flex items-center gap-1"><Briefcase size={14} /> {annonce.type_annonce}</span>
                 </>
               )}
+              <span>&bull;</span>
+              <span className="text-neutral-400">Publie le {new Date(annonce.created_at).toLocaleDateString('fr-FR')}</span>
             </div>
           </div>
 
@@ -117,7 +124,6 @@ export default async function AnnoncePage({ params }: Props) {
             <h2 className="font-semibold text-neutral-900 mb-4">Details</h2>
             <div className="grid grid-cols-2 gap-4">
               <Detail label="Retrocession" value={`${retro}%`} />
-              <Detail label="Prix estime" value={`${prixJour}€/jour`} />
               {annonce.type_cabinet && <Detail label="Type de cabinet" value={annonce.type_cabinet} />}
               <Detail label="Statut" value={annonce.statut === 'active' ? 'Active' : annonce.statut} />
               {annonce.specialites && annonce.specialites.length > 0 && (
@@ -157,10 +163,10 @@ export default async function AnnoncePage({ params }: Props) {
                         <CheckCircle size={12} /> RPPS verifie
                       </span>
                     )}
-                    {annonce.titulaire.reputation_score !== null && annonce.titulaire.reputation_score > 0 && (
+                    {annonce.titulaire.score_fiabilite !== null && annonce.titulaire.score_fiabilite > 0 && (
                       <span className="flex items-center gap-1">
                         <Star size={12} className="text-amber-500 fill-amber-500" />
-                        {annonce.titulaire.reputation_score.toFixed(1)}
+                        {annonce.titulaire.score_fiabilite.toFixed(1)}
                       </span>
                     )}
                     <span>
@@ -176,29 +182,21 @@ export default async function AnnoncePage({ params }: Props) {
           <SimilarAnnonces annonceId={annonce.id} />
         </div>
 
-        {/* Colonne droite — sticky CTA */}
-        <div className="lg:self-start lg:sticky lg:top-28">
+        {/* Colonne droite — sticky aside : decision uniquement (prix + CTA + trust) */}
+        <aside className="hidden lg:block lg:self-start lg:sticky lg:top-28">
           <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
-            <div className="text-center mb-6">
-              <p className="text-3xl font-bold text-neutral-900 mb-1">{prixJour}€<span className="text-lg font-normal text-neutral-500">/jour</span></p>
+            <div className="mb-6">
+              <p className="text-3xl font-bold text-neutral-900 mb-1">
+                {prixJour}€<span className="text-lg font-normal text-neutral-500">/jour</span>
+              </p>
               <p className="text-sm text-neutral-500">Retrocession {retro}%</p>
             </div>
 
             {isNative ? (
-              <>
-                {/* Bouton Postuler reel — client component avec gestion auth */}
-                <PostulerButton annonceId={annonce.id} />
-
-                <div className="border-t border-neutral-100 mt-4 pt-4">
-                  <p className="text-xs text-neutral-400 text-center mb-3">
-                    Aussi disponible sur l&apos;app mobile
-                  </p>
-                  <StoreButtons size="sm" className="justify-center" />
-                </div>
-              </>
+              <PostulerButton annonceId={annonce.id} />
             ) : (
               <>
-                <p className="text-sm text-neutral-600 text-center mb-4">
+                <p className="text-sm text-neutral-600 mb-4">
                   Cette annonce provient d&apos;une source partenaire.
                 </p>
                 {annonce.source_url && (
@@ -215,13 +213,33 @@ export default async function AnnoncePage({ params }: Props) {
             )}
 
             <div className="border-t border-neutral-100 mt-6 pt-4">
-              <p className="text-xs text-neutral-400 text-center">
+              <p className="text-xs text-neutral-400">
                 Annonce publiee le {new Date(annonce.created_at).toLocaleDateString('fr-FR')}
               </p>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
+
+      {/* Promo app mobile — section dediee, sortie de la card de decision (evite de diluer le CTA primaire) */}
+      <section className="mt-12 bg-white/60 rounded-2xl border border-neutral-100 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-neutral-900 text-lg">Gerez vos remplacements en mobilite</h2>
+          <p className="text-sm text-neutral-500 mt-1">
+            L&apos;app JIM est disponible sur iOS et Android.
+          </p>
+        </div>
+        <StoreButtons size="sm" />
+      </section>
+
+      {/* Barre CTA flottante — mobile/tablette uniquement (le sticky aside prend le relais en >= lg) */}
+      <MobileCtaBar
+        annonceId={annonce.id}
+        prixJour={prixJour}
+        retro={retro}
+        isNative={isNative}
+        sourceUrl={annonce.source_url ?? null}
+      />
     </main>
   );
 }

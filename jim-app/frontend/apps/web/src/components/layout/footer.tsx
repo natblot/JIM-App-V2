@@ -1,9 +1,22 @@
-import { Globe, ChevronUp } from 'lucide-react';
+'use client';
 
-// Footer fixe glass morphism — liens legaux + settings langue/devise/support
+import { Globe, ChevronUp } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+
+// Footer legal :
+// - Sur la landing ("/") : fixed bottom glass morphism (pattern dashboard kanban)
+// - Ailleurs : static dans le flux, pour ne pas manger 50px de viewport sur les pages a scroll naturel
 export function Footer() {
+  const pathname = usePathname();
+  const isLanding = pathname === '/';
+
+  const base = 'bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 text-[11px] text-gray-500';
+  const variant = isLanding
+    ? 'fixed bottom-0 left-0 right-0 z-40'
+    : 'relative mt-16';
+
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 text-[11px] text-gray-500 z-40">
+    <footer className={`${base} ${variant}`}>
       <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Liens gauche */}
         <div className="flex flex-wrap items-center gap-2 md:gap-4 justify-center">
@@ -18,13 +31,13 @@ export function Footer() {
 
         {/* Settings droite */}
         <div className="flex items-center gap-6">
-          <button className="flex items-center gap-2 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
+          <button type="button" className="flex items-center gap-2 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
             <Globe size={12} /> Francais, FR
           </button>
-          <button className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
+          <button type="button" className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
             EUR
           </button>
-          <button className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
+          <button type="button" className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
             Support <ChevronUp size={10} className="ml-0.5" />
           </button>
         </div>

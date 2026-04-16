@@ -2,11 +2,13 @@ import { Suspense } from 'react';
 import { Header } from '../../components/layout/header';
 import { Footer } from '../../components/layout/footer';
 
-// Layout marketing — dashboard kanban fixe plein ecran
-// Suspense requis car le Header utilise useSearchParams
+// Layout marketing — transparent : chaque page gere sa propre geometrie.
+// La landing applique h-screen overflow-hidden elle-meme (dashboard kanban),
+// les autres pages (detail annonce, marketing) conservent le scroll naturel.
+// Suspense requis car le Header utilise useSearchParams.
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-screen overflow-hidden relative bg-[#fdf6ed]">
+    <div className="relative bg-[#fdf6ed] min-h-screen">
       <Suspense>
         <Header />
       </Suspense>

@@ -1,10 +1,23 @@
 'use client';
 
 // Mini-carte statique Mapbox pour la page detail annonce — Phase 2
+// Le bundle mapbox-gl (~250 KB) est lazy-load via next/dynamic : il n'est charge
+// que lorsque l'utilisateur clique sur l'image pour activer le mode interactif.
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
-import MapGL, { Marker } from 'react-map-gl/mapbox';
+import dynamic from 'next/dynamic';
+
+// Lazy-load du composant Mapbox interactif (bundle evite tant que le user ne clique pas)
+const InteractiveMap = dynamic(
+  () => import('./mini-map-interactive').then((m) => m.MiniMapInteractive),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-2xl overflow-hidden h-48 border border-gray-100 bg-gray-50 animate-pulse" />
+    ),
+  }
+);
 
 interface MiniMapProps {
   lat: number;
@@ -38,23 +51,9 @@ export function MiniMap({ lat, lng, ville }: MiniMapProps) {
     );
   }
 
-  // Mode interactif apres clic
+  // Mode interactif apres clic — chargement dynamique du bundle mapbox-gl
   if (interactive) {
-    return (
-      <div className="rounded-2xl overflow-hidden h-48 border border-gray-100">
-        <MapGL
-          mapboxAccessToken={MAPBOX_TOKEN}
-          mapStyle="mapbox://styles/mapbox/light-v11"
-          initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
-          style={{ width: '100%', height: '100%' }}
-          attributionControl={false}
-        >
-          <Marker latitude={lat} longitude={lng} anchor="bottom">
-            <MapPin size={28} className="text-[#ff7c5c] fill-[#ff7c5c]" />
-          </Marker>
-        </MapGL>
-      </div>
-    );
+    return <InteractiveMap lat={lat} lng={lng} token={MAPBOX_TOKEN} />;
   }
 
   // Mode statique par defaut — image Mapbox
