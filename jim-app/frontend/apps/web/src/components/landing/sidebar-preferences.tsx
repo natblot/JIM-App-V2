@@ -3,11 +3,21 @@
 // Sidebar preferences — localisation, prix, filtrage avance
 import { useState } from 'react';
 import { MapPin, Info, SlidersHorizontal, Home, DollarSign } from 'lucide-react';
+import { useCurrentProfile } from '@jim/shared';
 import { FiltersPanel } from './filters-panel';
+import { useAuthContext } from '../providers/auth-provider';
 
 export function SidebarPreferences() {
   const [showTotal, setShowTotal] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Lecture du profil pour binder la ville (Bug 5.B QA 2026-04-16) — fallback
+  // explicite si pas de session ou pas de ville renseignee.
+  const { supabase } = useAuthContext();
+  const { data: profile } = useCurrentProfile(supabase);
+  const localisationLabel = profile?.city
+    ? `${profile.city}, France`
+    : 'Localisation a renseigner';
 
   return (
     <>
@@ -23,7 +33,7 @@ export function SidebarPreferences() {
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">Missions a proximite</p>
             <p className="text-xs text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-gray-700 cursor-pointer truncate">
-              Paris, France
+              {localisationLabel}
             </p>
           </div>
         </div>
