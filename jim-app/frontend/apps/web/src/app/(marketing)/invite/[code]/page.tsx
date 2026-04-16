@@ -21,11 +21,12 @@ export default async function InvitePage({ params }: Props) {
   const { code } = await params;
   const supabase = createServerSupabase();
 
+  // Migration 076 : on lit via profiles_public (parrainage_code y est expose).
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('profiles_public')
     .select('first_name, parrainage_code')
     .eq('parrainage_code', code)
-    .single();
+    .maybeSingle();
 
   const isValid = Boolean(profile);
 

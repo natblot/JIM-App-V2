@@ -39,7 +39,7 @@ export interface AnnonceRow {
 export interface TitulaireProfile {
   first_name: string | null;
   rpps_verified: boolean;
-  reputation_score: number | null;
+  score_fiabilite: number | null;
   created_at: string;
 }
 
@@ -75,6 +75,9 @@ export async function fetchActiveAnnonces(
 }
 
 // Fetch d'une annonce par ID (detail SSR) — avec profil titulaire
+// Migration 076 : RLS profiles durcie -> on ne peut plus embed profiles directement
+// (la SSR utilise un client anon, sans session user). On fetch l'annonce, puis le
+// profil titulaire via profiles_public en 2e query.
 export async function fetchAnnonceById(id: string): Promise<AnnonceDetail | null> {
   if (!isSupabaseConfigured()) return null;
   const supabase = createServerSupabase();
@@ -83,8 +86,7 @@ export async function fetchAnnonceById(id: string): Promise<AnnonceDetail | null
     .select(`
       id, ville, code_postal, adresse_complete, date_debut, date_fin, retrocession,
       description, type_annonce, type_cabinet, specialites, statut, is_urgent,
-      source, source_url, profile_id, created_at, photo_urls,
-      profiles!annonces_profile_id_fkey (first_name, rpps_verified, reputation_score, created_at)
+      source, source_url, profile_id, created_at, photo_urls
     `)
     .eq('id', id)
     .single();
@@ -94,14 +96,20 @@ export async function fetchAnnonceById(id: string): Promise<AnnonceDetail | null
     return null;
   }
 
-  // Extraire le profil joint
-  const row = data as unknown as Record<string, unknown>;
-  const profileData = row.profiles as TitulaireProfile | null;
-  const { profiles: _, ...annonceFields } = row;
-  return {
-    ...(annonceFields as unknown as Omit<AnnonceDetail, 'titulaire'>),
-    titulaire: profileData,
-  } as AnnonceDetail;
+  const annonceFields = data as unknown as Omit<AnnonceDetail, 'titulaire'>;
+
+  // Resoudre le profil titulaire via profiles_public (vue publique, GRANT TO anon)
+  let titulaire: TitulaireProfile | null = null;
+  if (annonceFields.profile_id) {
+    const { data: profRow } = await supabase
+      .from('profiles_public')
+      .select('first_name, rpps_verified, score_fiabilite, created_at')
+      .eq('user_id', annonceFields.profile_id)
+      .maybeSingle();
+    if (profRow) titulaire = profRow as TitulaireProfile;
+  }
+
+  return { ...annonceFields, titulaire };
 }
 
 // Fetch des coordonnees d'une annonce pour la mini-carte (Phase 2)

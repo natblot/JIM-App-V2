@@ -29,16 +29,15 @@ async function fetchConversations(
 
   const userId = user.id;
 
-  // Sélectionner les conversations + données des profils des deux participants
-  // Le JOIN sur profiles est fait via deux colonnes FK vers auth.users
+  // Migration 076 : RLS profiles durcie -> impossible d'embed profiles directement.
+  // On fetch les conversations, puis on resoud les profils des autres participants
+  // via profiles_public en 2e query.
   const { data, error } = await supabase
     .from('conversations')
     .select(
       `
       *,
-      participant1:profiles!conversations_participant_1_id_fkey(user_id, display_name, avatar_url),
-      participant2:profiles!conversations_participant_2_id_fkey(user_id, display_name, avatar_url),
-      annonces(titre)
+      annonces(ville, type_annonce)
       `
     )
     .or(`participant_1_id.eq.${userId},participant_2_id.eq.${userId}`)
@@ -59,14 +58,46 @@ async function fetchConversations(
     unreadMap[row.conversation_id] = (unreadMap[row.conversation_id] ?? 0) + 1;
   }
 
+  // Resoudre les profils des "autres participants" en une 2e query batch
+  const otherIds = Array.from(
+    new Set(
+      (data ?? []).map((conv) =>
+        conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id
+      ).filter(Boolean) as string[]
+    )
+  );
+  let profileMap = new Map<string, { first_name: string | null; last_name: string | null; avatar_url: string | null }>();
+  if (otherIds.length > 0) {
+    const { data: profs } = await supabase
+      .from('profiles_public')
+      .select('user_id, first_name, last_name, avatar_url')
+      .in('user_id', otherIds);
+    profileMap = new Map(
+      (profs ?? []).map((p) => [
+        p.user_id,
+        { first_name: p.first_name ?? null, last_name: p.last_name ?? null, avatar_url: p.avatar_url ?? null },
+      ])
+    );
+  }
+
   // Enrichir chaque conversation avec le profil de l'autre participant
   return (data ?? []).map((conv) => {
-    const p1 = conv.participant1 as unknown as { user_id: string; display_name: string | null; avatar_url: string | null } | null;
-    const p2 = conv.participant2 as unknown as { user_id: string; display_name: string | null; avatar_url: string | null } | null;
-    const annonce = conv.annonces as unknown as { titre: string | null } | null;
+    const otherId = conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id;
+    const other = profileMap.get(otherId) ?? null;
+    const annonce = conv.annonces as unknown as {
+      ville: string | null;
+      type_annonce: string | null;
+    } | null;
 
-    // L'autre participant est celui qui n'est pas l'utilisateur connecté
-    const other = p1?.user_id === userId ? p2 : p1;
+    const fullName = [other?.first_name, other?.last_name]
+      .filter((s) => s && s.length > 0)
+      .join(' ')
+      .trim();
+
+    // Construit un titre lisible a partir du type d'annonce et de la ville
+    const annonceTitle = annonce
+      ? [annonce.type_annonce, annonce.ville].filter(Boolean).join(' — ') || null
+      : null;
 
     return {
       id: conv.id,
@@ -77,9 +108,9 @@ async function fetchConversations(
       created_at: conv.created_at,
       last_message_at: conv.last_message_at,
       last_message_preview: conv.last_message_preview,
-      other_participant_name: other?.display_name ?? null,
+      other_participant_name: fullName.length > 0 ? fullName : null,
       other_participant_avatar: other?.avatar_url ?? null,
-      annonce_title: annonce?.titre ?? null,
+      annonce_title: annonceTitle,
       unread_count: unreadMap[conv.id] ?? 0,
     };
   }) as unknown as ConversationWithParticipant[];

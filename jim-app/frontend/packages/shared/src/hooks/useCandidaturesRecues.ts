@@ -41,19 +41,35 @@ export function useCandidaturesRecues(supabase: Supabase, annonceId: string) {
   return useQuery({
     queryKey: queryKeys.candidatures.byAnnonce(annonceId),
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Migration 076 : RLS profiles durcie -> on ne peut plus embed profiles directement.
+      // On fetch d'abord les candidatures, puis on resoud les profils via profiles_public
+      // (vue projetant uniquement les colonnes publiques) en 2e query + merge client.
+      const { data: cands, error } = await supabase
         .from('candidatures')
-        .select(`
-          *,
-          profiles!candidatures_remplacant_id_profiles_fkey(
-            first_name, last_name, rpps_number, rpps_verified,
-            specialites, zone_km, photo_url
-          )
-        `)
+        .select('*')
         .eq('annonce_id', annonceId)
         .order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as CandidatureRow[];
+
+      const userIds = Array.from(
+        new Set((cands ?? []).map((c) => c.remplacant_id).filter(Boolean) as string[])
+      );
+      let profileMap = new Map<string, Record<string, unknown>>();
+      if (userIds.length > 0) {
+        const { data: profs, error: profErr } = await supabase
+          .from('profiles_public')
+          .select('user_id, first_name, last_name, rpps_number, rpps_verified, specialties, mobility_radius_km, avatar_url')
+          .in('user_id', userIds);
+        if (profErr) throw new Error(profErr.message);
+        profileMap = new Map((profs ?? []).map((p) => [p.user_id, p as Record<string, unknown>]));
+      }
+
+      // Re-injecte le profil sous la cle "profiles" pour preserver la shape attendue par
+      // les composants consommateurs (CandidatureCard, etc.)
+      return (cands ?? []).map((c) => ({
+        ...c,
+        profiles: profileMap.get(c.remplacant_id) ?? null,
+      })) as unknown as CandidatureRow[];
     },
     enabled: !!annonceId,
     staleTime: 15_000,

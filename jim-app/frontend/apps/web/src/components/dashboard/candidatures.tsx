@@ -52,7 +52,9 @@ function TitulaireCandidatures({
   const processCandidature = useProcessCandidature(supabase);
   const generateContrat = useGenerateContrat(supabase);
 
-  // Candidatures recues sur toutes les annonces du titulaire
+  // Candidatures recues sur toutes les annonces du titulaire.
+  // Migration 076 : RLS profiles durcie -> on fetch les profils via profiles_public en
+  // 2e query + merge client (impossible d'embed profiles directement maintenant).
   const { data: candidatures, isLoading } = useQuery({
     queryKey: ['dashboard', 'candidatures-recues-all', userId],
     queryFn: async () => {
@@ -60,18 +62,32 @@ function TitulaireCandidatures({
         .from('candidatures')
         .select(`
           *,
-          profiles!candidatures_remplacant_id_profiles_fkey(first_name, last_name),
           annonces!inner(profile_id, ville, type_annonce)
         `)
         .order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
-      // Filtrer sur les annonces du titulaire
-      return ((data ?? []) as Array<
+
+      const filtered = ((data ?? []) as Array<
         CandidatureRow & {
-          profiles: { first_name: string; last_name: string } | null;
           annonces: { profile_id: string; ville: string; type_annonce: string };
         }
       >).filter((c) => c.annonces?.profile_id === userId);
+
+      const userIds = Array.from(
+        new Set(filtered.map((c) => c.remplacant_id).filter(Boolean) as string[])
+      );
+      let profileMap = new Map<string, { first_name: string; last_name: string }>();
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from('profiles_public')
+          .select('user_id, first_name, last_name')
+          .in('user_id', userIds);
+        profileMap = new Map(
+          (profs ?? []).map((p) => [p.user_id, { first_name: p.first_name, last_name: p.last_name }])
+        );
+      }
+
+      return filtered.map((c) => ({ ...c, profiles: profileMap.get(c.remplacant_id) ?? null }));
     },
     enabled: !!userId,
     staleTime: 30_000,
