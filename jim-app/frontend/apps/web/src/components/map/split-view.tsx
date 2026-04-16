@@ -11,15 +11,16 @@ import type { MapMarker } from '@jim/shared';
 import { Navigation } from 'lucide-react';
 
 // Conversion MapMarker -> ListingData pour la sidebar
+// Affiche le pourcentage de retrocession reel — pas de prix journalier fabrique
+// (voir Bug 3 du QA 2026-04-16).
 function markerToListing(marker: MapMarker): ListingData {
   const retro = marker.retrocession ?? 80;
-  const prixJour = Math.round(retro * 3.5);
 
   return {
     id: marker.id,
     ville: marker.ville,
     description: `Remplacement kine a ${marker.ville}`,
-    prixJour,
+    retrocessionPct: retro,
     isUrgent: marker.is_urgent,
     source: marker.source,
     dateDebut: marker.date_debut,

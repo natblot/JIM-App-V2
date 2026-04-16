@@ -15,9 +15,10 @@ interface HomeGridProps {
 }
 
 // Transforme une annonce Supabase en ListingData (avec source + rpps)
+// Affiche le pourcentage de retrocession reel — pas de prix journalier fabrique
+// (voir Bug 3 du QA 2026-04-16, ancien `Math.round(retro * 3.5)` retire).
 function annonceToListing(annonce: AnnonceRow | GeoAnnonce): ListingData {
   const retro = annonce.retrocession ?? 80;
-  const prixJour = Math.round(retro * 3.5);
 
   // photo_urls est present sur AnnonceRow mais pas sur GeoAnnonce
   const firstPhoto = 'photo_urls' in annonce ? (annonce as AnnonceRow).photo_urls?.[0] : undefined;
@@ -26,7 +27,7 @@ function annonceToListing(annonce: AnnonceRow | GeoAnnonce): ListingData {
     id: annonce.id,
     ville: annonce.ville ? `${annonce.ville}, France` : 'France',
     description: annonce.description ?? `Remplacement ${annonce.type_annonce ?? 'kinesitherapie'} — ${retro}% retrocession`,
-    prixJour,
+    retrocessionPct: retro,
     ...(firstPhoto ? { image: firstPhoto } : {}),
     specialites: annonce.specialites ?? [],
     isUrgent: annonce.is_urgent,

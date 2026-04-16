@@ -45,7 +45,6 @@ export default async function AnnoncePage({ params }: Props) {
   const dateDebut = new Date(annonce.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const dateFin = new Date(annonce.date_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const retro = annonce.retrocession ?? 80;
-  const prixJour = Math.round(retro * 3.5);
   const structuredData = buildJobPostingSchema(annonce);
 
   // Image reelle ou placeholder deterministe
@@ -187,9 +186,9 @@ export default async function AnnoncePage({ params }: Props) {
           <div className="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
             <div className="mb-6">
               <p className="text-3xl font-bold text-neutral-900 mb-1">
-                {prixJour}€<span className="text-lg font-normal text-neutral-500">/jour</span>
+                {retro}%
               </p>
-              <p className="text-sm text-neutral-500">Retrocession {retro}%</p>
+              <p className="text-sm text-neutral-500">de retrocession</p>
             </div>
 
             {isNative ? (
@@ -235,7 +234,6 @@ export default async function AnnoncePage({ params }: Props) {
       {/* Barre CTA flottante — mobile/tablette uniquement (le sticky aside prend le relais en >= lg) */}
       <MobileCtaBar
         annonceId={annonce.id}
-        prixJour={prixJour}
         retro={retro}
         isNative={isNative}
         sourceUrl={annonce.source_url ?? null}

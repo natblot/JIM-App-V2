@@ -9,7 +9,9 @@ export interface ListingData {
   rating?: number;
   reviewCount?: number;
   description: string;
-  prixJour: number;
+  // Pourcentage de retrocession negocie (info contractuelle reelle, pas de prix
+  // journalier fabrique a la volee — voir Bug 3 du QA 2026-04-16).
+  retrocessionPct: number;
   specialites?: string[] | undefined;
   isUrgent?: boolean | undefined;
   isRppsVerified?: boolean | undefined;
@@ -70,12 +72,12 @@ export function ListingCard({ listing }: { listing: ListingData }) {
         )}
       </div>
 
-      {/* Titre + prix sur la meme ligne */}
+      {/* Titre + retrocession sur la meme ligne */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <h3 className="font-bold text-sm text-gray-900 truncate">{listing.ville}</h3>
         <div className="text-sm flex-shrink-0">
-          <span className="font-bold text-gray-900">{listing.prixJour}€</span>
-          <span className="text-gray-500 text-xs">/jour</span>
+          <span className="font-bold text-gray-900">{listing.retrocessionPct}%</span>
+          <span className="text-gray-500 text-xs ml-1">retro.</span>
         </div>
       </div>
 

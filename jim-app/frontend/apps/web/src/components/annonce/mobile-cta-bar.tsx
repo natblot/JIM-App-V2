@@ -5,16 +5,16 @@ import { PostulerButton } from './postuler-button';
 
 // Barre CTA flottante mobile/tablette — pattern marketplace detail (Airbnb/Booking).
 // Disparait en >= lg (le sticky aside desktop prend le relais).
-// Affiche prix a gauche + bouton Postuler compact a droite.
+// Affiche la retrocession reelle a gauche + bouton Postuler compact a droite
+// (voir Bug 3 du QA 2026-04-16, ancien prix/jour fabrique retire).
 interface MobileCtaBarProps {
   annonceId: string;
-  prixJour: number;
   retro: number;
   isNative: boolean;
   sourceUrl: string | null;
 }
 
-export function MobileCtaBar({ annonceId, prixJour, retro, isNative, sourceUrl }: MobileCtaBarProps) {
+export function MobileCtaBar({ annonceId, retro, isNative, sourceUrl }: MobileCtaBarProps) {
   return (
     <div
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-[0_-4px_16px_rgba(58,31,8,0.08)]"
@@ -23,9 +23,9 @@ export function MobileCtaBar({ annonceId, prixJour, retro, isNative, sourceUrl }
       <div className="flex items-center gap-3 px-4 py-3 max-w-[600px] mx-auto">
         <div className="flex-shrink-0">
           <p className="text-lg font-bold text-neutral-900 leading-tight">
-            {prixJour}€<span className="text-xs font-normal text-neutral-500">/jour</span>
+            {retro}%
           </p>
-          <p className="text-[11px] text-neutral-500">Retrocession {retro}%</p>
+          <p className="text-[11px] text-neutral-500">retrocession</p>
         </div>
         <div className="flex-1 min-w-0">
           {isNative ? (
