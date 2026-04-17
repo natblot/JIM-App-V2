@@ -107,9 +107,8 @@ h3 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 
 @media (min-width: 1024px) {
   .kanban-column {
-    min-width: 380px;
-    max-width: 420px;
-    width: auto;
+    flex: 1 1 0%;
+    min-width: 260px;
     height: 100%;
   }
 }

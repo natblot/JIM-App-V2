@@ -20,8 +20,8 @@ export default async function Home() {
   const { annonces } = await fetchActiveAnnonces(50, 0);
 
   return (
-    <div className="lg:h-screen lg:overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] lg:h-screen pt-[160px] lg:pt-[200px] px-4 md:px-10 max-w-[1600px] mx-auto gap-6 lg:gap-8">
+    <div>
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] pt-[160px] lg:pt-[200px] px-4 md:px-10 max-w-[1600px] mx-auto gap-6 lg:gap-8">
         {/* Sidebar — masquee sur mobile */}
         <aside className="hidden lg:flex flex-col gap-4 overflow-y-auto no-scrollbar pb-24">
           <Suspense>
