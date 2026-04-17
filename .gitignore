@@ -55,6 +55,9 @@ coverage/
 # Claude Code
 .claude/
 
+# Routines secrets
+**/docs/routines/secrets.md
+
 # Next.js build cache
 tmp/
 .turbo/

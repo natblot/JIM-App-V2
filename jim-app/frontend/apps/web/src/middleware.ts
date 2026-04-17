@@ -4,9 +4,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isValidRedirect } from './lib/validate-redirect';
 
 // Routes qui necessitent une session authentifiee
-// Note : /messages est protege par AuthGuard client-side dans (app)/layout.tsx
-// Le middleware ne voit pas les sessions localStorage-only de Supabase
-const PROTECTED_ROUTES = ['/profil', '/contrats'];
+// Note : Les routes du groupe (app)/ sont protegees par AuthGuard client-side
+// dans (app)/layout.tsx. Le middleware ne voit pas les sessions localStorage-only
+// de Supabase, donc on retire /messages, /dashboard, /publier, /contrat, /paiement
+// pour eviter une redirection en boucle.
+const PROTECTED_ROUTES: string[] = [];
 const ADMIN_ROUTES = ['/admin'];
 // Routes accessibles UNIQUEMENT sans session
 const AUTH_ROUTES = ['/login', '/register', '/reset-password', '/update-password'];

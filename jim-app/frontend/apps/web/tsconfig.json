@@ -6,6 +6,7 @@
     "jsx": "preserve",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],

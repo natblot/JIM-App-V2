@@ -10,9 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#FEF9F5',
     theme_color: '#E8844A',
-    icons: [
-      { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
+    // Icons PWA a ajouter : deposer icon-192.png et icon-512.png dans public/
+    // puis reintegrer les entries ci-dessous.
+    icons: [],
   };
 }

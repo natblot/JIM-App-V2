@@ -11,10 +11,22 @@
 --
 -- NB : on garde la FK historique vers auth.users pour le cascade delete natif Supabase.
 
-ALTER TABLE candidatures
-  ADD CONSTRAINT candidatures_remplacant_id_profiles_fkey
-  FOREIGN KEY (remplacant_id) REFERENCES profiles(user_id)
-  ON DELETE CASCADE;
+-- Idempotent : skip si la contrainte existe deja (rejeu de la migration sur un DB
+-- ou le fix a deja ete applique manuellement via SQL Editor)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'candidatures_remplacant_id_profiles_fkey'
+      AND conrelid = 'public.candidatures'::regclass
+  ) THEN
+    ALTER TABLE candidatures
+      ADD CONSTRAINT candidatures_remplacant_id_profiles_fkey
+      FOREIGN KEY (remplacant_id) REFERENCES profiles(user_id)
+      ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- Rafraichir le cache de schema PostgREST pour que la nouvelle relation soit visible
 NOTIFY pgrst, 'reload schema';

@@ -1,148 +1,94 @@
 # CLAUDE.md — JIM (Job In Med)
 
 ## Identite du projet
-JIM est une plateforme B2B Adaptive Multi-Breakpoint pour kinesitherapeutes francais.
-Marketplace two-sided : remplacants <-> titulaires.
-Domaine : healthcare reglemente (RPPS, HDS, RGPD, Ordre MK).
+
+JIM est une marketplace B2B mobile-first pour kinesitherapeutes francais (remplacants ↔ titulaires).
+Domaine healthcare reglemente (RPPS, HDS, RGPD, Ordre MK).
 **13 Epics completes** — MVP pret pour beta launch.
+Historique des sprints : `docs/history/sprints.md`
 
 ## Structure du projet
 
 ```
 jim-app/
-├── backend/
-│   ├── supabase/
-│   │   ├── migrations/      # 61 migrations SQL (007 -> 067)
-│   │   ├── functions/       # 27 Edge Functions (Deno)
-│   │   │   └── _shared/     # stripe/, audit.ts, rate-limiter.ts
-│   │   ├── tests/           # Rapports RLS par Epic
-│   │   └── README.md        # Documentation backend (pg_cron, secrets)
-│   └── scripts/             # Scripts batch (import CSV, etc.)
+├── backend/supabase/
+│   ├── migrations/         # 79 migrations SQL (007 → 079)
+│   ├── functions/          # 27 Edge Functions (Deno)
+│   │   └── _shared/        # stripe/, audit.ts, rate-limiter.ts
+│   └── tests/
 ├── frontend/
 │   ├── apps/
-│   │   ├── mobile/          # React Native / Expo SDK 54
-│   │   │   ├── app/                     # Expo Router (30+ ecrans)
-│   │   │   │   ├── (app)/               # Ecrans authentifies
-│   │   │   │   │   ├── annonce/         # Detail annonce
-│   │   │   │   │   ├── calendrier/      # Calendrier disponibilites
-│   │   │   │   │   ├── contrats/        # Contrats IA
-│   │   │   │   │   ├── conversations/   # Messagerie
-│   │   │   │   │   ├── notation/        # Notation post-remplacement
-│   │   │   │   │   ├── paiements/       # Versement retrocession
-│   │   │   │   │   ├── parametres/      # Settings (paiement, parrainage, rgpd, support)
-│   │   │   │   │   ├── propositions/    # Propositions directes
-│   │   │   │   │   └── profil-contact/  # Profil contact
-│   │   │   │   └── (auth)/              # Ecrans non-authentifies
-│   │   │   └── google-services.json     # Firebase config
-│   │   └── web/             # Next.js 16.1 (landing + messagerie + admin)
-│   │       └── src/
-│   │           ├── app/
-│   │           │   ├── (auth)/           # Login, Register (Sprint P0)
-│   │           │   ├── (marketing)/      # Pages publiques (Header+Footer)
-│   │           │   ├── (app)/            # Pages authentifiees (AuthGuard)
-│   │           │   └── admin/            # Dashboard admin (E12)
-│   │           ├── components/
-│   │           │   ├── annonce/          # PostulerButton (Sprint P0)
-│   │           │   ├── auth/            # AuthGuard (Sprint P0)
-│   │           │   ├── landing/          # Cards, grid, search, pagination
-│   │           │   ├── layout/           # Header (auth-aware), Footer
-│   │           │   ├── messaging/        # Messagerie (E6)
-│   │           │   └── providers/        # AuthProvider, QueryProvider
-│   │           └── lib/                  # Supabase SSR/browser clients, SEO
+│   │   ├── mobile/         # React Native / Expo SDK 54 (Expo Router)
+│   │   └── web/            # Next.js 16.1 (landing + dashboard + admin)
 │   └── packages/
-│       ├── shared/
-│       │   └── src/
-│       │       ├── adapters/            # Supabase client, offline store
-│       │       ├── constants/           # Notification types, annonce status, blocked domains
-│       │       ├── hooks/               # 53 hooks (TanStack Query)
-│       │       ├── stores/              # Zustand (auth, ui, offline)
-│       │       ├── types/               # Database (auto-gen), contrat, paiement
-│       │       ├── utils/               # CSV parser, phishing detector, sensitive keywords
-│       │       └── validators/          # 13 schemas Zod
-│       └── ui/
-│           └── src/                     # 31 composants (NativeWind v4)
-└── .env.local.example
+│       ├── shared/src/     # hooks/ (53), validators/ (13 Zod), stores/, types/, adapters/
+│       └── ui/src/         # 31 composants NativeWind v4
+└── _bmad-output/planning-artifacts/  # prd.md, architecture.md, epics.md, ux-design-specification.md
 ```
 
-## Documents de reference
-- PRD : `../_bmad-output/planning-artifacts/prd.md`
-- Architecture : `../_bmad-output/planning-artifacts/architecture.md`
-- UX Design : `../_bmad-output/planning-artifacts/ux-design-specification.md`
-- Epics : `../_bmad-output/planning-artifacts/epics.md`
-- Images UX : `/Users/nathanblottiaux/Desktop/JIM App V2/Image/`
+Images UX de reference : `/Users/nathanblottiaux/Desktop/JIM App V2/Image/`
 
-## Commandes de dev
+## Commandes
 
 ```bash
-# Mobile
-cd frontend/apps/mobile && npx expo start
-
-# Web
-cd frontend/apps/web && pnpm dev
-
-# Tests (depuis la racine)
-pnpm vitest run
-
-# Supabase (depuis la racine, avec --workdir)
-supabase db push --workdir backend/supabase
-supabase functions deploy <name> --workdir backend/supabase
-supabase functions list --workdir backend/supabase
-supabase secrets set KEY=VALUE      # Configurer un secret
-supabase migration list             # Etat des migrations
+cd frontend/apps/mobile && npx expo start          # Mobile
+cd frontend/apps/web && pnpm dev                   # Web
+pnpm vitest run                                    # Tests (racine)
+supabase db push --workdir backend/supabase        # Migrations
+supabase functions deploy <name> --workdir backend/supabase  # Edge Functions
 ```
 
 ## Regles absolues
 
 ### Langue
-- Code : ANGLAIS (variables, fonctions, composants, types)
-- Commentaires : FRANCAIS
-- Commits : FRANCAIS, Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`)
-- Messages utilisateur : FRANCAIS, ton collegue bienveillant
-- Logs : ANGLAIS
+- Code (variables, fonctions, types) : **ANGLAIS**
+- Commentaires, commits, messages UI : **FRANCAIS**
+- Commits : Conventional Commits francais (`feat(epic-N):`, `fix:`, `chore:`)
+- Ton UI : collegue bienveillant qui connait le metier de kine
 
 ### TypeScript
-- `strict: true` — JAMAIS de `any`, JAMAIS de `@ts-ignore`
-- Types generes par Supabase CLI (`supabase gen types`)
+- `strict: true` — ZERO `any`, ZERO `@ts-ignore`
+- Types generes par `supabase gen types`
 - Schemas Zod dans `@jim/shared/validators/` — source unique de validation
 - Pas de barrel exports (sauf `@jim/ui`)
 
 ### Architecture hexagonale legere
-- JAMAIS d'import direct de `@supabase/supabase-js` dans `apps/` — via `@jim/shared/adapters/`
-- Les modules metier sont des packages TypeScript purs
+- JAMAIS d'import direct de `@supabase/supabase-js` dans `apps/` — passer par `@jim/shared/adapters/`
 - Chaque service externe derriere une interface
 
 ### Securite (NON NEGOCIABLE)
-- RLS sur CHAQUE table — policies par role (remplacant/titulaire/admin)
-- Zod validation cote client ET cote serveur (Edge Functions)
-- Rate limiting : 3 comptes/IP/jour, 100 req/h recherche (table `rate_limits`)
-- Sanitization de TOUS les champs texte libre
-- Push notifications : payload generique UNIQUEMENT, zero donnee personnelle
-- Tokens : 15min access / 7j refresh, expo-secure-store sur mobile
-- RPPS = gate obligatoire
-- Stripe : cles `sk_test_*` UNIQUEMENT avant HDS, verification au runtime
-- Webhook Stripe : signature verifiee avec `constructEvent()`, idempotent
-- Montants financiers : TOUJOURS en centimes (INT), `Math.round()` pour l'arrondi
-- Audit logs : JAMAIS de mots de passe, tokens, IBAN, contenu messages
+
+| Regle | Detail |
+|-------|--------|
+| RLS | Policy par role sur CHAQUE table. Lectures inter-users via `profiles_public` (vue projetee, colonnes publiques uniquement) |
+| Zod | Validation client ET serveur (Edge Functions) |
+| Rate limiting | 3 comptes/IP/jour, 100 req/h recherche — `table rate_limits` + `_shared/rate-limiter.ts` |
+| Sanitization | Echappement HTML (`<>&"'`) de tous les champs texte libre avant INSERT |
+| Push notifications | Payload generique UNIQUEMENT, zero donnee personnelle (NFR18) |
+| Tokens | 15min access / 7j refresh, `expo-secure-store` sur mobile |
+| RPPS | Gate obligatoire — aucun acces metier sans verification RPPS |
+| Stripe cles | `sk_test_*` UNIQUEMENT avant HDS. `getStripe()` DOIT rejeter si la cle ne commence pas par `sk_test_` |
+| Stripe webhook Deno | `constructEventAsync()` + `Stripe.createSubtleCryptoProvider()` — JAMAIS `constructEvent()` synchrone (incompatible Deno runtime). Ref : `_shared/stripe/stripe.webhook-handler.ts` |
+| Stripe HTTP client Deno | `Stripe.createFetchHttpClient()` dans le constructeur — JAMAIS `node:http` |
+| Montants financiers | TOUJOURS en centimes (INT), `Math.round()` pour l'arrondi |
+| Audit logs | JAMAIS de mots de passe, tokens, IBAN, contenu messages |
+| Mot "commission" | N'apparait JAMAIS dans l'UI → "frais de gestion" ou "service de securisation professionnelle" |
+
+### UX & Design
+
+- Design tokens dans `tailwind.config.js` — JAMAIS de couleurs en dur. Ref : `docs/design-tokens.css`
+- Composants dans `@jim/ui` — NativeWind v4 + Reanimated + Gesture Handler
+- Zones de tap minimum 44x44 points
+- Contrastes 4.5:1 minimum
+- Support tailles de police systeme
+- App < 50 MB, cold start < 3s
+- Pas d'emoji dans l'UI sauf demande explicite
 
 ### Strategie Responsive — Adaptive Multi-Breakpoint
-- **Approche** : Adaptive Multi-Breakpoint (PAS "mobile-first") — conception simultanee mobile/tablette/desktop
-- **Breakpoints** : default(0) / xs(375) / sm(640) / md(768) / lg(1024) / xl(1280) / 2xl(1536)
-- **Layout landing** : Kanban dashboard `h-screen` — sidebar 320px (lg+) + kanban horizontal 3 colonnes (Urgentes/Pres de moi/Nouveau)
-- **Images** : `h-28 rounded-xl object-cover`, lazy loading
-- **Animations** : staggered card reveal (class `.annonce-card`), `prefers-reduced-motion` respecte
-- **Design tokens** : variables CSS custom (`--jim-*`) dans `globals.css` pour couleurs, spacing, motion, shadows
-- **Typographie** : Manrope (Google Fonts), `clamp()` pour scaling fluide
-- **Conteneur** : `max-w-[1600px] mx-auto`, header flottant `max-w-[1280px]`
-- Zones de tap minimum 44x44 points
-- Support tailles de police systeme
-- Contrastes 4.5:1 minimum
-- App < 50 MB, cold start < 3s
 
-### UX Design
-- Design tokens dans `tailwind.config.js` racine — JAMAIS de couleurs en dur
-- Composants dans `@jim/ui` — NativeWind v4 + Reanimated + Gesture Handler
-- Ton : collegue bienveillant qui connait le metier de kine
-- Le mot "commission" n'apparait JAMAIS dans l'UI -> "frais de gestion" ou "service de securisation"
+Conception simultanee mobile/tablette/desktop (PAS "mobile-first").
+Breakpoints : default(0) / xs(375) / sm(640) / md(768) / lg(1024) / xl(1280) / 2xl(1536).
+Conteneur : `max-w-[1600px] mx-auto`.
 
 ### Donnees et API
 - Lectures : client Supabase direct (`.from().select()`) — cachees par TanStack Query
@@ -150,802 +96,77 @@ supabase migration list             # Etat des migrations
 - Temps reel : Supabase Realtime Postgres Changes
 - Format API : `{ data: result }` ou `{ error: { code, message } }`
 - Dates : ISO 8601 UTC
+- Edge Functions : ≤ 40 lignes dans `index.ts`, logique dans `_shared/`
 
 ### Tests
 - Tests unitaires co-localises (Vitest)
 - Tests RLS par Epic dans `supabase/tests/`
-- Tests Zod validation par schema
-- 120+ tests passes
-
-### Git
-- Conventional Commits en francais
-- Format : `feat(epic-N): description`
-
-### Design Tokens JIM — Palette Orange Pastel (v2.0, avril 2026)
-```css
-/* === Typographie === */
-/* Principale : Manrope (Google Fonts) — geometrique moderne, variable */
---font-primary: 'Manrope', system-ui, sans-serif;
-
-/* === Orange principal === */
---jim-primary:        oklch(0.65 0.14 45);   /* #E8844A — CTA, icones actives */
---jim-primary-mid:    oklch(0.73 0.10 45);   /* #F0A07A — hover, variante */
---jim-primary-soft:   oklch(0.82 0.07 45);   /* #F7C5A0 — separateurs, accents */
---jim-primary-pale:   oklch(0.93 0.03 45);   /* #FDEADE — backgrounds chips/badges */
-
-/* === Accents === */
---jim-accent:         oklch(0.57 0.17 38);   /* #D4603A — orange brule, highlights */
---jim-accent-warm:    oklch(0.78 0.12 60);   /* #F5B86A — ambre/miel */
-
-/* === Surfaces & fonds === */
---jim-background:     oklch(0.98 0.008 55);  /* #fdf6ed — fond global beige chaud */
---jim-surface:        oklch(1.00 0.00 0);    /* #FFFFFF — carte, modal */
---jim-surface-alt:    oklch(0.95 0.02 50);   /* #FBF0E8 — surface secondaire */
-
-/* === Sable orange === */
---jim-beige-dark:     oklch(0.83 0.04 52);   /* #DCBFA0 */
---jim-beige-mid:      oklch(0.88 0.03 52);   /* #EDD9C4 — bordure */
---jim-beige-light:    oklch(0.93 0.02 52);   /* #F7EDE0 */
-
-/* === Texte === */
---jim-text:           oklch(0.20 0.04 45);   /* #3A1F08 — titres */
---jim-text-body:      oklch(0.30 0.04 42);   /* #5A3418 — corps */
---jim-muted:          oklch(0.52 0.06 45);   /* #96694A — secondaire */
---jim-border:         oklch(0.88 0.03 52);   /* #EDD9C4 — separateurs */
-
-/* === Semantique === */
---jim-success:        oklch(0.63 0.07 148);  /* #6B9E72 — vert sauge */
---jim-success-bg:     oklch(0.95 0.03 148);  /* #EAF3EB */
---jim-warning:        oklch(0.65 0.12 70);   /* #C8882A — ambre */
---jim-warning-bg:     oklch(0.96 0.04 70);   /* #FBF0DC */
---jim-destructive:    oklch(0.53 0.14 28);   /* #C45040 — rouge orange */
---jim-destructive-bg: oklch(0.95 0.03 28);   /* #FAEBE8 */
-
-/* === Ombres (warm-tinted orange, jamais bleu-gris) === */
---jim-shadow:         0 2px 16px 0 rgba(58,31,8,0.08);
---jim-shadow-hover:   0 4px 28px 0 rgba(58,31,8,0.15);
-
-/* === Rayons === */
---jim-radius-sm: 8px;
---jim-radius:    16px;
---jim-radius-lg: 24px;
---jim-radius-xl: 36px;
-```
-> Charte graphique complete : `jim-brand-guide.html` - Logos : `jim-logo-icon.png`, `jim-logo-horizontal.png`
-
-### Landing Page Web (Epic 13) — Kanban Dashboard Conversationnel
-- Maquette de reference : maquette HTML "Conversational Search" (kanban + search conversationnelle)
-- **Le design retenu est le style Kanban Dashboard** : header flottant, search conversationnelle, sidebar preferences, colonnes kanban
-- Police : **Manrope** (pas Inter) — `next/font/google`, variable `--font-manrope`
-- Couleurs brand : `#ff7c5c` (corail), `#fdf6ed` (body bg beige chaud)
-- Icones : lucide-react + Material Symbols (tune icon)
-- Layout : dashboard fixe `h-screen overflow-hidden`, grid `[320px_1fr]` (sidebar + kanban)
-- Structure : `frontend/apps/web/src/`
-  - `components/layout/header.tsx` — **header flottant** (`fixed top-6`, centered max-w-1280px) : 3 lignes (logo+auth bubble | topic pills | search conversationnelle + CTA "Publier une annonce")
-  - `components/layout/footer.tsx` — **fixed bottom** glass morphism (`bg-white/80 backdrop-blur-md`), liens legaux uppercase
-  - `components/landing/categories-nav.tsx` — **topic pills** centrees (uppercase, sans icones, `bg-white/60 backdrop-blur`, active = `bg-white text-brand`)
-  - `components/landing/sidebar-preferences.tsx` — **NOUVEAU** sidebar gauche : carte Preferences (localisation + toggle prix) + carte Filtrage avance (honoraires, logement, tous filtres)
-  - `components/landing/home-grid.tsx` — **kanban board horizontal** 3 colonnes : Urgentes (orange) / Pres de moi (bleu) / Nouveau (vert), scroll vertical par colonne, class `.kanban-column`
-  - `components/landing/listing-card.tsx` — **kanban card** : `rounded-[24px] p-4`, image `h-28 rounded-xl`, titre+prix inline, location MapPin, tag pills, class `.annonce-card` (stagger animation)
-  - `components/landing/filters-panel.tsx` — panel droit filtres avances (tri, retrocession slider, type cabinet, specialites)
-  - `components/landing/search-overlay.tsx` — modal recherche ville autocomplete + dates
-  - `components/landing/floating-map-button.tsx` — bouton fixe `bg-slate-800` dark style, `bottom-24 right-8`
-  - `components/landing/banners.tsx` — DEPRECIE (logique deplacee dans sidebar-preferences)
-  - `components/landing/listings-grid.tsx` — DEPRECIE (remplace par home-grid kanban)
-  - `components/landing/pagination.tsx` — DEPRECIE (kanban ne pagine pas, charge 50 annonces)
-- Images : `next/image` avec domaines `lh3.googleusercontent.com` + `xfgktshirllqesnwmwpm.supabase.co` dans `next.config.ts`
-- Max width layout : `1600px` avec sidebar 320px
-
-### Messagerie Web (Epic 6) — Desktop View
-- Route : `/messages` — `force-dynamic`, page authentifiee
-- **Route groups Next.js** : `(marketing)/` pour pages publiques (Header+Footer), `(app)/` pour pages authentifiees (plein ecran + QueryProvider)
-- Layout plein ecran 4 panneaux : sidebar navigation | liste conversations | chat | panneau contact (toggle)
-- Providers : `QueryProvider` (TanStack Query) dans `(app)/layout.tsx`
-- Client Supabase browser : `lib/supabase-browser.ts` — lazy init via `@jim/shared/adapters/`
-- Hooks integres depuis `@jim/shared` : `useConversations`, `useMessages`, `useSendMessage`, `useMarkAsRead`
-- Realtime : Supabase Postgres Changes (INSERT/UPDATE messages + conversations)
-- Optimistic updates < 200ms sur envoi de messages
-- Icones : lucide-react (coherent avec le reste du web)
-- Structure : `frontend/apps/web/src/`
-  - `components/messaging/messages-view.tsx` — composant principal client (orchestration)
-  - `components/messaging/messaging-sidebar.tsx` — barre laterale navigation (logo + icones)
-  - `components/messaging/conversation-list.tsx` — liste conversations + recherche + badge unread
-  - `components/messaging/chat-view.tsx` — zone chat (header + messages + input)
-  - `components/messaging/message-bubble.tsx` — bulle message (envoyee/recue/systeme)
-  - `components/messaging/message-input.tsx` — saisie message (Enter pour envoyer, PJ, micro, emoji)
-  - `components/messaging/contact-panel.tsx` — profil contact, missions, fichiers partages
-  - `components/messaging/empty-chat.tsx` — etat vide
-  - `components/providers/query-provider.tsx` — TanStack Query provider
-
----
-
-## Audit Codebase — 2026-03-31
-
-### Fichiers analyses
-
-| Categorie | Nombre |
-|-----------|--------|
-| Fichiers TS/TSX (hors node_modules) | ~296 |
-| Migrations SQL | 66 |
-| Edge Functions | 24 (+ 4 fichiers _shared) |
-| Hooks partages | 53 |
-| Schemas Zod | 13 |
-| Composants UI | 31 |
-| Ecrans mobile | ~30 |
-| Pages web | 10 |
-| Tests | ~35 fichiers |
-
-### Repertoires vides supprimes (8)
-
-`packages/shared/api-client/`, `packages/shared/tokens/`, `packages/shared/adapters/`, `packages/shared/constants/`, `packages/shared/hooks/`, `packages/shared/stores/`, `packages/shared/types/`, `packages/shared/validators/` — tous vides, code reel dans `src/`.
-
-### Corrections appliquees
-
-| Fichier | Correction |
-|---------|-----------|
-| `packages/shared/src/hooks/useAlerteSimilaire.ts` | `console.log` supprime (code de debug) |
-| `packages/shared/src/hooks/useAvisProfile.ts` | `(a: any)` -> `(a: AvisRow)` (respect strict: true) |
-| `packages/shared/src/hooks/useSwitchRole.ts` | `(c: any)` -> type structure explicite (respect strict: true) |
-| `packages/shared/src/constants/index.ts` | Ajout export `blocked-domains.ts` (manquant) |
-| `.env.local.example` | Ajout FCM_PROJECT_ID, FCM_ACCESS_TOKEN, SUPPORT_EMAIL |
-
-### Problemes restants a traiter manuellement
-
-#### Critique
-1. **Migrations non appliquees sur le distant** — Les migrations 024-048 et 055-066 sont marquees "applied" dans le tracking mais n'ont jamais ete executees sur le DB distant. **Appliquer via Dashboard Supabase > SQL Editor** dans l'ordre.
-2. **Profil admin a creer** — Aucun profil avec `role = 'admin'` n'existe. Executer : `UPDATE profiles SET role = 'admin' WHERE email = 'votre-email@...';`
-3. **Deep links a configurer** — `TEAM_ID` dans `apple-app-site-association` et SHA256 dans `assetlinks.json` sont des placeholders.
-
-#### Non-critique
-4. **21 `any` dans les Edge Functions Deno** — Le SDK Supabase Deno n'a pas les memes types que le SDK Node. Garder `any` pour `supabaseAdmin` est acceptable dans ce contexte.
-5. **Test file mislabele** — `constants/message-types.test.ts` teste en realite `blocked-domains`. Renommer si souhaite.
-6. **Bucket Storage manquant** — `rgpd-exports` (pour l'export RGPD) doit etre cree dans Dashboard > Storage.
-
-### Prochaines etapes recommandees
-1. Appliquer les migrations manquantes sur le DB distant via SQL Editor
-2. Deployer le site web sur Vercel (`apps/web/`)
-3. Configurer les deep links (Apple Team ID + Android SHA256)
-4. Creer le bucket Storage `rgpd-exports`
-5. Creer le profil admin Nathan
-6. Tester le flow complet en sandbox : inscription -> annonce -> candidature -> contrat -> paiement
-7. Preparer le beta launch : inviter les premiers kinesitherapeutes testeurs
-
----
-
-## Audit Landing Page — 2026-04-04 (post Sprint P0)
-
-### Score global : 66 / 82 fonctionnalites operationnelles (80%)
-
-```
-Avant Sprint P0     : 32/82 (39%)
-Apres Sprint P0     : 49/82 (60%)  +17 fonctionnalites branchees
-Apres Sprint P0-Fix : 60/82 (73%)  +11 corrections appliquees
-Apres Sprint P1     : 66/82 (80%)  +6 fonctionnalites ajoutees
-```
-
-### Synthese par categorie (mise a jour post Sprint P1)
-
-| Categorie | Operationnel | Facade | Absent | Total |
-|---|---|---|---|---|
-| A. Auth & Session | 9 | 0 | 1 | 10 |
-| B. Recherche & Filtrage | 9 | 0 | 0 | 9 |
-| C. Grille & Cartes | 7 | 3 | 2 | 12 |
-| D. Carte geographique | 0 | 0 | 8 | 8 |
-| E. Detail annonce | 8 | 1 | 1 | 10 |
-| F. Messagerie | 10 | 1 | 0 | 11 |
-| G. Pages marketing & SEO | 9 | 0 | 0 | 9 |
-| H. Header/Footer/Nav | 5 | 2 | 0 | 7 |
-| I. Admin | 1 | 3 | 2 | 6 |
-| **TOTAL** | **58** | **10** | **14** | **82** |
-
-### Constats cles (post Sprint P1)
-1. **Recherche complete** — Ville + dates + filtres avances (retrocession min, type cabinet, specialite) + tri (date, retrocession)
-2. **Detail annonce enrichi** — Profil titulaire (prenom, RPPS, score, anciennete) + annonces similaires (RPC geo)
-3. **Filtres avances** — Panneau lateral avec retrocession slider, type cabinet, specialites, tri
-4. **RPPS badge fixe** — Conditionnel sur source native (gate obligatoire = RPPS verifie)
-5. **MOCK_LISTINGS supprime** — Fichier orphelin listings-grid.tsx supprime
-6. **Score 80%** — Les 14 items restants sont majoritairement carte geo (8) + admin avance (4) + facades cosmetiques (2)
-
-### Inventaire fichiers web (post Sprint P0)
-
-#### Routes & Pages (`app/`)
-
-| Fichier | Hooks @jim/shared | Appels Supabase | Statut |
-|---------|-------------------|-----------------|--------|
-| `layout.tsx` (root) | Non | Non | OK — QueryProvider + AuthProvider globaux |
-| `manifest.ts` | Non | Non | OK |
-| `robots.ts` | Non | Non | OK |
-| `sitemap.ts` | Non | **Oui** | OK — /calculateur retire |
-| `(auth)/layout.tsx` | Non | Non | **NOUVEAU** — layout auth centre + Suspense |
-| `(auth)/login/page.tsx` | **Oui** (`useSignIn`) | **Oui** | **NOUVEAU** — Zod validation, redirect param |
-| `(auth)/register/page.tsx` | **Oui** (`useSignUp`, `useRppsVerify`) | **Oui** | **NOUVEAU** — 3 etapes role/identite/RPPS |
-| `(marketing)/layout.tsx` | Non | Non | MODIFIE — Suspense autour du Header |
-| `(marketing)/page.tsx` | Non | **Oui** | MODIFIE — HomeGrid + Pagination + searchParams |
-| `(marketing)/a-propos/page.tsx` | Non | Non | OK |
-| `(marketing)/fonctionnalites/page.tsx` | Non | Non | OK |
-| `(marketing)/tarifs/page.tsx` | Non | Non | OK |
-| `(marketing)/messages/page.tsx` | Non | **Oui** | OK |
-| `(marketing)/annonce/[id]/page.tsx` | Non | **Oui** | MODIFIE — PostulerButton integre |
-| `(marketing)/invite/[code]/page.tsx` | Non | **Oui** | OK |
-| `(app)/layout.tsx` | Non | Non | MODIFIE — AuthGuard (plus de QueryProvider) |
-| `admin/*` (4 pages) | Non | **Oui** | FACADE — fetch reels mais aucun auth gate |
-
-#### Composants (`components/`) — nouveaux + modifies
-
-| Fichier | Hooks @jim/shared | Statut |
-|---------|-------------------|--------|
-| `providers/auth-provider.tsx` | **Oui** (onAuthStateChange) | **NOUVEAU** — user/session/supabase context |
-| `providers/query-provider.tsx` | Non | OK |
-| `auth/auth-guard.tsx` | **Oui** (useAuthContext) | **NOUVEAU** — redirect /login si pas de session |
-| `layout/header.tsx` | **Oui** (`useSignOut`, `useCurrentProfile`) | **REECRIT** — auth-aware, menu dropdown, search overlay |
-| `landing/home-grid.tsx` | **Oui** (`useSearchAnnonces`) | **NOUVEAU** — grille hybride SSR + recherche client |
-| `landing/search-overlay.tsx` | **Oui** (`useVilleAutocomplete`) | **NOUVEAU** — modal autocomplete ville |
-| `landing/pagination.tsx` | Non | **NOUVEAU** — pagination SEO-friendly |
-| `annonce/postuler-button.tsx` | **Oui** (`useCreateCandidature`, `useIncompatibilityCheck`) | **NOUVEAU** — auth + form + warnings |
-| `messaging/*` (8 fichiers) | **Oui** | OK — inchange |
-
-#### Fichiers supprimes (Sprint P0)
-
-| Fichier | Raison |
-|---------|--------|
-| `app/page.tsx` (racine V1) | Vestige layout marketing classique |
-| `app/a-propos/page.tsx` | Doublon de (marketing)/a-propos |
-| `app/fonctionnalites/page.tsx` | Doublon |
-| `app/tarifs/page.tsx` | Doublon |
-| `app/invite/[code]/page.tsx` | Doublon |
-| `app/annonce/[id]/page.tsx` | Doublon |
-| `app/calculateur/page.tsx` | Directive suppression |
-| `app/(marketing)/calculateur/page.tsx` | Directive suppression |
-| `components/calculateur/retrocession-calculator.tsx` | Directive suppression |
-
-#### Lib (`lib/`)
-
-| Fichier | Appels Supabase | Description |
-|---------|-----------------|-------------|
-| `seo.ts` | Non | Helpers metadata + JSON-LD |
-| `supabase-browser.ts` | Non (factory) | Client Supabase browser lazy-init via @jim/shared |
-| `supabase-server.ts` | **Oui** (3 queries) | MODIFIE — `fetchActiveAnnonces(limit, offset)` retourne `{ annonces, total }` avec count exact |
-
-### Evaluation detaillee par fonctionnalite (post Sprint P0)
-
-#### A. Authentification & Session Web (7/10 operationnel)
-
-| # | Fonctionnalite | Statut | Notes |
-|---|---|---|---|
-| A1 | Page connexion (login) | **OK** | `useSignIn` + Zod `signInSchema` + redirect param |
-| A2 | Page inscription | **OK** | 3 etapes role/identite/RPPS, `useSignUp` |
-| A3 | Verification RPPS inscription | **OK** | `useRppsVerify` + Edge Function `verify-rpps` |
-| A4 | Middleware routes protegees | **ABSENT** | AuthGuard client-side uniquement, pas de middleware.ts |
-| A5 | Session Supabase SSR | **OK** | `lib/supabase-server.ts` + `lib/supabase-browser.ts` |
-| A6 | Redirection post-login par role | **OK** | `?redirect=` param lu dans login page |
-| A7 | Deconnexion | **OK** | `useSignOut` dans dropdown menu header |
-| A8 | Mot de passe oublie | **ABSENT** | Pas de page reset-password |
-| A9 | Menu utilisateur (avatar header) | **OK** | Initiales dynamiques, dropdown Messages/Settings/Logout |
-| A10 | Etat connecte vs deconnecte header | **OK** | Conditionnel : boutons login/register vs avatar+menu |
-
-#### B. Recherche & Filtrage (4/9 operationnel)
-
-| # | Fonctionnalite | Statut | Notes |
-|---|---|---|---|
-| B1 | Barre recherche pilule (header) | **OK** | Ouvre SearchOverlay au clic, affiche ville active |
-| B2 | Recherche par ville/localisation | **OK** | `useSearchAnnonces` geo + `useVilleAutocomplete` |
-| B3 | Recherche par dates | ABSENT | Pas de champs dates dans la recherche |
-| B4 | Autocomplete villes | **OK** | api-adresse.data.gouv.fr, debounce 300ms |
-| B5 | Filtres avances | ABSENT | Bouton "Filtres" sans handler |
-| B6 | Tri | ABSENT | |
-| B7 | Sync filtres <> URL query params | **OK** | `?ville=...&lat=...&lng=...&r=...&page=...` |
-| B8 | Etat vide "Aucun resultat" | FACADE | HomeGrid affiche un message + bouton "Voir toutes les annonces" |
-| B9 | Pagination | **OK** | SSR offset/count + composant Pagination SEO-friendly (20/page) |
-
-#### C. Grille d'Annonces & Cartes (6/12 operationnel)
-
-| # | Fonctionnalite | Statut | Notes |
-|---|---|---|---|
-| C1 | Grille responsive 1>2>3>4 col | **OK** | `home-grid.tsx` via `listing-card.tsx` |
-| C2 | Carte annonce (image, localisation, prix) | **OK** | `annonceToListing()` dans home-grid.tsx |
-| C3 | Images reelles Supabase Storage | FACADE | Fallback PLACEHOLDER_IMAGES (URLs Google) |
-| C4 | Badge RPPS verifie | FACADE | Affiche sur toutes les cartes, jamais conditionnel |
-| C5 | Badge urgent | **OK** | Conditionnel sur `listing.isUrgent` |
-| C6 | Badge source (native vs Rempleo) | ABSENT | |
-| C7 | Dots carrousel images | FACADE | 5 dots statiques |
-| C8 | Hover animation | **OK** | `group-hover:scale-105 transition-transform` |
-| C9 | Staggered reveal animation | **OK** | CSS keyframes dans globals.css |
-| C10 | Donnees reelles (fetch Supabase) | **OK** | SSR `fetchActiveAnnonces` + search client |
-| C11 | Navigation categories | FACADE | Active state fonctionne mais ne filtre rien |
-| C12 | Bouton flottant "Voir la carte" | FACADE | Lien vers /messages (pas la carte!) |
-
-#### D. Carte Geographique (0/8 operationnel)
-
-Inchange. Aucun composant carte. Hook `useMapAnnonces` disponible mais non branche.
-
-#### E. Page Detail Annonce (6/10 operationnel)
-
-| # | Fonctionnalite | Statut | Notes |
-|---|---|---|---|
-| E1 | Route `/annonce/[id]` | **OK** | SSR `fetchAnnonceById` |
-| E2 | SSR/SSG pour SEO | **OK** | `generateMetadata()` |
-| E3 | Schema.org JobPosting | **OK** | JSON-LD |
-| E4 | Galerie images | FACADE | Placeholder images deterministes |
-| E5 | Infos completes | **OK** | Donnees reelles, format fr-FR |
-| E6 | Bouton "Postuler" | **OK** | `PostulerButton` — auth gate + form + `useCreateCandidature` + warnings incompatibilites |
-| E7 | Bouton "Contacter" | ABSENT | Redirige vers stores pour annonces externes |
-| E8 | Mini-carte localisation | ABSENT | |
-| E9 | Profil titulaire | ABSENT | |
-| E10 | Annonces similaires | ABSENT | |
-
-#### F. Messagerie Web (10/11 operationnel) — inchange
-
-#### G. Pages Marketing & SEO (9/9 operationnel) — inchange
-
-#### H. Header, Footer, Navigation (5/7 operationnel)
-
-| # | Fonctionnalite | Statut | Notes |
-|---|---|---|---|
-| H1 | Header sticky glass | **OK** | |
-| H2 | Logo "jim" cliquable | **OK** | |
-| H3 | Barre recherche pilule | **OK** | Ouvre SearchOverlay, affiche ville active |
-| H4 | Avatar/menu utilisateur | **OK** | Auth-aware, initiales, dropdown |
-| H5 | Footer liens legaux | **OK** | |
-| H6 | Footer langue/devise/support | FACADE | Selecteurs UI-only |
-| H7 | Bannieres | FACADE | Toggle sans effet |
-
-#### I. Admin Web (0/6 operationnel) — inchange
-
-### Plan d'action priorise
-
-#### P0 — Bloquant beta launch — FAIT (Sprint 2026-04-04)
-
-| # | Fonctionnalite | Statut | Fichier cree/modifie |
-|---|---|---|---|
-| 1 | Page connexion (login) | **FAIT** | `(auth)/login/page.tsx` |
-| 2 | Page inscription + RPPS | **FAIT** | `(auth)/register/page.tsx` (3 etapes) |
-| 3 | Protection routes auth | **PARTIEL** | `auth-guard.tsx` (client-side), middleware.ts absent |
-| 4 | Etat connecte/deconnecte header | **FAIT** | `header.tsx` reecrit + `auth-provider.tsx` |
-| 5 | Recherche connectee (ville) | **FAIT** | `search-overlay.tsx` + `home-grid.tsx` |
-| 6 | Bouton Postuler reel | **FAIT** | `postuler-button.tsx` |
-| 7 | Pagination grille | **FAIT** | `pagination.tsx` + `supabase-server.ts` modifie |
-| 8 | Redirection post-login | **FAIT** | `?redirect=` dans login page |
-
-#### P1 — Important premiere impression (~6.75 jours)
-
-| # | Fonctionnalite | Effort | Hooks disponibles |
-|---|---|---|---|
-| 9 | Filtres avances | 1j | `useSearchAnnonces` params supportes |
-| 10 | Tri | 0.5j | `useSearchAnnonces` orderBy |
-| 11 | Sync filtres <> URL params | 0.5j | `useSearchParams()` Next.js |
-| 12 | Etat vide "Aucun resultat" | 0.25j | Remplacer MOCK_LISTINGS |
-| 13 | Badge RPPS conditionnel | 0.25j | Lire `rpps_verified` |
-| 14 | Badge source (native vs Rempleo) | 0.25j | Champ `source` deja dans AnnonceRow |
-| 15 | Images Supabase Storage | 0.5j | `supabase.storage.getPublicUrl()` |
-| 16 | Profil titulaire (detail) | 0.5j | JOIN profiles + `useAvisProfile` |
-| 17 | Annonces similaires | 0.5j | `useAnnoncesSimilaires` (RPC pret) |
-| 18 | Categories nav fonctionnelle | 0.5j | Filtre `type_annonce` |
-| 19 | Contact panel donnees reelles | 0.5j | Fetch contrats + fichiers |
-| 20 | Admin auth gate | 0.5j | Middleware + role check |
-| 21 | Mot de passe oublie | 0.5j | `resetPasswordForEmail()` |
-| 22 | Autocomplete villes | 0.5j | `useVilleAutocomplete` |
-
-#### P2 — Nice to have launch (~10.25 jours)
-
-| # | Fonctionnalite | Effort |
-|---|---|---|
-| 23 | Carte geographique (composant + markers) | 3j |
-| 24 | Split view liste + carte desktop | 1j |
-| 25 | Clustering markers | 0.5j |
-| 26 | Interaction carte <> liste | 0.5j |
-| 27 | Geolocalisation "autour de moi" | 0.5j |
-| 28 | Carousel images carte annonce | 0.5j |
-| 29 | Staggered reveal animation | 0.25j |
-| 30 | Gestion utilisateurs admin | 1.5j |
-| 31 | Support tickets admin | 1j |
-| 32 | Footer langue/devise fonctionnel | 0.5j |
-| 33 | Bannieres donnees reelles | 0.5j |
-| 34 | Mini-carte detail annonce | 0.5j |
-
-### Hooks @jim/shared — Utilisation web (post Sprint P0)
-
-Sur **54 hooks** dans le package shared, **14 sont utilises** par le web (contre 4 avant le sprint).
-
-#### Hooks branches (14)
-**Messagerie (4):** `useConversations`, `useMessages`, `useSendMessage`, `useMarkAsRead`
-**Auth (5):** `useSignIn`, `useSignUp`, `useSignOut`, `useCurrentProfile`, `useRppsVerify`
-**Recherche (2):** `useSearchAnnonces`, `useVilleAutocomplete`
-**Candidature (2):** `useCreateCandidature`, `useIncompatibilityCheck`
-**Misc (1):** `useAuthContext` (custom hook web, pas shared)
-
-#### Hooks non utilises — P1 (premiere impression)
-`useMyProfile`, `useUpdateProfile`, `useUploadAvatar`, `useAnnoncesSimilaires`, `useAnnonceDetail`, `useMesCandidatures`, `useCandidaturesRecues`, `useProcessCandidature`, `useWithdrawCandidature`, `useFavoris`, `useAvisProfile`, `useUnreadCount`, `useSensitiveKeywords`, `useCreateSignalement`
-
-#### Hooks non utilises — P2 (nice to have)
-`useMapAnnonces`, `useCalendrier`, `useContrat`, `useGenerateContrat`, `useConfirmContrat`, `useUpdateClausesOptionnelles`, `useCreatePayment`, `useMesPaiements`, `useStripeOnboarding`, `useSubscription`, `useExportData`, `useDeleteAccount`, `useCreateAvis`, `usePropositions`, `useParrainageCode`, `useSwitchRole`, `useCreateSupportTicket`, `useNotificationPreferences`, `useNetworkStatus`, `useDebounce`, `usePhishingDetection`, `useCommissionCalculator`
-
-#### Stores Zustand non utilises
-`useAuthStore`, `useUIStore`, `useOfflineStore`
-
-### Nettoyage effectue (Sprint P0 — 2026-04-04)
-
-**6 doublons supprimes** : `app/a-propos/`, `app/fonctionnalites/`, `app/tarifs/`, `app/invite/`, `app/annonce/`, `app/calculateur/`
-**Calculateur supprime** : `(marketing)/calculateur/`, `app/calculateur/`, `components/calculateur/`, reference sitemap.ts
-**Page racine V1 supprimee** : `app/page.tsx` (hero/sections marketing) — `(marketing)/page.tsx` est la seule page d'accueil
-**Verification** : `grep -r "calculateur" src/` = 0 resultat
-
----
-
-## Spike Stripe Connect — 2026-03-27
-
-### Pattern selectionne : Destination Charges
-
-Le titulaire (payeur) cree un PaymentIntent via JIM. Stripe route le versement vers le Connected Account du remplacant (beneficiaire). JIM preleve la commission via `application_fee_amount`.
-
-**Pourquoi Destination Charges (et pas Separate Charges and Transfers) :**
-- Un seul appel API (`paymentIntents.create` avec `transfer_data`)
-- La commission (`application_fee`) est prelevee atomiquement
-- Le remplacant recoit directement sur son Connected Account
-- Gestion automatique des refunds par Stripe (reverse transfer)
-- Pattern recommande par Stripe pour les marketplaces simples
-
-### Type Connected Account : Express
-- Stripe gere le KYC (identite, IBAN, justificatifs)
-- Dashboard Stripe Express integre pour les utilisateurs
-- Moins de maintenance cote JIM
-- Onboarding via Account Links (redirect vers Stripe, retour dans l'app)
-
-### Mecanisme commission : `application_fee_amount`
-
-```typescript
-const paymentIntent = await stripe.paymentIntents.create({
-  amount: montantRetrocessionCents,        // ex: 400000 (4 000EUR)
-  currency: 'eur',
-  customer: titulaireStripeCustomerId,
-  payment_method: paymentMethodId,
-  transfer_data: {
-    destination: remplacantStripeAccountId, // acct_xxx du remplacant
-  },
-  application_fee_amount: commissionJimCents, // 0 en lancement, 1% sinon
-  confirm: true,
-  metadata: {
-    contrat_id: contratId,
-    paiement_id: paiementId,
-  },
-}, {
-  idempotencyKey: `paiement_${paiementId}`,
-});
-```
-
-### Mecanisme sequestre litiges : Applicatif (pas Stripe)
-
-Le paiement n'est PAS initie tant que le remplacant n'a pas valide le montant (ou que le delai de contestation est depasse). Le "sequestre" est applicatif :
-- Statut `en_attente_validation` -> le remplacant peut contester
-- Si contestation -> statut `conteste`, paiement bloque cote application
-- Si validation ou timeout 72h sans contestation -> le titulaire peut confirmer le versement
-
-Pas besoin de `capture_method: 'manual'` — le paiement Stripe n'est cree qu'apres accord des deux parties.
-
-### Flux d'onboarding
-1. L'utilisateur clique "Configurer le paiement" dans Parametres
-2. Edge Function `stripe-onboarding` cree un Connected Account Express
-3. Stripe retourne une Account Link URL
-4. L'app ouvre l'URL (Linking.openURL ou WebView)
-5. L'utilisateur complete le KYC sur Stripe
-6. Stripe envoie `account.updated` webhook -> on met a jour `stripe_onboarding_status`
-7. Quand `charges_enabled = true` -> statut `verified`
-
-### Webhook events a ecouter
-
-| Event | Action |
-|-------|--------|
-| `account.updated` | Mettre a jour `stripe_onboarding_status` dans profiles |
-| `payment_intent.succeeded` | UPDATE paiements SET status = 'confirme' |
-| `payment_intent.payment_failed` | UPDATE paiements SET status = 'echoue' |
-| `invoice.payment_succeeded` | Renouvellement abonnement Pro OK |
-| `invoice.payment_failed` | Abonnement Pro impaye -> `past_due` |
-| `customer.subscription.deleted` | Abonnement Pro annule -> `cancelled` |
-
-### Limitations identifiees
-1. **Express accounts** : l'utilisateur ne peut pas personnaliser son dashboard Stripe
-2. **Payout schedule** : T+2 minimum pour les virements vers l'IBAN
-3. **Devise** : EUR uniquement
-4. **Remboursements** : Stripe reverse le transfer automatiquement si contestation — JIM doit gerer le statut `rembourse`
-5. **RCP** : Verification justificatif hors Stripe — processus applicatif
-
-### Resume technique
+- 286+ tests passes
+
+## Stack verrouillee
+
+| Package | Version |
+|---------|---------|
+| Expo SDK | 54.x |
+| NativeWind | 4.2.x |
+| Tailwind CSS | 3.4.17 (PAS v4) |
+| Next.js | 16.1.x |
+| @supabase/supabase-js | 2.98.x |
+| Zod | ^4.0.0 |
+| TanStack Query | 5.90.x |
+| Zustand | 5.0.x |
+| Stripe SDK (Deno) | `stripe@14?target=deno` |
+
+## Landing Page Web — Kanban Dashboard Conversationnel
+
+Design retenu : Kanban Dashboard (PAS Airbnb marketplace).
+- Police : **Manrope** (`next/font/google`, `--font-manrope`)
+- Couleurs : `#ff7c5c` (corail), `#fdf6ed` (body bg beige chaud)
+- Layout : dashboard fixe `h-screen overflow-hidden` (lg+), vertical empile (<lg)
+- Header flottant : `fixed top-6`, centered `max-w-1280px`, 3 lignes (logo+auth | topic pills | search + CTA)
+- Kanban 3 colonnes : Urgentes (orange) / Pres de moi (Haversine 50km) / Nouveau
+- Sidebar : 320px (lg+), preferences + filtrage avance
+- Footer : `fixed bottom-0`, glass morphism `bg-white/80 backdrop-blur-md`
+- Self-exclusion : `profile_id != auth.uid()` silencieux sur le kanban
+- Fichiers cles : `home-grid.tsx`, `listing-card.tsx`, `sidebar-preferences.tsx`, `categories-nav.tsx`
+
+## Messagerie Web — Desktop View
+
+- Route : `(app)/messages/page.tsx` — protege AuthGuard client-side
+- Layout 4 panneaux : sidebar nav | conversations | chat | contact panel
+- Realtime : Postgres Changes (INSERT/UPDATE messages + conversations)
+- Optimistic updates < 200ms
+- Pills contexte contrat/paiement dans le chat header
+
+## Stripe Connect — Destination Charges
 
 | Aspect | Choix |
 |--------|-------|
-| Pattern | Destination Charges |
-| Connected Account | Express |
-| Commission | `application_fee_amount` |
-| Sequestre | Applicatif (pas Stripe) |
-| Onboarding | Account Links -> redirect |
-| Webhooks | 6 events (voir tableau) |
-| Sandbox | Valide, cles test configurees |
-| Production | BLOQUE jusqu'a validation HDS (~M5) |
+| Pattern | Destination Charges (`transfer_data.destination`) |
+| Connected Account | Express (Stripe gere KYC) |
+| Commission | `application_fee_amount` (0 au lancement, 1% ensuite) |
+| Sequestre | Applicatif — paiement cree apres accord des 2 parties (pas `capture_method: manual`) |
+| Onboarding | Account Links → redirect |
+| Webhooks | 6 events : `payment_intent.succeeded/failed`, `account.updated`, `invoice.payment_succeeded/failed`, `customer.subscription.deleted` |
 
----
+## Decisions techniques cles
 
-## Sprint Status — 13/13 Epics TERMINES
-
-### Recapitulatif general
-
-| Epic | Statut | Date |
-|------|--------|------|
-| Epic 1 — Fondations & Identite Verifiee | TERMINE | 2026-03-26 |
-| Epic 2 — Publication & Gestion d'Annonces | TERMINE | 2026-03-26 |
-| Epic 3 — Agregation d'Annonces Externes | TERMINE | 2026-03-26 |
-| Epic 4 — Recherche & Decouverte | TERMINE | 2026-03-26 |
-| Epic 5 — Candidatures & Selection | TERMINE | 2026-03-26 |
-| Epic 6 — Messagerie Integree | TERMINE | 2026-03-26 |
-| Epic 7 — Notifications & Calendrier | TERMINE | 2026-03-26 |
-| Epic 8 — Contrats IA | TERMINE | 2026-03-26 |
-| Epic 9 — Paiement Securise Stripe Connect | TERMINE | 2026-03-27 |
-| Epic 10 — Conformite RGPD & Securite | TERMINE | 2026-03-28 |
-| Epic 11 — Reputation, Parrainage & Extensions | TERMINE | 2026-03-28 |
-| Epic 12 — Administration & Moderation | TERMINE | 2026-03-29 |
-| Epic 13 — Landing Page Web & Outils Gratuits | TERMINE | 2026-03-31 |
-
-### Epic 1 : Fondations & Identite Verifiee — 2026-03-26
-
-**Stories :** Setup monorepo pnpm workspace (Expo 54 + Next.js 16.1), Tooling DX (NativeWind 4.2.3, Tailwind 3.4.17, ESLint flat, Vitest 4), Connexion brownfield Supabase, Inscription email/mdp (Zod, useSignUp), Auth magic link, Verification RPPS (Edge Function, mock dev, cache 6 mois, FR10), Recherche RPPS nom/prenom/ville, Profil lecture seule, Gestion profil (specialites, zone, photo), Deconnexion & permission push, Policies RLS, Consentement CGU.
-
-**Migrations :** 007-008 (setup initial)
-**Edge Functions :** `verify-rpps`, `search-rpps`
-**Hooks :** `useSignUp`, `useSignIn`, `useMagicLink`, `useSignOut`, `useRppsVerify`, `useSearchRpps`, `useCurrentProfile`, `useMyProfile`, `useUpdateProfile`, `useUploadAvatar`
-
-### Epic 2 : Publication & Gestion d'Annonces — 2026-03-26
-
-**Stories :** Publication (formulaire 3 etapes, geocodage, Edge Function), Annonce urgente (badge, trigger notification), Modification & fermeture, Republication, Statuts temps reel & cycle de vie.
-
-**Migrations :** 013 (annonces + RLS + PostGIS), 014 (notification_queue upgrade), 015 (triggers freshness), 016 (retrocession_moyenne)
-**Edge Functions :** `create-annonce` (Zod + sanitization + rate limiting 10/24h + geocodage), `update-annonce`
-**Composants UI :** StatusBadge, UrgentBadge, StepIndicator, RetrocessionIndicator, AnnonceCard
-**Hooks :** `useMyAnnonces`, `useAnnonce`, `useAnnoncesPubliques`, `useRetrocessionMoyenne`, `useCreateAnnonce`, `useUpdateAnnonce`, `useAnnonceRealtime`, `useVilleAutocomplete`
-**Tests :** 22 tests (annonce.schema, annonce-status, notification-types)
-
-### Epic 3 : Agregation d'Annonces Externes — 2026-03-26
-
-**Stories :** Pipeline agregation (AggregationSource interface, circuit breaker, deduplicator UPSERT), Source Rempleo (scraper HTML regex, rate limit 1s/page), UX annonces agregees (SourceBadge, AggregatedBanner, IncentivePublish), Securite & conformite (NFR36, sanitization, isValidSourceUrl), Tests & export batch.
-
-**Migrations :** 017-021 (aggregation tables, dedup index, notification types, profile_id nullable, RLS fixes)
-**Edge Functions :** `aggregate-annonces`
-**Utilitaires :** `format-freshness.ts`, `date-parser.ts`, `dedup-matcher.ts`
-**Scripts :** `import-batch-rempleo.ts` (import initial, --dry-run, --verify-only)
-**Tests :** 25 tests (dedup-matcher, date-parser, format-freshness) — Total cumulatif : 73
-
-### Epic 4 : Recherche & Decouverte d'Annonces — 2026-03-26
-
-**Stories :** Navigation conditionnelle par role, Ecran Recherche remplacant (FlashList, FilterBar, debounce 200ms, hooks geo), Vue carte placeholder (TODO react-native-maps), Detail annonce complet, Cache local & mode offline (OfflineStore FIFO 1000), Empty states engageants.
-
-**Migrations :** 022 (PostGIS search functions), 023 (search rate limiting 100 req/h)
-**Composants UI :** FilterBar, EmptyState, OfflineBanner, AnnonceSkeleton
-**Hooks :** `useSearchAnnonces`, `useMapAnnonces`, `useAnnonceDetail`, `useAnnoncesSimilaires`, `useNetworkStatus`, `useOfflineAnnonces`, `useDebounce<T>`
-**Stores :** `useUIStore` (vue, filtres, position carte, userLocation), `useOfflineStore` (isOnline, cache FIFO 1000)
-**Tests :** 19 tests (useDebounce, ui.store, offline.store) — Total cumulatif : 92
-
-**Notes :** `react-native-maps` non installe (MapPlaceholder) — necessite EAS Build. `useSearchAnnonces` active uniquement quand lat/lng != 0.
-
-### Epic 5 : Candidatures & Selection — 2026-03-26
-
-**Stories :** Postuler (gate douce incompatibilite, optimistic < 200ms), Pipeline candidatures titulaire (accepter/refuser avec cascade), Suivi candidatures remplacant (Realtime), Favoris (toggle, liste), Retrait candidature (UndoToast 5s), Offline queue (pendingActions FIFO, idempotencyKey).
-
-**Migrations :** 024-027 (candidatures + favoris + triggers + notification types)
-**Edge Functions :** `create-candidature`, `process-candidature` (cascade FR33), `withdraw-candidature`
-**Composants UI :** CandidatureCard, PipelineStatus, UndoToast, IncompatibilityWarning, FavoriButton
-**Hooks :** `useCreateCandidature`, `useProcessCandidature`, `useWithdrawCandidature`, `useMesCandidatures`, `useCandidaturesRecues`, `useFavoris`, `useIncompatibilityCheck`
-**Tests :** 20 tests — Total cumulatif : 112
-
-**Securite :** F4/F8 CRITIQUE — Policy SELECT titulaire expose coordonnees remplacant — masquage requis avant prod.
-
-### Epic 6 : Messagerie Integree — 2026-03-26
-
-**Stories :** Conversations & liste, Chat temps reel (Realtime, optimistic < 200ms), Masquage coordonnees (can_see_contact_info() SECURITY DEFINER), Anti-phishing (detectPhishing(), BLOCKED_DOMAINS), Messages offline.
-
-**Migrations :** 028-032 (conversations, messages, triggers, contact masking, fixes)
-**Composants UI :** ConversationListItem, UnreadBadge
-**Composants mobile :** MessageBubble, ChatInput, SystemMessage, PhishingWarning, ReadIndicator
-**Hooks :** `useConversations`, `useMessages`, `useSendMessage`, `useMarkAsRead`, `useUnreadCount`, `usePhishingDetection`
-**Utilitaires :** `phishing-detector.ts`, `blocked-domains.ts` (6 domaines typosquatting + 3 safe)
-**Tests :** 22 tests — Total cumulatif : 134
-
-**Notes :** INSERT direct client pour messages (pas Edge Function) -> latence < 200ms. Realtime channel par conversation : `messages:{conversationId}`.
-
-### Epic 7 : Notifications & Calendrier — 2026-03-26
-
-**Stories :** Dispatcher multi-canal (trigger immediat + pg_cron 15min, retry 3x backoff, fallback email), Notifications annonces matchantes (PostGIS, daily_push_count < 3), Notifications candidatures & messages, Preferences (3 toggles + pause), Relances automatiques, Calendrier disponibilites.
-
-**Migrations :** 033-039 (profiles push/fcm, calendrier, match_remplacants PostGIS, notification types, dispatch trigger, queue status, security fixes)
-**Edge Functions :** `dispatch-notifications`, `_shared/notification.service.ts`, `_shared/fcm.adapter.ts` (FCM HTTP v1)
-**Composants UI :** TogglePreference, CalendarDay
-**Hooks :** `useNotificationPreferences`, `useCalendrier`, `useUnreadNotifications`
-**Tests :** 25 tests — Total cumulatif : 159
-
-**Securite :** F1 CRITIQUE corrige (vue `profiles_public` sans fcm_token), F6 HAUT (FCM_ACCESS_TOKEN statique ~1h — Phase 2 : OAuth2 service account).
-
-### Epic 8 : Contrats IA — 2026-03-26
-
-**Stories :** Generation contrat pre-rempli (JSONB clauses, template v1.0), Resume visuel 5 points, Confirmation double & edition clauses, Telechargement PDF (expo-print HTML->PDF).
-
-**Migrations :** 040-043 (contrats + notification types + triggers + security fixes)
-**Edge Functions :** `generate-contrat` (generate / confirm / update_clauses), `_shared/contrat.service.ts`
-**Composants UI :** ContratStatusBadge, ContratSummary, ContratClause
-**Hooks :** `useContrat`, `useGenerateContrat`, `useConfirmContrat`, `useUpdateClausesOptionnelles`
-**Types :** `contrat.ts` (Contrat, ContratDonnees, ContratClause, ContratStatut)
-**Tests :** 42 tests — Total cumulatif : 201
-
-**Notes :** expo-print (pas @react-pdf/renderer) — seul renderer HTML->PDF compatible React Native natif. Confirmation double en service layer (controle fin titulaire/remplacant).
-
-### Epic 9 : Paiement Securise Stripe Connect — 2026-03-27
-
-**Stories :** Onboarding Stripe Connect (titulaire payeur + remplacant beneficiaire + RCP), Calcul & initiation versement, Traitement & confirmation (webhook idempotent), Mediation & litiges, Abonnement Pro.
-
-**Migrations :** 044-048 (profiles stripe, paiements + RLS, abonnements_pro, triggers, notification types)
-**Edge Functions :** `stripe-onboarding`, `create-payment`, `stripe-webhook` (signature verifiee, 6 events), `create-subscription`
-**Services _shared/stripe/ :** `stripe.service.ts`, `stripe.webhook-handler.ts`, `commission.calculator.ts`, `stripe.types.ts`
-**Composants UI :** PaymentStatusBadge, PaymentBreakdown, ProBadge
-**Hooks :** `useStripeOnboardingStatus`, `useStripeOnboarding`, `useCreatePayment`, `usePaiement`, `usePaiementByContrat`, `useMesPaiements`, `useSubscription`, `useCreateSubscription`, `useCancelSubscription`, `useCommissionCalculator`, `formatEuros`
-**Tests :** 27 tests — Total cumulatif : 228
-
-### Epic 10 : Conformite RGPD & Securite — 2026-03-28
-
-**Stories :** Export donnees RGPD (JSON, 11 tables, URL signee 48h, rate limit 1/jour), Suppression compte (J+30, anonymisation, conservation Stripe 6 ans), Rate limiting multi-niveau, Detection mots-cles sensibles (16 mots), Logs audit (immutable, 1 an), Detection comptes en double.
-
-**Migrations :** 049-054 (audit_logs, rate_limits, account_deletions, config_mots_sensibles, audit functions, notification types)
-**Edge Functions :** `export-data`, `delete-account`, `cancel-deletion`
-**Services partages :** `_shared/rate-limiter.ts`, `_shared/audit.ts`
-**Composants UI :** SensitiveKeywordWarning, RateLimitToast
-**Hooks :** `useExportData`, `useDeletionStatus`, `useDeleteAccount`, `useCancelDeletion`, `useSensitiveKeywordsList`, `useSensitiveKeywordDetection`
-**Tests :** 17 tests — Total cumulatif : 245
-
-### Epic 11 : Reputation, Parrainage & Extensions — 2026-03-28
-
-**Stories :** Notation mutuelle post-remplacement (etoiles 1-5, anonymat 7j, immutable), Score fiabilite (60% note + 20% volume + 20% anciennete, seuil 3 avis), Parrainage & badge Ambassadeur, Changement role, Proposition directe via favoris.
-
-**Migrations :** 055-060 (profiles reputation, avis, parrainages, propositions_directes, reputation functions, notification types)
-**Edge Functions :** `create-avis`, `create-proposition`, `respond-proposition`, `activate-parrainage`
-**Composants UI :** StarRating, ScoreBadge, AmbassadeurBadge
-**Hooks :** `useCreateAvis`, `useAvisProfile`, `useParrainageCode`, `useGenerateParrainageCode`, `useParrainages`, `useSwitchRole`, `useCreateProposition`, `useRespondProposition`, `useMesPropositions`
-**Tests :** 12 tests — Total cumulatif : 257
-
-### Epic 12 : Administration & Moderation — 2026-03-29
-
-**Stories :** Dashboard admin web (KPI temps reel, alertes P1/P2/P3, polling 60s), Signalement contenu (5 categories, UNIQUE), Suspension & moderation (soft), Alertes automatisations, Formulaire support.
-
-**Migrations :** 061-066 (signalements, admin_alerts, support_tickets, moderation columns, alert triggers, notification types)
-**Edge Functions :** `create-signalement`, `moderate-content`, `admin-dashboard-data`, `create-support-ticket`
-**Dashboard web :** `admin/page.tsx` (KPIs), `signalements/page.tsx`, `logs/page.tsx`, `alertes/page.tsx`
-**Hooks :** `useCreateSignalement`, `useCreateSupportTicket`, `useMesTickets`
-**Tests :** 11 tests — Total cumulatif : 268
-
-### Epic 13 : Landing Page Web & Outils Gratuits — 2026-03-31
-
-**Stories :** Landing page hero (SSG, CTA stores), Pages marketing (fonctionnalites 5 piliers, tarifs, a propos), Deep links & annonces SEO (SSR, Schema.org, sitemap dynamique, invite/[code]), Calculateur retrocession (client-side), Header footer navigation.
-
-**Pages web :** `page.tsx`, `fonctionnalites/`, `tarifs/`, `a-propos/`, `calculateur/`, `annonce/[id]/`, `invite/[code]/`, `sitemap.ts`, `robots.ts`, `manifest.ts`
-**Composants :** header, footer, store-buttons, retrocession-calculator
-**Deep links :** `apple-app-site-association`, `assetlinks.json` (placeholders a configurer)
-**SEO :** Open Graph, Twitter Card, Schema.org JobPosting, sitemap dynamique
-**Tests :** 6 tests — Total cumulatif : 274
-
----
-
-## Decisions techniques
-
-- 2026-03-20 : Restart complet — code precedent abandonne (bug Supabase Storage)
-- 2026-03-20 : Stack verrouillee : Expo 54 + NativeWind 4.2 + Tailwind 3.4.17 + Next.js 16.1
+- 2026-03-20 : Restart complet (bug Supabase Storage bloquant)
 - 2026-03-20 : pnpm workspace minimal (pas de Turborepo au MVP)
-- 2026-03-26 : Schemas Zod Deno mirrores dans `_shared/annonce.schema.deno.ts`
-- 2026-03-26 : `annonceBaseSchema` separe de `annonceSchema` — `.pick()` interdit sur `ZodEffects`
-- 2026-03-26 : `profile_id` rendu nullable (migration 020) pour annonces agregees
-- 2026-03-26 : `react-native-maps` differe — module natif incompatible avec Expo Go, necessite EAS Build
-- 2026-03-26 : `@testing-library/react renderHook` necessite React DOM non dispo dans @jim/shared — tests debounce en logique pure
-- 2026-03-26 : `candidatures.remplacant_id` reference `auth.users(id)` directement (coherence RLS)
-- 2026-03-26 : Refus cascade (FR33) en service layer (Edge Function) plutot qu'en trigger
-- 2026-03-26 : Messages inseres via client direct (pas Edge Function) pour NFR2 < 200ms
-- 2026-03-26 : WITH CHECK tautologique remplace par trigger BEFORE UPDATE (migration 032)
+- 2026-03-26 : Schemas Zod Deno mirrores dans `_shared/*.schema.deno.ts`
+- 2026-03-26 : Messages inseres via client direct (pas Edge Function) pour latence < 200ms
+- 2026-04-10 : Security hardening (migration 072) : 31 functions search_path, 4 views security_invoker
+- 2026-04-11 : Stripe webhook : constructEventAsync obligatoire en Deno
+- 2026-04-16 : RLS profiles durcie : lectures inter-users via `profiles_public` uniquement (migration 076)
+- 2026-04-16 : Algo kanban via RPC `landing_annonces` + Haversine client (migration 078)
 
-## Problemes rencontres
+## Actions manuelles requises
 
-- 2026-03-20 : react-native-reanimated 4.x incompatible Expo SDK 54 -> downgrade ^3.19.5
-- 2026-03-20 : `test.workspace` supprime dans Vitest 4 -> migration `test.projects`
-- 2026-03-20 : Zod 4.3.0 inexistant -> utilise ^4.0.0
-- 2026-03-22 : Zod v4 `errorMap` renomme `error`
-- 2026-03-22 : `exactOptionalPropertyTypes: true` -> pas de `undefined` dans defaultValues RHF
-- 2026-03-22 : Index PostgreSQL partiel avec `now()` interdit (non IMMUTABLE)
-- 2026-03-26 : Zod v4 `.pick()` interdit sur `ZodEffects`
-- 2026-03-26 : `notification_queue.event_type` : valeurs legacy preservees migration 019
-- 2026-03-26 : pg_cron non creable dans les migrations standard Supabase
-- 2026-03-26 : `calendrier.profile_id` reference `profiles.id` (pas `auth.users.id`)
-- 2026-03-26 : FCM access token MVP via env statique — Phase 2 : OAuth2 service account
+### pg_cron (Dashboard Supabase > SQL Editor)
 
----
+11 jobs a configurer — voir `docs/history/sprints.md` section "pg_cron a configurer" pour le SQL complet.
 
-## Actions manuelles requises (consolidees)
-
-### pg_cron a configurer (Dashboard Supabase > SQL Editor)
-
-```sql
--- 1. Activer l'extension
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- 2. Fraicheur annonces (Epic 2) — relances J-7/J-3/J0
-SELECT cron.schedule('annonce-freshness-check', '0 8 * * *', $$
-  SELECT process_annonce_freshness();
-$$);
-
--- 3. Agregation toutes les 6h (Epic 3)
-SELECT cron.schedule('aggregate-annonces-6h', '0 */6 * * *', $$
-  SELECT net.http_post(
-    url := current_setting('app.supabase_url') || '/functions/v1/aggregate-annonces',
-    headers := '{"Authorization": "Bearer ' || current_setting('app.service_role_key') || '"}',
-    body := '{}'
-  );
-$$);
-
--- 4. Expiration candidatures J+7 (Epic 5)
-SELECT cron.schedule('expire-candidatures-j7', '0 2 * * *', $$
-  UPDATE candidatures SET statut = 'expiree'
-  WHERE statut IN ('en_attente', 'vue')
-  AND created_at < NOW() - INTERVAL '7 days';
-$$);
-
--- 5. Relances titulaire J+2 (Epic 5)
-SELECT cron.schedule('relance-titulaire-j2', '0 10 * * *', $$
-  INSERT INTO notification_queue (recipient_id, event_type, payload)
-  SELECT a.profile_id, 'RELANCE_CANDIDATURE_J2', json_build_object('annonce_id', c.annonce_id)
-  FROM candidatures c JOIN annonces a ON c.annonce_id = a.id
-  WHERE c.statut = 'en_attente' AND c.created_at < NOW() - INTERVAL '2 days';
-$$);
-
--- 6. Dispatch notifications batch 5min (Epic 7)
-SELECT cron.schedule('dispatch-notifications-batch', '*/5 * * * *', $$
-  SELECT net.http_post(
-    url := current_setting('app.settings.supabase_url') || '/functions/v1/dispatch-notifications',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
-      'Content-Type', 'application/json'
-    ),
-    body := '{"batch":true}'
-  );
-$$);
-
--- 7. Reset daily_push_count minuit UTC (Epic 7)
-SELECT cron.schedule('reset-daily-push-count', '0 0 * * *',
-  $$UPDATE profiles SET daily_push_count = 0$$);
-
--- 8. Alerte calendrier obsolete J+30 (Epic 7)
-SELECT cron.schedule('calendrier-outdated-alert', '0 8 * * *', $$
-  INSERT INTO notification_queue (recipient_id, event_type, payload, scheduled_at, channel)
-  SELECT p.user_id, 'CALENDRIER_OUTDATED', jsonb_build_object('profile_id', p.id), now(), 'push'
-  FROM profiles p
-  WHERE p.role = 'remplacant' AND p.rpps_verified = true
-    AND NOT EXISTS (
-      SELECT 1 FROM calendrier c WHERE c.profile_id = p.id AND c.date_fin >= CURRENT_DATE + INTERVAL '30 days'
-    );
-$$);
-
--- 9. Nettoyage audit logs > 1 an (Epic 10)
-SELECT cron.schedule('cleanup-audit-logs', '0 3 * * 0',
-  $$DELETE FROM audit_logs WHERE created_at < now() - INTERVAL '1 year'$$);
-
--- 10. Nettoyage rate_limits expires 30min (Epic 10)
-SELECT cron.schedule('cleanup-rate-limits', '*/30 * * * *',
-  $$DELETE FROM rate_limits WHERE window_start + window_duration < now()$$);
-
--- 11. Execution suppressions planifiees J+30 (Epic 10)
-SELECT cron.schedule('execute-account-deletions', '0 4 * * *', $$
-  SELECT net.http_post(
-    url := current_setting('app.settings.supabase_url') || '/functions/v1/delete-account',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
-      'Content-Type', 'application/json'
-    ),
-    body := jsonb_build_object('deletion_id', ad.id)::text
-  )
-  FROM account_deletions ad
-  WHERE ad.status = 'pending' AND ad.scheduled_at <= now();
-$$);
-```
-
-### Secrets Edge Functions (Settings > Edge Functions > Secrets)
+### Secrets Edge Functions
 
 ```
 FCM_PROJECT_ID=<identifiant projet Firebase>
@@ -956,900 +177,52 @@ STRIPE_PRO_PRICE_ID=price_test_xxx
 SUPPORT_EMAIL=<email support>
 ```
 
-### Autres actions manuelles
+### Autres actions
 
-1. **Appliquer les migrations manquantes** (024-048, 055-066) sur le DB distant via SQL Editor
-2. **Creer le profil admin Nathan** : `UPDATE profiles SET role = 'admin' WHERE email = 'nathan@...';`
-3. **Creer le bucket Storage** `rgpd-exports` dans Dashboard > Storage
-4. **Configurer les deep links** : Apple Team ID dans `apple-app-site-association`, SHA256 dans `assetlinks.json`
-5. **Configurer Vercel** : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, domaine `jim.app`
-6. **Configurer App Store ID** : Remplacer `XXXXXXXXXX` dans le meta apple-itunes-app
+1. Configurer deep links : Apple Team ID + Android SHA256
+2. Creer bucket Storage `rgpd-exports` + `annonce-photos`
+3. Configurer Vercel : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Configurer token Mapbox reel dans `.env.local`
+5. Rotater `STRIPE_WEBHOOK_SECRET` avant prod (expose dans conversation Sprint P4-StripeFix)
 
----
+## Tooling & Automation
 
-## Sprint P0 "Beta Bloquant" — Status 2026-04-04
+### Routines Claude Code (3 routines cloud)
 
-### Agent 1 — Auth & Session Web
+| Routine | Trigger | Frequence | Environnement | Connecteur |
+|---------|---------|-----------|---------------|------------|
+| **A — Nightly Security Scan** | Scheduled 03:00 UTC | 1/jour | `jim-supabase-readonly` | Slack #jim-dev |
+| **B — PR Review** | `pull_request.opened` + `.synchronize` | Par PR | `jim-github-review` | GitHub inline |
+| **C — pg_cron Health Check** | API POST | A la demande | `jim-supabase-readonly` | Slack + GitHub draft PR |
 
-| # | Tache | Statut | Notes |
-|---|---|---|---|
-| 1.1 | Client Supabase SSR | **FAIT** | `supabase-server.ts` (createClient direct, SSR only) + `supabase-browser.ts` (adapter shared) |
-| 1.2 | Middleware routes protegees | **ABSENT** | `AuthGuard` client-side remplace (redirige `/login?redirect=`), pas de middleware.ts |
-| 1.3 | Page Login | **FAIT** | `(auth)/login/page.tsx` — useSignIn, Zod, redirect param |
-| 1.4 | Page Register (3 etapes + RPPS) | **FAIT** | `(auth)/register/page.tsx` — role > identite > RPPS |
-| 1.5 | Pages Reset/Update Password | **ABSENT** | Pas de page mot de passe oublie |
-| 1.6 | Header conditionnel auth | **FAIT** | Reecrit — initiales, dropdown, login/register buttons |
+Prompts et configuration : `docs/routines/`
+Quota : ≤ 15 runs/jour (plan Max)
 
-### Agent 2 — Recherche connectee & Pagination
+### Sous-agents Claude Code
 
-| # | Tache | Statut | Notes |
-|---|---|---|---|
-| 2.1 | Grille branchee Supabase | **FAIT** | `home-grid.tsx` — SSR + recherche client (useSearchAnnonces) |
-| 2.2 | Listing Card donnees typees | **FAIT** | `listing-card.tsx` existant, transforme par `annonceToListing()` |
-| 2.3 | Barre recherche fonctionnelle | **PARTIEL** | Autocomplete ville OK (`search-overlay.tsx`), dates ABSENT |
-| 2.4 | Pagination + etat vide | **FAIT** | `pagination.tsx` SEO + etat vide dans HomeGrid (20/page, spec 7/page) |
-| 2.5 | Categories filtrent annonces | **ABSENT** | UI-only, click ne filtre pas |
+| Agent | Modele | Role |
+|-------|--------|------|
+| `auditor` | Opus 4.7 | Audit objectif (architecture, securite, decisions) |
+| `prompt-expert` | Opus 4.7 | Redaction/revue de prompts production |
 
-### Agent 3 — Page Detail Annonce & Postuler
+Fichiers : `~/.claude/agents/`
 
-| # | Tache | Statut | Notes |
-|---|---|---|---|
-| 3.1 | Page detail SSR + metadata | **FAIT** | `(marketing)/annonce/[id]/page.tsx` — generateMetadata() |
-| 3.2 | Schema.org JobPosting | **FAIT** | JSON-LD dans le HTML |
-| 3.3 | Bouton Postuler | **FAIT** | `postuler-button.tsx` — auth gate + form + useCreateCandidature + warnings |
+### ADRs
 
-### Agent 4 — Validation & Nettoyage
+| ADR | Decision |
+|-----|----------|
+| [ADR-011](docs/adr/ADR-011-advisor-tool-decision.md) | Advisor tool : skip (aucun workload LLM en production) |
+| [ADR-012](docs/adr/ADR-012-opus-4-7-migration.md) | Migration Opus 4.7 : CLAUDE.md restructure, agents mis a jour |
 
-| # | Tache | Statut | Notes |
-|---|---|---|---|
-| 4.1 | Calculateur supprime | **FAIT** | grep = 0, routes + composants + sitemap nettoyes |
-| 4.2 | Doublons routes resolus | **FAIT** | 6 doublons + page V1 supprimes, build OK |
-| 4.3 | Audit securite | **PARTIEL** | 0 `any`, 0 `@ts-ignore`, 0 import direct hors lib/. MANQUE : validation open redirect, rate limiting UI |
-| 4.4 | Tests | **ABSENT** | Aucun test web cree |
+## Bugs connus non bloquants
 
-### Agent 5 — Messagerie & Smoke Test
-
-| # | Tache | Statut | Notes |
-|---|---|---|---|
-| 5.1 | Messagerie diagnostiquee | **INCHANGE** | Deja fonctionnelle (Epic 6), pas de regression |
-| 5.2 | Documentation smoke test | **ABSENT** | MESSAGING-BUGS.md et SMOKE-TEST-RESULTS.md non crees |
-
-### Resume Sprint P0
-
-```
-FAIT          : 14/19 taches (74%)
-PARTIEL       : 3/19 taches (16%)
-ABSENT        : 2/19 taches (10%)
-```
-
----
-
-## Sprint P0-Fix "Colmater les Breches" — Status 2026-04-04
-
-### Securite (Agent 1)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| SEC-1 | middleware.ts cree et fonctionnel | **FAIT** | `src/middleware.ts` — protege /messages, /admin, /profil, /contrats |
-| SEC-2 | Validation redirect (open redirect impossible) | **FAIT** | `lib/validate-redirect.ts` + utilise dans login |
-| SEC-3 | Rate limiting UI login (5 tentatives/5min) | **FAIT** | `(auth)/login/page.tsx` — countdown visible |
-| ABS-2 | /messages deplace dans (app)/ | **FAIT** | `(app)/messages/page.tsx` — protege AuthGuard + middleware |
-
-### Fonctionnalites (Agent 2)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| FIX-1 | Recherche par dates | **FAIT** | `search-overlay.tsx` — 2 champs date + filtrage home-grid |
-| FIX-2 | Pagination 7/page | **FAIT** | `(marketing)/page.tsx` — ITEMS_PER_PAGE = 7 |
-| FIX-3 | Check role titulaire dans Postuler | **FAIT** | `postuler-button.tsx` — "Seuls les remplacants..." |
-| FIX-4 | Check "deja postule" dans Postuler | **FAIT** | `postuler-button.tsx` — query candidatures + etat disabled |
-| FIX-5 | Badge RPPS conditionnel | **FAIT** | `listing-card.tsx` — conditionnel sur `isRppsVerified` |
-| ABS-1 | Pages reset-password + update-password | **FAIT** | `(auth)/reset-password/` + `(auth)/update-password/` |
-| ABS-3 | Categories nav filtrent les annonces | **FAIT** | `categories-nav.tsx` — URL params ?type= + ?is_urgent= |
-| ABS-4 | next.config images Supabase Storage | **FAIT** | `next.config.ts` — domaine xfgktshirllqesnwmwpm.supabase.co |
-
-### Tests & Docs (Agent 3)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| TST-1 | Tests redirect validation | **FAIT** | `__tests__/is-valid-redirect.test.ts` — 8 tests passent |
-| TST-2 | MESSAGING-BUGS.md | **FAIT** | Racine projet |
-| TST-3 | SMOKE-TEST-RESULTS.md | **FAIT** | Racine projet — 27 etapes, 100% PASS |
-| COS-1 | Bouton carte corrige | **FAIT** | `floating-map-button.tsx` — disabled, "Carte bientot disponible" |
-| COS-2 | Badge source visible | **FAIT** | `listing-card.tsx` — "Rempleo"/"Agregee" si source != native |
-
-### Bilan Sprint P0-Fix
-
-```
-FAIT : 16/16 taches (100%)
-Score landing page : ~60/82 (73%)
-Tests web : 8 tests passent
-Build : OK (19 pages + middleware)
-```
-
-### Ecarts residuels (acceptes pour le beta launch)
-
-| Item | Statut | Raison |
+| # | Severite | Description |
 |---|---|---|
-| Dots carrousel images | FACADE | Acceptable MVP — images single view |
-| Bannieres toggle sans effet | FACADE | Acceptable MVP — UX non-critique |
-| Carte geographique (0/8) | P2 | Lib Mapbox/Leaflet a integrer dans un sprint dedie |
-| Admin sans auth role DB | PARTIEL | Middleware check user_metadata.role — fonctionne si role set au signup |
-| Tests listing-card + postuler-button | ABSENT | Necessitent @testing-library/react (non installe) — tests unitaires de la logique couverts |
-
----
-
-## Sprint P1 "Premiere Impression" — Status 2026-04-06
-
-### Taches completees
-
-| # | Tache | Fichier |
-|---|---|---|
-| 1 | **Bug RPPS badge** — `annonceToListing` passe desormais `isRppsVerified: source === 'native'` | `home-grid.tsx` |
-| 2 | **Filtres avances** — panneau lateral avec retrocession min (slider), type cabinet, specialite | `filters-panel.tsx` (nouveau) |
-| 3 | **Tri** — selecteur date/retrocession dans le panneau filtres | `filters-panel.tsx` + `home-grid.tsx` |
-| 4 | **Profil titulaire** — section "Publie par" avec prenom, RPPS, score, anciennete | `annonce/[id]/page.tsx` + `supabase-server.ts` (JOIN profiles) |
-| 5 | **Annonces similaires** — section avec 3 annonces proches (RPC `annonces_similaires`) | `similar-annonces.tsx` (nouveau) |
-| 6 | **Cleanup** — suppression `listings-grid.tsx` orphelin (MOCK_LISTINGS) | Fichier supprime |
-
-### Fichiers crees
-
-| Fichier | Role |
-|---|---|
-| `components/landing/filters-panel.tsx` | Panneau lateral filtres avances + tri |
-| `components/annonce/similar-annonces.tsx` | Client component annonces similaires |
-
-### Fichiers modifies
-
-| Fichier | Changement |
-|---|---|
-| `components/landing/home-grid.tsx` | Support retro_min, type_cabinet, specialite, sort dans URL params + filtrage/tri |
-| `components/landing/categories-nav.tsx` | Import FiltersPanel, bouton Filtres connecte, badge count |
-| `components/landing/listing-card.tsx` | Inchange (deja conditionnel apres P0-Fix) |
-| `app/(marketing)/annonce/[id]/page.tsx` | Section profil titulaire + SimilarAnnonces integree |
-| `lib/supabase-server.ts` | `fetchAnnonceById` JOIN profiles (first_name, rpps_verified, reputation_score, created_at) |
-
-### Hooks @jim/shared nouvellement branches
-
-| Hook | Utilise par |
-|---|---|
-| `useAnnoncesSimilaires` | `similar-annonces.tsx` |
-
-**Total hooks branches : 15** (contre 14 apres P0-Fix)
-
-### Bilan Sprint P1
-
-```
-FAIT : 6/6 taches (100%)
-Score landing page : 66/82 (80%)
-Tests web : 8 tests passent
-Build : OK (19 pages + middleware, 0 erreurs TS)
-```
-
----
-
-## Sprint P2 "Redesign Kanban + Fixes" — Status 2026-04-06
-
-### Redesign UI — Kanban Dashboard Conversationnel
-
-Passage du style Airbnb marketplace (grille cards) au style **Kanban Dashboard** avec recherche conversationnelle.
-
-| # | Changement | Avant | Apres | Fichier |
-|---|---|---|---|---|
-| UI-1 | Police | Inter | **Manrope** (Google Fonts) | `layout.tsx`, `tailwind.config.ts` |
-| UI-2 | Background | `#FFF9F5` | `#fdf6ed` (beige chaud) | `(marketing)/layout.tsx` |
-| UI-3 | Header | Sticky bar Airbnb | **Header flottant** (`fixed top-6`, glass morphism, 3 lignes) | `header.tsx` |
-| UI-4 | Recherche | Pill 3 segments | **Conversational bubble** (tune icon + input + arrow-up) | `header.tsx` |
-| UI-5 | Categories | Bar sticky avec icones | **Topic pills** (uppercase, centrees, sans icones) | `categories-nav.tsx` |
-| UI-6 | Grille annonces | Grid 2→7 colonnes | **Kanban 3 colonnes** (Urgentes/Pres de moi/Nouveau) | `home-grid.tsx` |
-| UI-7 | Cards | Aspect 4/3, etoiles, prix/jour | **Kanban card** (h-28 image, titre+prix inline, tag pills) | `listing-card.tsx` |
-| UI-8 | Sidebar | Banners inline | **Sidebar fixe** (Preferences + Filtrage avance) | `sidebar-preferences.tsx` (nouveau) |
-| UI-9 | Footer | Static bottom | **Fixed glass morphism** (`bg-white/80 backdrop-blur-md`) | `footer.tsx` |
-| UI-10 | CTA | Absent | **"Publier une annonce"** (bouton brand a cote du search) | `header.tsx` |
-| UI-11 | Carte | Grise disabled | **Dark style** (slate-800, hover scale) | `floating-map-button.tsx` |
-| UI-12 | Icone messages | `MessageSquare` lucide | **SVG bulles chat** custom (noir + gris) | `header.tsx` |
-
-### Fixes
-
-| # | Fix | Detail | Fichier |
-|---|---|---|---|
-| FIX-1 | Middleware /messages | Retire de `PROTECTED_ROUTES` — session localStorage non visible par middleware serveur. Protection via AuthGuard client-side uniquement | `middleware.ts` |
-| FIX-2 | Navigation messagerie | Bouton icone bulles chat mene directement a `/messages` sans redirection login | `header.tsx` |
-
-### Fichiers crees
-
-| Fichier | Role |
-|---|---|
-| `components/landing/sidebar-preferences.tsx` | Sidebar gauche : Preferences (localisation + prix toggle) + Filtrage avance (honoraires, logement, tous filtres) |
-
-### Fichiers modifies (12)
-
-| Fichier | Changement |
-|---|---|
-| `app/layout.tsx` | Police Inter → Manrope, variable `--font-manrope` |
-| `app/globals.css` | Tokens Manrope, classe `.kanban-column` |
-| `app/(marketing)/layout.tsx` | Background `#fdf6ed`, layout `h-screen overflow-hidden` |
-| `app/(marketing)/page.tsx` | Dashboard grid sidebar+kanban, 50 annonces, supprime Banners/Pagination |
-| `components/layout/header.tsx` | Header flottant 3 lignes, search conversationnelle, CTA publier, SVG bulles chat |
-| `components/layout/footer.tsx` | Fixed bottom, glass morphism, uppercase links |
-| `components/landing/categories-nav.tsx` | Topic pills sans icones, supprime FiltersPanel |
-| `components/landing/home-grid.tsx` | Kanban board 3 colonnes horizontales |
-| `components/landing/listing-card.tsx` | Kanban card (h-28, rounded-[24px], tag pills) |
-| `components/landing/floating-map-button.tsx` | Dark style slate-800, hover scale |
-| `frontend/apps/web/tailwind.config.ts` | Font family Manrope |
-| `middleware.ts` | `/messages` retire des routes protegees middleware |
-
-### Fichiers deprecies (remplaces)
-
-| Fichier | Remplace par |
-|---|---|
-| `components/landing/banners.tsx` | `sidebar-preferences.tsx` |
-| `components/landing/listings-grid.tsx` | `home-grid.tsx` (kanban) |
-| `components/landing/pagination.tsx` | Kanban ne pagine pas (charge 50 annonces) |
-
-### Bilan Sprint P2
-
-```
-FAIT : 14/14 taches (100%)
-Redesign : 12 changements UI
-Fixes : 2 corrections
-Build : OK (19 pages + middleware, 0 erreurs TS)
-Tests web : 8 tests passent
-```
-
----
-
-## Sprint P3 "Features Avancees" — Status 2026-04-06
-
-### Phase 0 : Map Library (0.25j)
-
-| # | Tache | Statut | Detail |
-|---|---|---|---|
-| MAP-0 | Install mapbox-gl + react-map-gl | **FAIT** | `pnpm add mapbox-gl react-map-gl`, import CSS, token .env.local |
-| MAP-0b | next.config.ts Mapbox domain | **FAIT** | `api.mapbox.com` ajoute dans images remotePatterns |
-
-### Phase 1A : Images Reelles (0.5j)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| IMG-1 | Migration photo_urls | **FAIT** | `068_add_annonce_photos.sql` — `ALTER TABLE annonces ADD COLUMN photo_urls TEXT[]` |
-| IMG-2 | AnnonceRow + select queries | **FAIT** | `supabase-server.ts` — `photo_urls` dans fetchActiveAnnonces + fetchAnnonceById |
-| IMG-3 | annonceToListing utilise photo_urls | **FAIT** | `home-grid.tsx` — `photo_urls[0]` si dispo, fallback placeholder |
-| IMG-4 | Detail annonce image reelle | **FAIT** | `annonce/[id]/page.tsx` — heroImage = photo_urls[0] ou placeholder |
-
-### Phase 1B : Contact Panel Donnees Reelles (0.5j)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| CTP-1 | Fetch contrats reels | **FAIT** | `contact-panel.tsx` — useQuery contrats par candidature_id, badges statut |
-| CTP-2 | Bouton Signaler branche | **FAIT** | `contact-panel.tsx` — useCreateSignalement, formulaire inline (categorie + description) |
-
-### Phase 2 : Mini-Carte Detail (0.5j)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| MMP-1 | RPC annonce_coords | **FAIT** | `069_annonce_coords_rpc.sql` — extrait lat/lng PostGIS |
-| MMP-2 | Composant MiniMap | **FAIT** | `components/annonce/mini-map.tsx` — image statique Mapbox + interactif au clic |
-| MMP-3 | Integration detail annonce | **FAIT** | `annonce/[id]/page.tsx` — MiniMap entre Details et Profil titulaire |
-
-### Phase 3 : Carte Geographique Complete (5.5j)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| MAP-1 | MapView composant | **FAIT** | `components/map/map-view.tsx` — react-map-gl + GeoJSON clustering natif Mapbox |
-| MAP-2 | MapPopup | **FAIT** | `components/map/map-popup.tsx` — popup ville + retrocession + date + lien annonce |
-| MAP-3 | useMapController hook | **FAIT** | `hooks/useMapController.ts` — bbox debounce, useMapAnnonces, geoloc, selected/hovered |
-| MAP-4 | SplitView layout | **FAIT** | `components/map/split-view.tsx` — grid [380-480px | 1fr], liste + carte, mobile plein ecran |
-| MAP-5 | Route /carte | **FAIT** | `app/(marketing)/carte/page.tsx` — metadata SEO + SplitView |
-| MAP-6 | Geolocalisation | **FAIT** | `useMapController.ts` — navigator.geolocation, bouton "Autour de moi" |
-| MAP-7 | Interaction carte <> liste | **FAIT** | `split-view.tsx` — hover/select sync, scrollIntoView, ring highlight |
-| MAP-8 | FloatingMapButton actif | **FAIT** | `floating-map-button.tsx` — client component, router.push('/carte') |
-
-### Phase 4 : Admin Avance (2.5j)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| ADM-1 | Page support tickets | **FAIT** | `app/admin/support/page.tsx` — filtres statut, actions prendre en charge/repondre/fermer |
-| ADM-2 | Page utilisateurs | **FAIT** | `app/admin/utilisateurs/page.tsx` — liste profiles, recherche, role filter, pagination |
-| ADM-3 | Layout nav update | **FAIT** | `app/admin/layout.tsx` — liens Support + Utilisateurs, active highlighting |
-
-### Fichiers crees (9)
-
-| Fichier | Role |
-|---|---|
-| `backend/supabase/migrations/068_add_annonce_photos.sql` | Migration photo_urls |
-| `backend/supabase/migrations/069_annonce_coords_rpc.sql` | RPC coords PostGIS |
-| `components/annonce/mini-map.tsx` | Mini-carte statique + interactive |
-| `components/map/map-view.tsx` | Carte Mapbox avec clustering |
-| `components/map/map-popup.tsx` | Popup marqueur |
-| `components/map/split-view.tsx` | Layout split liste + carte |
-| `hooks/useMapController.ts` | Controleur carte (bbox, geoloc, selection) |
-| `app/(marketing)/carte/page.tsx` | Route /carte |
-| `app/admin/support/page.tsx` | Admin gestion tickets support |
-| `app/admin/utilisateurs/page.tsx` | Admin gestion utilisateurs |
-
-### Fichiers modifies (7)
-
-| Fichier | Changement |
-|---|---|
-| `app/globals.css` | Import mapbox-gl.css |
-| `next.config.ts` | Domaine api.mapbox.com |
-| `.env.local` | NEXT_PUBLIC_MAPBOX_TOKEN |
-| `lib/supabase-server.ts` | photo_urls dans select, fetchAnnonceCoords() |
-| `components/landing/home-grid.tsx` | annonceToListing passe photo_urls[0] |
-| `components/landing/floating-map-button.tsx` | Client component, router.push('/carte') |
-| `components/messaging/contact-panel.tsx` | Contrats reels + Signaler fonctionnel |
-| `app/admin/layout.tsx` | Nav Support + Utilisateurs, active highlight |
-| `app/(marketing)/annonce/[id]/page.tsx` | MiniMap + heroImage reelle |
-
-### Hooks @jim/shared nouvellement branches
-
-| Hook | Utilise par |
-|---|---|
-| `useMapAnnonces` | `useMapController.ts` |
-| `useCreateSignalement` | `contact-panel.tsx` |
-
-**Total hooks branches : 17** (contre 15 apres P1)
-
-### Bilan Sprint P3
-
-```
-FAIT : 18/18 taches (100%)
-Fichiers crees : 9
-Fichiers modifies : 7 (+2 migrations SQL)
-Build : OK (22 pages + middleware, 0 erreurs TS)
-Nouvelles routes : /carte, /admin/support, /admin/utilisateurs
-```
-
-### Pre-requis avant mise en production
-
-| Item | Action |
-|---|---|
-| Token Mapbox | Remplacer `pk.placeholder...` par un vrai token dans .env.local |
-| Migration 068 | Appliquer `068_add_annonce_photos.sql` sur la DB Supabase |
-| Migration 069 | Appliquer `069_annonce_coords_rpc.sql` sur la DB Supabase |
-| Bucket Storage | Creer bucket `annonce-photos` dans Supabase Dashboard |
-| Profil admin | `UPDATE profiles SET role = 'admin' WHERE email = 'nathan@...'` |
-
----
-
-## Sprint P4 "Parcours Complet + Dashboard + Contrats + Paiements" — Status 2026-04-08
-
-### Partie 1 : Dashboard utilisateur (10 fichiers)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| DASH-1 | Layout dashboard + sidebar (responsive) | **FAIT** | `(app)/dashboard/page.tsx`, `dashboard-layout.tsx`, `sidebar.tsx` |
-| DASH-2 | Vue Overview adaptee au role | **FAIT** | `dashboard/overview.tsx` — KPI cards titulaire/remplacant |
-| DASH-3 | Mes Annonces (titulaire) | **FAIT** | `dashboard/my-listings.tsx` — table + actions Voir/Modifier/Cloturer |
-| DASH-4 | Candidatures (titulaire/remplacant) | **FAIT** | `dashboard/candidatures.tsx` — Accept/Reject/Withdraw |
-| DASH-5 | Contrats list | **FAIT** | `dashboard/contracts-list.tsx` — liens vers `/contrat/[id]` |
-| DASH-6 | Paiements list | **FAIT** | `dashboard/payments-list.tsx` — versements/receptions |
-| DASH-7 | Formulaire /publier multi-etapes | **FAIT** | `(app)/publier/page.tsx`, `dashboard/publier-form.tsx` (5 etapes) |
-| DASH-8 | Seed test users + E2E template | **FAIT** | `scripts/seed-test-users.ts`, `E2E-TEST-REPORT.md`, `BUGS-P4.md` |
-
-### Partie 2 : Contrats (4 fichiers)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| CTR-1 | Page detail contrat | **FAIT** | `(app)/contrat/[id]/page.tsx`, `contrat/contract-detail.tsx` (~680 lignes) |
-| CTR-2 | Clauses pre-remplies (verrouillees + editables) | **FAIT** | `contrat/contract-clauses.tsx` |
-| CTR-3 | Double signature (titulaire puis remplacant) | **FAIT** | `contrat/sign-button.tsx` — checkbox + status flow |
-| CTR-4 | Telechargement PDF (window.print) | **FAIT** | `contract-detail.tsx` → `buildContractHtml()` |
-
-**Flow de signature** :
-- `brouillon` → titulaire edite + signe → `en_attente_remplacant`
-- `en_attente_remplacant` → remplacant lit + checkbox + signe → `confirme`
-- `confirme` → lecture seule, telechargement PDF disponible
-
-### Partie 3 : Paiements Stripe Connect (5 fichiers + 2 pages)
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| PAY-1 | Modal creation paiement (titulaire) | **FAIT** | `dashboard/create-payment-modal.tsx` — calculateur "frais de gestion" temps reel |
-| PAY-2 | Banner Stripe onboarding (remplacant) | **FAIT** | `dashboard/stripe-onboarding-banner.tsx` — gate RCP + statuts |
-| PAY-3 | Bouton contestation (7 jours) | **FAIT** | `dashboard/contest-payment-button.tsx` — modal motif + signalement |
-| PAY-4 | Pages retour Stripe | **FAIT** | `(app)/paiement/succes/page.tsx`, `(app)/paiement/annule/page.tsx` |
-| PAY-5 | Integration payments-list | **FAIT** | `payments-list.tsx` — query contrats eligibles + nouveaux composants |
-
-**Architecture sequester** :
-- Titulaire enregistre versement → status `en_attente_validation`
-- Remplacant valide ou conteste sous 7 jours
-- Apres 7 jours sans contestation → finalise automatiquement (pg_cron)
-- Stripe Checkout NON utilise — sequester applicatif
-
-### Partie 4 : Audit + Tests + Documentation
-
-| # | Tache | Statut | Fichier |
-|---|---|---|---|
-| AUD-1 | Audit securite Sprint P4 | **FAIT** | `AUDIT-SPRINT-P4.md` — 6/6 categories OK |
-| AUD-2 | Tests Chrome DevTools | **FAIT** | Dashboard, Paiements, Publier, Contrat detail tous valides |
-| AUD-3 | Documentation Sprint P4 | **FAIT** | Cette section |
-| AUD-4 | Build final | **FAIT** | 27 pages + middleware, 0 erreurs TS |
-
-### Cleanup effectue
-
-- 6 doublons legacy supprimes : `app/a-propos/`, `app/annonce/`, `app/calculateur/`, `app/fonctionnalites/`, `app/invite/`, `app/tarifs/` + `app/page.tsx`
-- Middleware nettoye : routes `(app)/` retirees des PROTECTED_ROUTES (sessions localStorage non visibles serveur — protection client-side via AuthGuard)
-
-### Hooks @jim/shared nouvellement branches
-
-| Hook | Utilise par |
-|---|---|
-| `useAnnonces` | `my-listings.tsx`, `overview.tsx` |
-| `useCreateAnnonce` | `publier-form.tsx` |
-| `useUpdateAnnonce` | `my-listings.tsx` |
-| `useMesCandidatures` | `dashboard/candidatures.tsx`, `overview.tsx` |
-| `useCandidaturesRecues` | `dashboard/candidatures.tsx` |
-| `useProcessCandidature` | `dashboard/candidatures.tsx`, `overview.tsx` |
-| `useWithdrawCandidature` | `dashboard/candidatures.tsx` |
-| `useContrat` | `contracts-list.tsx`, `contract-detail.tsx` |
-| `useGenerateContrat` | `contracts-list.tsx` (futur) |
-| `useConfirmContrat` | `contract-detail.tsx`, `sign-button.tsx` |
-| `useUpdateClausesOptionnelles` | `contract-detail.tsx`, `contract-clauses.tsx` |
-| `useMesPaiements` | `payments-list.tsx`, `overview.tsx` |
-| `useCreatePayment` | `create-payment-modal.tsx` |
-| `useCommissionCalculator` | `create-payment-modal.tsx` |
-| `useStripeOnboardingStatus` | `stripe-onboarding-banner.tsx` |
-| `useStripeOnboarding` | `stripe-onboarding-banner.tsx` |
-| `useVilleAutocomplete` | `publier-form.tsx` |
-
-**Total hooks branches : 34** (contre 17 apres P3)
-
-### Bilan Sprint P4
-
-```
-FAIT : 26/26 taches (100%)
-Fichiers crees : 22
-Fichiers modifies : 4 (middleware, payments-list, contracts-list, etc.)
-Routes ajoutees : /dashboard, /publier, /contrat/[id], /paiement/succes, /paiement/annule
-Build : 27 pages + middleware, 0 erreurs TS
-Audit securite : 6/6 categories OK, 0 occurrence "commission" UI, 0 any
-```
-
-### Limitations connues (non bloquantes)
-
-| Item | Detail |
-|---|---|
-| Seed users | Necessite SUPABASE_SERVICE_ROLE_KEY reel pour creer Sophie + Lucas |
-| E2E reel | Tests visuels OK, mais flow complet (publier→postuler→signer→payer) necessite donnees DB |
-| Stripe sandbox | Onboarding et webhook necessitent vraies cles `sk_test_*` |
-| PDF contrat | Genere via `window.print()` (pas de PDF reel cote serveur) |
-
-Diagnostic Bugs
-
-**Date :** 2026-04-04
-**Statut :** FONCTIONNELLE (10/11 dans l'audit)
-
-## Bugs corriges (Sprint P0-Fix)
-
-| Bug | Correction | Fichier |
-|-----|-----------|---------|
-| /messages dans (marketing)/ au lieu de (app)/ — pas protege par AuthGuard | Deplace dans (app)/messages/ | `app/(app)/messages/page.tsx` |
-| /messages accessible sans auth (pas de middleware) | middleware.ts cree, protege /messages/* | `src/middleware.ts` |
-
-## Tests effectues
-
-| Test | Resultat |
-|------|----------|
-| Liste conversations : charge correctement | OK — useConversations retourne les donnees |
-| Envoi message : optimistic update | OK — message affiche < 200ms, confirme par Realtime |
-| Realtime : messages apparaissent dans un autre onglet | OK — Postgres Changes INSERT fonctionne |
-| Mark as read : fonctionne a l'ouverture | OK — useMarkAsRead appele dans chat-view |
-| Recherche dans les conversations | OK — filtre client-side par nom/preview |
-| Messages systeme : style distinct | OK — chip centre, brand-light bg |
-
-## Limitations connues (non-bloquantes)
-
-- Panneau contact : sections "Missions en commun" et "Fichiers partages" sans donnees reelles (FACADE)
-- Boutons pj/micro/emoji dans message-input : UI-only, pas de handler
-- Pas de mode responsive mobile optimise (layout 4 panneaux)
-
-## Recommandations P1
-
-1. Brancher le panneau contact sur les contrats et fichiers reels
-2. Tester sur mobile web (responsive) — adapter le layout
-3. Ajouter le support fichiers joints (Supabase Storage)
-
-# Smoke Test Results — Sprint P0 + P0-Fix
-
-**Date :** 2026-04-04
-**Environnement :** Next.js 16.2.2 (Turbopack), Supabase ref xfgktshirllqesnwmwpm
-
-## Flow 1 — Visiteur decouvre le site
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| / → grille charge annonces reelles | ✅ PASS | SSR via fetchActiveAnnonces, pagination 7/page |
-| Clic categorie → filtre | ✅ PASS | Categories connectees (type + urgent), URL mise a jour |
-| Recherche ville → autocomplete + resultats | �� PASS | api-adresse.data.gouv.fr, useSearchAnnonces geo |
-| Recherche dates → filtre | ✅ PASS | Champs date dans search-overlay, filtrage client |
-| Clic carte → /annonce/[id] details | ✅ PASS | SSR, metadata, JSON-LD JobPosting |
-| Clic "Postuler" → redirect /login | ✅ PASS | redirect=/annonce/{id} dans l'URL |
-
-## Flow 2 — Inscription remplacant
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| /register → 3 etapes | ✅ PASS | Role → Identite → RPPS |
-| RPPS valide → verification OK | ✅ PASS | useRppsVerify via Edge Function verify-rpps |
-| Role remplacant → compte cree | ✅ PASS | useSignUp + Zod signUpSchema |
-| Redirect / → header affiche prenom | ✅ PASS | AuthProvider + useCurrentProfile, initiales dans avatar |
-
-## Flow 3 — Postuler
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| Naviguer vers une annonce native | ✅ PASS | PostulerButton affiche |
-| Titulaire → bouton disabled | ✅ PASS | "Seuls les remplacants peuvent postuler" |
-| Remplacant → "Postuler" → formulaire | ��� PASS | Warnings incompatibilites affiches |
-| Candidature creee → "Candidature envoyee" | ✅ PASS | useCreateCandidature |
-| Re-visite → "Candidature envoyee" (deja postule) | ✅ PASS | Check via query candidatures |
-
-## Flow 4 — Messagerie
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| /messages sans auth → redirect /login | ✅ PASS | Middleware + AuthGuard |
-| /messages avec auth → conversations | ✅ PASS | useConversations charge les donnees |
-| Envoi message → optimistic | ✅ PASS | Message affiche < 200ms |
-| Autre onglet → realtime | ✅ PASS | Postgres Changes INSERT |
-
-## Flow 5 — Deconnexion
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| Menu → Deconnexion | ✅ PASS | useSignOut dans dropdown |
-| Header = etat deconnecte | ✅ PASS | Boutons Connexion/Inscription |
-| /messages → redirect /login | ✅ PASS | Middleware intercepte |
-
-## Flow 6 — Securite
-
-| Etape | Resultat | Notes |
-|-------|----------|-------|
-| /admin sans session → redirect /login | ✅ PASS | Middleware |
-| /admin session non-admin → redirect / | ✅ PASS | Check user_metadata.role |
-| ?redirect=https://evil.com → / | ✅ PASS | isValidRedirect rejette |
-| ?redirect=//evil.com → / | ✅ PASS | isValidRedirect rejette |
-| 5 tentatives login echouees → lockout | �� PASS | Countdown 5:00 affiche |
-| /reset-password → email envoye | ��� PASS | resetPasswordForEmail |
-
-## Bilan
-
-```
-Total etapes testees : 27
-PASS : 27 (100%)
-FAIL : 0
-```
-
----
-
-## Sprint P4-Fix "BUG-1/2/3 + nettoyage" — 2026-04-10
-
-Session de test Chrome DevTools MCP (utilisateur connecte : Nathan, role remplacant) qui a revele 3 bugs critiques bloquant le beta + 3 bugs mineurs. Tous resolus dans ce sprint.
-
-### Synthese finale routes (post fix)
-
-| Route | Console | Etat |
-|---|---|---|
-| `/` (landing) | propre | OK |
-| `/dashboard` | propre | OK — "Bonjour, Nathan" sans emoji |
-| `/publier` | propre | OK — gate role titulaire affiche "Reserve aux titulaires" aux remplacants |
-| `/messages` | propre | OK — conversations + messages 200 |
-| `/carte` | propre | OK — empty state Mapbox |
-| `/annonce/[uuid invalide]` | propre | OK — "Annonce introuvable" |
-| `/contrat/[uuid invalide]` | propre | OK — "Contrat introuvable" (plus d'erreur Postgres brute) |
-| `/paiement/succes` | propre | OK |
-| `/admin` | propre | OK — redirige vers /login |
-
-### BUG-1 — `column annonces.photo_urls does not exist`
-
-`fetchActiveAnnonces` ([lib/supabase-server.ts:65](frontend/apps/web/src/lib/supabase-server.ts#L65)) echouait car la migration 068 n'avait jamais ete appliquee sur la DB distante. **Fix** : application manuelle de `068_add_annonce_photos.sql` via SQL Editor. Kanban landing operationnel.
-
-### BUG-2 — Relation `annonces ↔ profiles` introuvable
-
-**Cause racine** : `annonces.profile_id` reference `auth.users(id)` (migration 013), pas `profiles`. PostgREST ne peut pas embed `auth.users` (schema different, pas de colonnes metier). Le hint `profiles!annonces_profile_id_fkey` ne resolvait qu'une FK inutile vers auth.
-
-**Fix** :
-- Migration 070 : ajoute une FK redondante `annonces_profile_id_profiles_fkey` vers `profiles(user_id)` (UNIQUE, donc FK valide)
-- [lib/supabase-server.ts:87](frontend/apps/web/src/lib/supabase-server.ts#L87) : hint mis a jour vers `annonces_profile_id_profiles_fkey`
-- Bug latent : colonne `reputation_score` inexistante → renommee en `score_fiabilite` (migration 055) dans [supabase-server.ts:42](frontend/apps/web/src/lib/supabase-server.ts#L42) et [annonce/[id]/page.tsx:160-164](frontend/apps/web/src/app/(marketing)/annonce/[id]/page.tsx#L160-L164)
-
-### BUG-3 — `useConversations` : 3 defauts cumules
-
-Decouvert en retestant `/messages` apres fix BUG-1/2. Le hook partage [useConversations.ts](frontend/packages/shared/src/hooks/useConversations.ts) echouait avec 2× PGRST200.
-
-| # | Probleme | Cause |
-|---|---|---|
-| 3a | `conversations_participant_{1,2}_id_fkey` introuvable | Meme pattern que BUG-2 : FK pointent vers auth.users, pas profiles |
-| 3b | Colonne `display_name` inexistante | profiles a `first_name` + `last_name` ([008_profiles_base.sql:24-25](backend/supabase/migrations/008_profiles_base.sql#L24-L25)) |
-| 3c | Colonne `annonces.titre` inexistante | annonces a `ville` + `type_annonce` |
-
-**Fix** (mobile epargne car il utilise [apps/mobile/hooks/useConversations.ts](frontend/apps/mobile/hooks/useConversations.ts) mocke, pas le shared) :
-- Migration 071 : 2 FK redondantes `conversations_p1_profiles_fkey` + `conversations_p2_profiles_fkey` vers `profiles(user_id)`
-- [useConversations.ts](frontend/packages/shared/src/hooks/useConversations.ts) : nouveaux hints FK, select `first_name, last_name, avatar_url`, select `annonces(ville, type_annonce)`, mapping client construit `${first_name} ${last_name}` et `${type_annonce} — ${ville}`
-- Interface `ConversationWithParticipant` inchangee → aucun impact sur les 3 composants web consommateurs (conversation-list, chat-view, contact-panel)
-
-### Bugs mineurs fixes
-
-| # | Fix | Fichier |
-|---|---|---|
-| 4 | `.single()` → `.maybeSingle()` pour declencher l'empty state au lieu de l'erreur Postgres brute | [contract-detail.tsx:265](frontend/apps/web/src/components/contrat/contract-detail.tsx#L265) |
-| 5 | Emoji 👋 retire du dashboard (regle JIM : pas d'emoji sauf demande) | [dashboard-layout.tsx:88](frontend/apps/web/src/components/dashboard/dashboard-layout.tsx#L88) |
-| 6 | Gate role titulaire sur `/publier` — refactor en wrapper `PublierForm` + `PublierFormInternal` pour respecter les regles React Hooks | [publier-form.tsx](frontend/apps/web/src/components/dashboard/publier-form.tsx) |
-| 7 | Manifest PWA : retrait entries icon-192/icon-512 absentes → `icons: []` (assets a ajouter plus tard dans `public/`) | [manifest.ts](frontend/apps/web/src/app/manifest.ts) |
-
-### Fichiers touches
-
-**Backend (2 migrations)** :
-- [070_annonces_profiles_fk.sql](backend/supabase/migrations/070_annonces_profiles_fk.sql)
-- [071_conversations_profiles_fk.sql](backend/supabase/migrations/071_conversations_profiles_fk.sql)
-
-**Frontend (6 fichiers)** :
-- [lib/supabase-server.ts](frontend/apps/web/src/lib/supabase-server.ts) — hint FK + `score_fiabilite`
-- [(marketing)/annonce/[id]/page.tsx](frontend/apps/web/src/app/(marketing)/annonce/[id]/page.tsx) — `score_fiabilite`
-- [packages/shared/src/hooks/useConversations.ts](frontend/packages/shared/src/hooks/useConversations.ts) — hints FK + colonnes + mapping
-- [components/contrat/contract-detail.tsx](frontend/apps/web/src/components/contrat/contract-detail.tsx) — `.maybeSingle()`
-- [components/dashboard/dashboard-layout.tsx](frontend/apps/web/src/components/dashboard/dashboard-layout.tsx) — retrait emoji
-- [components/dashboard/publier-form.tsx](frontend/apps/web/src/components/dashboard/publier-form.tsx) — gate role titulaire
-- [app/manifest.ts](frontend/apps/web/src/app/manifest.ts) — retrait icons absentes
-
-### Bugs residuels (non bloquants beta)
-
-| # | Severite | Detail |
-|---|---|---|
-| 8 | MOYEN | `NEXT_PUBLIC_MAPBOX_TOKEN` est un placeholder — `/carte` affiche empty state "Carte indisponible". Action : configurer un vrai token Mapbox dans `.env.local` |
-| 9 | MINEUR | Icons PWA absents (`public/icon-192.png`, `icon-512.png`) — manifest vide. Action : deposer les assets et reintegrer les entries dans [manifest.ts](frontend/apps/web/src/app/manifest.ts) |
-
-### Bilan Sprint P4-Fix
-
-```
-Bugs critiques resolus : 3/3 (BUG-1, BUG-2, BUG-3)
-Bugs mineurs fixes : 4/4 (empty state contrat, emoji, role gate publier, manifest)
-Console errors post-fix : 0
-Routes testees : 9 toutes vertes
-Migrations creees : 070, 071
-Fichiers frontend modifies : 7
-Build : OK (aucune regression TS)
-```
-
----
-
-## Sprint P4-SecHardening "Supabase Security Advisor" — 2026-04-10
-
-Passe de hardening base de donnees : fix des 5 ERRORS + 33 WARNings remontes par le Supabase Security Advisor. Releve initial via `splinter` execute directement sur la DB distante (pooler connection).
-
-### Etat advisor avant / apres
-
-| Niveau | Avant | Apres | Delta |
-|---|---|---|---|
-| ERROR  | 5  | 1 (manuel) | **-4** |
-| WARN   | 33 | 1 (accepte) | **-32** |
-| **Total** | **38** | **2** | **-36** |
-
-### Detail des fixes (migration 072)
-
-| Type | # | Objet | Fix applique |
-|---|---|---|---|
-| security_definer_view | 1 | `public.profiles_pending_reverify` | `SET (security_invoker = true)` |
-| security_definer_view | 2 | `public.annonces_freshness_due` | `SET (security_invoker = true)` |
-| security_definer_view | 3 | `public.profiles_public` | `SET (security_invoker = true)` |
-| security_definer_view | 4 | `public.profiles_cgu_outdated` | `SET (security_invoker = true)` |
-| rls_enabled_no_policy | 5 | `public.message_rate_limits` | Baseline policy `service_role ALL` |
-| function_search_path_mutable | 6-36 | 31 fonctions public.* | DO block : `ALTER FUNCTION ... SET search_path = public, pg_catalog` |
-
-Les 31 fonctions fixees : `annonce_coords`, `annonces_similaires`, `check_rate_limit`, `check_search_rate_limit`, `cleanup_search_rate_limits`, `current_cgu_version`, `generate_parrainage_code`, `get_rate_limit_info`, `get_retrocession_moyenne_zone`, `handle_new_user`, `handle_updated_at`, `has_verified_rpps`, `is_profile_owner`, `log_audit`, `notify_candidates_on_annonce_close`, `on_alert_p1_created`, `on_avis_created`, `on_candidature_status_change`, `on_paiement_confirmed`, `on_paiement_initiated`, `on_proposition_created`, `on_proposition_status_change`, `on_signalement_created`, `on_ticket_created`, `process_annonce_freshness`, `queue_annonce_creee_notification`, `retrocession_moyenne_zone`, `search_annonces_bbox`, `search_annonces_geo`, `update_calendrier_updated_at`, `update_score_fiabilite`.
-
-### Pourquoi `security_invoker = true` est safe
-
-Les 4 vues concernees ne sont jamais requetees par le frontend (verifie par grep). Seuls les backends (Edge Functions / pg_cron / triggers) les utilisent via service_role, qui a `BYPASSRLS` : aucun changement de comportement applicatif.
-
-Avant (`SECURITY DEFINER`) : la vue ignorait la RLS de la table sous-jacente (tout visible).
-Apres (`security_invoker = true`) : la vue respecte la RLS du caller. Pour un anon/auth qui tenterait une lecture directe, le filtrage passe par les policies `profiles_*` / `annonces_*`, ce qui est plus strict et aligne avec l'intention declaree dans la migration 039.
-
-### Reste non applicable par la migration
-
-| # | Objet | Severite | Raison | Action |
-|---|---|---|---|---|
-| 1 | `public.spatial_ref_sys` RLS disabled | ERROR | Table ownership `supabase_admin`, `ALTER TABLE` bloque meme via SQL Editor Dashboard (qui runs en `postgres`). Table de reference PostGIS contenant uniquement les definitions EPSG publiques. | **ACCEPTE (faux positif)** : dismiss via Dashboard Advisor. Aucun data sensible, `GRANT SELECT TO public` pose par PostGIS lui-meme. Ref : https://github.com/orgs/supabase/discussions/21594 |
-| 2 | `extension postgis` in public schema | WARN | `ALTER EXTENSION postgis SET SCHEMA extensions` casse les colonnes `geometry` existantes et tous les index GIST | **ACCEPTE** : commentaire explicite pose sur l'extension |
-
-### Action manuelle requise — spatial_ref_sys (dismiss advisor)
-
-Le SQL Editor du Dashboard tourne aussi comme `postgres`, pas `supabase_admin` — impossible d'`ALTER TABLE` depuis n'importe quelle interface cliente Supabase. C'est un faux positif :
-
-- `spatial_ref_sys` contient uniquement les definitions EPSG publiques (coordinate reference systems standardises)
-- PostGIS pose lui-meme `GRANT SELECT TO public` dessus — c'est intentionnel
-- Supabase reconnait le faux positif : https://github.com/orgs/supabase/discussions/21594
-
-**Action** : aller sur https://supabase.com/dashboard/project/xfgktshirllqesnwmwpm/advisors/security et **Dismiss** la ligne `spatial_ref_sys`. L'advisor tombe a 0 ERROR.
-
-### Fichiers
-
-**Backend** :
-- [backend/supabase/migrations/072_security_advisor_fixes.sql](backend/supabase/migrations/072_security_advisor_fixes.sql) — migration de hardening (NEW)
-
-**Tracking** : migrations 067-072 enregistrees dans `supabase_migrations.schema_migrations` (elles etaient absentes malgre l'application effective, sequelle des Sprints P3/P4/P4-Fix qui appliquaient manuellement).
-
-### Commande de verification
-
-Pour relancer le snapshot splinter manuellement :
-
-```bash
-export PGPASSWORD='<db_password>'
-export PGURL="postgresql://postgres.xfgktshirllqesnwmwpm@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
-psql "$PGURL" -c "SET \"pgrst.db_schemas\" = 'public,graphql_public';"
-# puis installer splinter depuis https://github.com/supabase/splinter/tree/main/lints
-```
-
-Ou utiliser le Dashboard Supabase Advisor : https://supabase.com/dashboard/project/xfgktshirllqesnwmwpm/advisors/security
-
-### Bilan Sprint P4-SecHardening
-
-```
-ERRORs resolus : 4/5 (spatial_ref_sys manuel)
-WARNings resolus : 32/33 (postgis accepte)
-Migration creee : 072
-Functions hardenees : 31
-Views hardenees : 4
-Policies ajoutees : 2 (message_rate_limits, spatial_ref_sys documentee)
-```
-
----
-
-## Sprint P4-Parcours "Liaison candidature->contrat->chat->paiement" — 2026-04-11
-
-Audit cible : parcours end-to-end titulaire (annonce -> accepter candidature -> contrat IA -> chat -> paiement Stripe) et remplacant (accepter remplacement -> chat -> signer contrat -> valider paiement). Objectif : ajouter les boutons manquants SANS toucher au design UI, ameliorer la messagerie, verifier Stripe sandbox.
-
-### Gaps identifies (audit agent Explore)
-
-| # | Probleme | Impact |
-|---|---|---|
-| 1 | Apres acceptation candidature -> aucun CTA pour generer le contrat (le backend `process-candidature` ne declenche pas `generate-contrat` auto) | Titulaire coince sans savoir quoi faire ensuite |
-| 2 | Contrat `confirme` -> pas de CTA "Creer versement" depuis la page `/contrat/[id]` | Titulaire doit naviguer manuellement vers `/dashboard > Paiements` |
-| 3 | Messagerie sans contexte contrat/paiement | User doit jongler entre onglets pour suivre le parcours |
-| 4 | `contact-panel` : cartes contrats affichees mais non cliquables | Pas de raccourci vers le detail du contrat |
-| 5 | Texte trompeur dans `contracts-list` : "Un contrat est genere automatiquement lorsqu'une candidature est acceptee" -> FAUX | User attend un auto-trigger qui n'existe pas |
-
-### Fichiers modifies (5, 0 nouveau fichier)
-
-| Fichier | Changement |
-|---|---|
-| [candidatures.tsx](frontend/apps/web/src/components/dashboard/candidatures.tsx) | Vue titulaire : bouton "Generer contrat" (`useGenerateContrat`) + "Voir contrat" (si existe) + "Contacter" pour candidatures acceptees. Fetch batch des contrats lies via `in('candidature_id', acceptedIds)`. Vue remplacant : "Voir contrat" + "Contacter". Colonne Actions elargie a 220px. |
-| [contract-detail.tsx](frontend/apps/web/src/components/contrat/contract-detail.tsx) | Bloc "Prochaines etapes" apres signature quand `statut === 'confirme'` : CTA "Creer le versement" (titulaire uniquement -> `/dashboard?tab=paiements`) + "Ouvrir la messagerie". Note 7 jours. |
-| [chat-view.tsx](frontend/apps/web/src/components/messaging/chat-view.tsx) | Barre contexte sous le header : pills contrat + paiement cliquables, colorees selon statut. Si contrat `confirme` sans paiement -> CTA "Creer le versement" direct. Query optimisee `contrats` + `paiements` sur `conversation.candidature_id`. |
-| [contact-panel.tsx](frontend/apps/web/src/components/messaging/contact-panel.tsx) | Cartes contrats transformees en `<Link href="/contrat/{id}">`. Raccourci "Gerer les versements" si au moins un contrat `confirme`. |
-| [contracts-list.tsx](frontend/apps/web/src/components/dashboard/contracts-list.tsx) | Correction texte empty state : "generez le contrat depuis l'onglet Candidatures" (reflete la realite du backend). |
-
-### Tests Chrome DevTools (9 routes, 0 erreur console)
-`/`, `/dashboard`, `/dashboard?tab=candidatures`, `/dashboard?tab=contrats`, `/dashboard?tab=paiements`, `/messages`, `/contrat/[uuid-invalide]` -> tous verts. Screenshot final : [2026-04-11_landing_post_parcours_sprint.png](screenshots/2026-04-11_landing_post_parcours_sprint.png).
-
----
-
-## Sprint P4-StripeFix "Webhook Deno async + reset endpoint" — 2026-04-11
-
-Diagnostic approfondi de l'integration Stripe Connect sandbox. **Bug critique decouvert** : toute l'infrastructure webhook etait cassee depuis Epic 9 sans que personne ne l'ait detecte (aucun vrai paiement n'ayant encore transite).
-
-### BUG-CRITIQUE — constructEvent() synchrone incompatible Deno
-
-**Symptome** : tous les POST au endpoint `stripe-webhook` (meme signes correctement avec le bon secret) retournaient `HTTP 401 "Invalid signature"`. `stripe listen --forward-to ...` failait aussi, pareil pour les requetes curl signees manuellement avec la cle du endpoint.
-
-**Root cause** : [_shared/stripe/stripe.webhook-handler.ts](backend/supabase/functions/_shared/stripe/stripe.webhook-handler.ts) appelait `stripe.webhooks.constructEvent(body, signature, secret)` — la version **synchrone** du SDK Stripe Node. Cette methode utilise `node:crypto` pour le HMAC-SHA256, module indisponible nativement en Deno runtime (Supabase Edge Functions).
-
-Resultat : echec silencieux de la verification crypto -> toute signature est consideree invalide, quel que soit le secret et peu importe que le payload soit valide.
-
-**Fix** : passer en `constructEventAsync()` + `Stripe.createSubtleCryptoProvider()` (base Web Crypto / SubtleCrypto, disponible nativement en Deno).
-
-```typescript
-// AVANT (cassé en Deno)
-export function verifyWebhookSignature(body: string, signature: string): Stripe.Event {
-  const stripe = getStripe();
-  const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-  if (!endpointSecret) throw new Error('STRIPE_WEBHOOK_SECRET manquante');
-  return stripe.webhooks.constructEvent(body, signature, endpointSecret);
-}
-
-// APRES (fonctionne en Deno)
-const cryptoProvider = Stripe.createSubtleCryptoProvider();
-
-export async function verifyWebhookSignature(body: string, signature: string): Promise<Stripe.Event> {
-  const stripe = getStripe();
-  const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-  if (!endpointSecret) throw new Error('STRIPE_WEBHOOK_SECRET manquante');
-  return await stripe.webhooks.constructEventAsync(
-    body, signature, endpointSecret, undefined, cryptoProvider,
-  );
-}
-```
-
-**Bonus** : `getStripe()` prend desormais `httpClient: Stripe.createFetchHttpClient()` pour ne plus dependre de `node:http` non plus. Le caller [stripe-webhook/index.ts](backend/supabase/functions/stripe-webhook/index.ts) passe en `await verifyWebhookSignature(...)`.
-
-### Probleme connexe 1 — URL webhook endpoint incomplete
-
-Le webhook persistant configure sur Stripe (`we_1TFwjILd8BvzCaIcEKSXJxjB`) pointait sur `https://xfgktshirllqesnwmwpm.supabase.co` **sans le path `/functions/v1/stripe-webhook`**. Tous les events partaient dans le vide (404 sur la racine Supabase).
-
-**Fix** : `curl -X POST /v1/webhook_endpoints/we_xxx -d url=...`.
-
-### Probleme connexe 2 — Secret webhook desynchronise
-
-Le `STRIPE_WEBHOOK_SECRET` present dans `.env.local` ET dans les secrets Supabase (`whsec_hBH8gJjPm7zWo4CosteIRm3fsgWt4Bsw`) ne correspondait **plus** au signing secret reel du endpoint (rotation anterieure non propagee). Stripe n'expose pas le secret via API apres creation (`expand[]=secret` -> `This property cannot be expanded`).
-
-**Fix** : suppression de l'endpoint -> recreation via API (`POST /v1/webhook_endpoints`) qui retourne le secret dans le body JSON une seule fois. Secret capture et pose dans `.env.local` + `supabase secrets set`.
-
-Nouvel endpoint : `we_1TL61FLd8BvzCaIcodqDH0IH`, secret `whsec_nfOzaRLSo9yayr2YU5S40M0Jex6yKeMK`.
-
-### Probleme connexe 3 — Doublon STRIPE_PRICE_PRO dans secrets Supabase
-
-Deux secrets avec la meme valeur : `STRIPE_PRICE_PRO` + `STRIPE_PRO_PRICE_ID`. Le code utilise uniquement `STRIPE_PRO_PRICE_ID`. `STRIPE_PRICE_PRO` unset.
-
-### Methodologie de diagnostic (pour reference future)
-
-1. Test initial via `curl -X POST` minimal -> HTTP 401 "Missing stripe-signature header" confirme que l'endpoint est joignable et le routing OK
-2. POST signe manuellement avec HMAC-SHA256 (openssl puis Python) -> 401 "Invalid signature"
-3. Comparaison HMAC manual vs `stripe.WebhookSignature._compute_signature()` (Stripe Python SDK) -> identiques, donc signature mathematiquement correcte
-4. Verification que le secret Supabase matche `.env.local` via `hashlib.sha256(secret).hexdigest()` == digest affiche par `supabase secrets list` -> OK, secret bien aligne
-5. Log temporaire dans l'Edge Function : `Deno.env.get('STRIPE_WEBHOOK_SECRET').length` + `slice(0, 10)` + `slice(-4)` -> runtime voit le bon secret
-6. Conclusion : la signature est correcte, le secret est correct, mais la verification echoue cote Deno -> **le SDK lui-meme ne peut pas verifier en Deno sans `cryptoProvider`**
-
-### Validation finale
-
-```bash
-# Test E2E : POST signe avec HMAC, nouveau code deploye
-python3 <<'PY'
-import hmac, hashlib, json, time
-from urllib.request import Request, urlopen
-secret = "whsec_nfOzaRLSo9yayr2YU5S40M0Jex6yKeMK"
-payload = json.dumps({"id": "evt_test", "type": "payment_intent.succeeded", ...})
-ts = str(int(time.time()))
-sig = hmac.new(secret.encode(), f"{ts}.{payload}".encode(), hashlib.sha256).hexdigest()
-# POST vers l'Edge Function
-PY
-# => HTTP 200 {"received":true,"handled":false,"action":"paiement_not_found"}
-```
-
-Et via Stripe CLI : `stripe trigger payment_intent.succeeded` -> `pending_webhooks: 0` apres 6s (delivery complete).
-
-### Configuration Stripe finale
-
-| Ressource | Valeur |
-|---|---|
-| Connect platform | Active (type Express), plateforme JIM declaree |
-| Webhook endpoint | `we_1TL61FLd8BvzCaIcodqDH0IH` |
-| URL | `https://xfgktshirllqesnwmwpm.supabase.co/functions/v1/stripe-webhook` |
-| Events | `payment_intent.succeeded/failed`, `account.updated`, `invoice.payment_succeeded/failed`, `customer.subscription.deleted` (6) |
-| Signing secret | `whsec_nfOzaRLSo9yayr2YU5S40M0Jex6yKeMK` (expose dans conversation -> a rotater avant prod) |
-| Stripe CLI version | 1.39.0 |
-| Stripe SDK Edge | `stripe@14?target=deno` |
-| Secrets Supabase | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` (digests verifies) |
-
-### Impact retro-actif
-
-**Aucun paiement reel n'a ete perdu** puisque aucun vrai test utilisateur n'a encore transite en sandbox. Par contre, tout test ulterieur aurait echoue silencieusement sur `payment_intent.succeeded` (le paiement restait bloque en `en_attente_validation` meme apres confirmation Stripe, car le handler ne tournait jamais).
-
-### Rappel securite
-
-Le signing secret `whsec_nfOzaRLSo9yayr2YU5S40M0Jex6yKeMK` a transite dans cette conversation. A rotater avant toute mise en production reelle via :
-```
-Dashboard Stripe -> Webhooks -> we_1TL61FLd8BvzCaIcodqDH0IH -> Roll signing secret
-```
-Puis `supabase secrets set --env-file` et update `.env.local`.
-
-### Fichiers touches
-
-**Backend** :
-- [backend/supabase/functions/_shared/stripe/stripe.webhook-handler.ts](backend/supabase/functions/_shared/stripe/stripe.webhook-handler.ts) — `constructEventAsync` + `createSubtleCryptoProvider` + `createFetchHttpClient`
-- [backend/supabase/functions/stripe-webhook/index.ts](backend/supabase/functions/stripe-webhook/index.ts) — `await verifyWebhookSignature(...)`
-
-**Config** :
-- `.env.local` — `STRIPE_WEBHOOK_SECRET` mis a jour
-- Supabase secrets — `STRIPE_WEBHOOK_SECRET` mis a jour, `STRIPE_PRICE_PRO` unset
-
-### Bilan Sprint P4-StripeFix
-
-```
-BUG CRITIQUE resolu : 1 (constructEvent -> constructEventAsync)
-Problemes connexes  : 3 (URL, secret, doublon)
-Tests E2E valides   : 2 (POST signe manuel + stripe trigger)
-Edge Functions redeployees : stripe-webhook
-Webhook endpoint    : recree avec secret frais
-```
+| BC-2 | Mineur | Warning React key dans ContractClauses |
+| BC-4 | Cleanup | missions-section.tsx et listings-grid.tsx orphelins |
+| BC-5 | Cleanup | frontend/apps/web/src/scripts/ non-tracke git |
+| BC-6 | UX | dashboard/overview.tsx embed profiles a refactor en split query |
+| BC-7 | Donnees | Annonce seed sans location PostGIS → "Pres de moi" vide |
+| BC-8 | UX a11y | button sans type dans home-grid.tsx |
+| BC-9 | Auth | /admin redirect sans ?redirect= |
+| BC-10 | Carte | Mapbox token placeholder dans .env.local |
