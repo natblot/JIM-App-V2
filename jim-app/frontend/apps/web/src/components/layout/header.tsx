@@ -1,30 +1,23 @@
 'use client';
 
-import { useState, useRef, useEffect, Suspense } from 'react';
-import { SlidersHorizontal, ArrowUp, PlusCircle, Menu, LayoutDashboard, LogOut, MessageSquare, Settings } from 'lucide-react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+import { PlusCircle, Menu, LayoutDashboard, LogOut, MessageSquare, Settings } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSignOut, useCurrentProfile } from '@jim/shared';
 import { useAuthContext } from '../providers/auth-provider';
-import { SearchOverlay } from '../landing/search-overlay';
-import { CategoriesNav } from '../landing/categories-nav';
 
-// Header flottant — variantes :
-// - "landing" (defaut) : 3 lignes (logo+auth | topic pills | search conversationnelle + CTA) — dashboard kanban
-// - "compact" : 1 ligne (logo+auth+CTA) — pages detail/contenu pour ne pas ecraser le contenu
-// Detection via usePathname : seule la racine "/" utilise "landing".
+// Header flottant compact — UNE ligne universelle (logo + auth + CTA).
+// Les categories et la search sont desormais geres par <KanbanNav/> positionne
+// sous le hero sur la landing, pour eviter la duplication "deux navbars".
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, supabase } = useAuthContext();
   const profile = useCurrentProfile(supabase);
   const signOut = useSignOut(supabase);
-  const searchParams = useSearchParams();
-  const activeVille = searchParams.get('ville');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Landing = racine "/" uniquement. Tout le reste (detail, marketing, /carte...) utilise le compact.
   const isLanding = pathname === '/';
 
   // Fermer le menu au clic exterieur
@@ -55,15 +48,15 @@ export function Header() {
     <>
       <header
         role="banner"
-        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[1280px] flex flex-col gap-3"
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[1280px]"
       >
-        {/* Top navbar — logo + (CTA Publier compact) + auth */}
+        {/* Top navbar — UNE ligne : logo + (CTA Publier) + auth */}
         <div className="flex items-center justify-between gap-3">
           <a href="/" className="text-3xl font-extrabold text-brand tracking-tighter inline-flex items-center h-10 px-1 -ml-1">
             jim
           </a>
 
-          {/* CTA Publier inline en mode compact (deplace depuis la 3e ligne) */}
+          {/* CTA Publier — visible partout sauf sur la landing (ou KanbanNav le propose) */}
           {!isLanding && (
             <a
               href="/publier"
@@ -177,44 +170,7 @@ export function Header() {
           )}
         </div>
 
-        {/* Lignes 2 et 3 — uniquement sur la landing (dashboard kanban) */}
-        {isLanding && (
-          <>
-            {/* Topic pills (categories) — centered */}
-            <Suspense>
-              <CategoriesNav />
-            </Suspense>
-
-            {/* Conversational search bubble */}
-            <div className="flex items-center gap-4 w-full max-w-[900px] mx-auto">
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                aria-label="Ouvrir la recherche"
-                className="flex-1 bg-white rounded-[32px] shadow-lg border border-gray-100 flex items-center gap-3 px-5 h-14 hover:shadow-xl transition-shadow focus-within:ring-2 focus-within:ring-brand/30"
-              >
-                <SlidersHorizontal size={18} className="text-gray-400 flex-shrink-0" />
-                <span className="flex-grow text-left text-sm text-gray-400 truncate">
-                  {activeVille ?? 'Rechercher une mission, une ville...'}
-                </span>
-                <div className="bg-brand text-white w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-brand-dark transition-colors">
-                  <ArrowUp size={16} />
-                </div>
-              </button>
-              <a
-                href="/publier"
-                className="bg-brand text-white h-14 px-8 rounded-3xl text-sm font-bold flex items-center gap-2 hover:bg-brand-dark transition-colors flex-shrink-0 shadow-lg hidden md:flex"
-              >
-                <PlusCircle size={18} />
-                Publier une annonce
-              </a>
-            </div>
-          </>
-        )}
       </header>
-
-      {/* Overlay recherche */}
-      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

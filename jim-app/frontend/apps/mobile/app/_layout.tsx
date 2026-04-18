@@ -2,6 +2,7 @@ import '../global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore, getSupabaseClient, useAnnonceRealtime } from '@jim/shared';
 // Gestionnaire push — Epic 7 (listeners foreground + deep link)
 import { NotificationHandler } from '../components/notifications/notification-handler';
@@ -53,11 +54,13 @@ function AppProviders() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* NotificationHandler monté après QueryClientProvider — gère listeners push (Epic 7) */}
-      {/* Ne pas appeler requestPermissionsAsync ici — géré dans l'écran push-permission (Story 1.8) */}
-      <NotificationHandler />
-      <AppProviders />
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* NotificationHandler monté après QueryClientProvider — gère listeners push (Epic 7) */}
+        {/* Ne pas appeler requestPermissionsAsync ici — géré dans l'écran push-permission (Story 1.8) */}
+        <NotificationHandler />
+        <AppProviders />
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

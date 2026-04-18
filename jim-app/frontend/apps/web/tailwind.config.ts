@@ -15,17 +15,19 @@ const config: Config = {
     ...rootConfig.theme,
     extend: {
       ...rootConfig.theme?.extend,
-      // Couleurs maquette Airbnb-style (en plus des tokens jim- racine)
+      // Alias brand → jim-primary (compatibilite composants existants)
       colors: {
         ...rootConfig.theme?.extend?.colors,
         brand: {
-          DEFAULT: '#FF7A59',
-          light: '#FFF0EA',
-          dark: '#E06245',
+          DEFAULT: '#ff7c5c',
+          light: '#fff0ea',
+          dark: '#e06245',
         },
       },
+      // Accent editorial — utilise via class `font-serif italic` sur mots pivots
       fontFamily: {
-        sans: ['var(--font-manrope)', 'Manrope', 'system-ui', 'sans-serif'],
+        ...rootConfig.theme?.extend?.fontFamily,
+        serif: ['var(--font-fraunces)', 'Fraunces', 'Georgia', 'serif'],
       },
     },
   },

@@ -10,9 +10,12 @@ export function Footer() {
   const pathname = usePathname();
   const isLanding = pathname === '/';
 
+  // Glass morphism beige chaud
   const base = 'bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 text-[11px] text-gray-500';
+  // Landing : fixed bottom en dashboard mode uniquement lg+ (laisse place a la
+  // CTA sticky mobile + evite chevauchement). Les autres pages restent statiques.
   const variant = isLanding
-    ? 'fixed bottom-0 left-0 right-0 z-40'
+    ? 'relative mt-16 lg:mt-0 lg:fixed lg:bottom-0 lg:left-0 lg:right-0 lg:z-40'
     : 'relative mt-16';
 
   return (

@@ -1,13 +1,23 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
+import { Manrope, Fraunces } from 'next/font/google';
 import { QueryProvider } from '../components/providers/query-provider';
 import { AuthProvider } from '../components/providers/auth-provider';
 import './globals.css';
 
-// Police Manrope — kanban dashboard design
+// Police Manrope — corps, UI, titres sans serif
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-manrope',
+  display: 'swap',
+});
+
+// Police Fraunces — accent editorial en italique (hero, citations)
+// Utilisee via class `font-serif italic` sur les mots pivots
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  style: ['italic'],
+  variable: '--font-fraunces',
   display: 'swap',
 });
 
@@ -31,7 +41,7 @@ export const metadata: Metadata = {
 // Layout racine — providers globaux (auth + cache), chrome ajoute par les sous-layouts
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={manrope.variable}>
+    <html lang="fr" className={`${manrope.variable} ${fraunces.variable}`}>
       <body className="font-sans text-neutral-800 antialiased">
         <QueryProvider>
           <AuthProvider>

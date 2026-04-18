@@ -48,7 +48,10 @@ export function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <button className="w-full py-3.5 rounded-xl text-[15px] font-bold text-jim-text bg-jim-beige-light hover:bg-jim-beige-mid transition-colors">
+              <button
+                type="button"
+                className="w-full py-3.5 rounded-xl text-[15px] font-bold text-jim-text bg-jim-beige-light hover:bg-jim-beige-mid transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-jim-primary/50"
+              >
                 Commencer gratuitement
               </button>
             </div>
@@ -71,7 +74,10 @@ export function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <button className="w-full py-3.5 rounded-xl text-[15px] font-bold text-white bg-white/20 border-[1.5px] border-white/35 hover:bg-white/30 transition-colors">
+              <button
+                type="button"
+                className="w-full py-3.5 rounded-xl text-[15px] font-bold text-white bg-white/20 border-[1.5px] border-white/35 hover:bg-white/30 transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-white/50"
+              >
                 Passer a JIM Pro
               </button>
             </div>

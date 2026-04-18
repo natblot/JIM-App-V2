@@ -77,7 +77,12 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
               className="flex-grow text-sm text-neutral-900 placeholder-neutral-400 outline-none"
             />
             {isLoading && <Loader2 size={16} className="animate-spin text-neutral-400" />}
-            <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fermer la recherche"
+              className="flex items-center justify-center min-w-[44px] min-h-[44px] text-neutral-600 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary rounded-full"
+            >
               <X size={18} />
             </button>
           </div>

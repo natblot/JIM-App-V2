@@ -101,14 +101,35 @@ interface KanbanColumnProps {
   listings: ListingData[];
 }
 
+// Messages contextuels par colonne quand vide — oriente l'utilisateur
+const EMPTY_MESSAGES: Record<string, { title: string; hint: string; emoji: string }> = {
+  Urgentes: {
+    emoji: '⚡',
+    title: 'Rien d\'urgent',
+    hint: 'Les annonces signalees "urgentes" apparaitront ici en premier.',
+  },
+  'Pres de moi': {
+    emoji: '📍',
+    title: 'Active ta localisation',
+    hint: 'Les missions dans un rayon de 50 km autour de toi s\'afficheront ici.',
+  },
+  Nouveau: {
+    emoji: '✨',
+    title: 'En attente',
+    hint: 'Les dernieres annonces publiees apparaitront ici.',
+  },
+};
+
 function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
+  const emptyState = EMPTY_MESSAGES[title];
+
   return (
     <div className="kanban-column flex-shrink-0">
       {/* Header colonne */}
       <div className="flex items-center gap-2 px-5 pt-5 pb-3">
         <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
-        <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-        <span className="text-xs text-gray-400 font-medium ml-auto">{listings.length}</span>
+        <h3 className="text-sm font-bold text-jim-text">{title}</h3>
+        <span className="text-xs text-jim-muted font-medium ml-auto">{listings.length}</span>
       </div>
 
       {/* Cards scrollables */}
@@ -117,8 +138,20 @@ function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
           listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))
+        ) : emptyState ? (
+          <div className="flex flex-col items-center justify-center text-center py-10 px-4 border border-dashed border-jim-border rounded-2xl bg-jim-surface-alt/40">
+            <span className="text-3xl mb-2" aria-hidden>
+              {emptyState.emoji}
+            </span>
+            <p className="text-sm font-semibold text-jim-text mb-1">
+              {emptyState.title}
+            </p>
+            <p className="text-xs text-jim-muted leading-relaxed">
+              {emptyState.hint}
+            </p>
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-12 text-sm text-gray-400">
+          <div className="flex items-center justify-center py-12 text-sm text-jim-muted">
             Aucune annonce
           </div>
         )}
@@ -261,8 +294,10 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
             </p>
           </div>
           <button
+            type="button"
             onClick={handleClearSearch}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50 transition-colors"
+            aria-label="Effacer la recherche"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
           >
             <X size={14} /> Effacer
           </button>
@@ -292,8 +327,9 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
             Essayez d&apos;elargir votre recherche ou de modifier vos criteres.
           </p>
           <button
+            type="button"
             onClick={handleClearSearch}
-            className="text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-50 transition-colors"
+            className="text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
           >
             Reinitialiser les filtres
           </button>
@@ -321,25 +357,31 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
         </div>
       )}
 
-      {/* Etat initial sans filtres — kanban complet (memes responsive rules) */}
+      {/* Etat initial sans filtres — kanban complet avec banniere d'accueil */}
       {!isLoading && listings.length === 0 && !showBanner && (
-        <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
-          <KanbanColumn
-            title="Urgentes"
-            dotColor="bg-orange-500"
-            listings={[]}
-          />
-          <KanbanColumn
-            title="Pres de moi"
-            dotColor="bg-blue-500"
-            listings={[]}
-          />
-          <KanbanColumn
-            title="Nouveau"
-            dotColor="bg-green-500"
-            listings={[]}
-          />
-        </div>
+        <>
+          {/* Banniere d'accueil — explique la metaphore kanban */}
+          <div className="mb-4 rounded-2xl border border-jim-primary/20 bg-gradient-to-br from-jim-primary-pale via-white to-jim-primary-pale/50 px-5 py-4 flex items-start gap-3">
+            <span className="text-2xl flex-shrink-0 mt-0.5" aria-hidden>
+              👋
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-jim-text mb-0.5">
+                Bienvenue sur JIM
+              </p>
+              <p className="text-xs text-jim-muted leading-relaxed">
+                Les missions s&apos;organisent en 3 colonnes : <strong className="text-jim-text">urgentes</strong>,
+                {' '}<strong className="text-jim-text">pres de toi</strong>,
+                {' '}<strong className="text-jim-text">nouvelles</strong>. Active la geoloc pour voir les missions proches.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
+            <KanbanColumn title="Urgentes" dotColor="bg-orange-500" listings={[]} />
+            <KanbanColumn title="Pres de moi" dotColor="bg-blue-500" listings={[]} />
+            <KanbanColumn title="Nouveau" dotColor="bg-green-500" listings={[]} />
+          </div>
+        </>
       )}
     </div>
   );

@@ -37,13 +37,13 @@ export function Pagination({
       {currentPage > 1 ? (
         <a
           href={buildHref(currentPage - 1)}
-          className="flex items-center justify-center w-10 h-10 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
           aria-label="Page precedente"
         >
           <ChevronLeft size={18} />
         </a>
       ) : (
-        <span className="flex items-center justify-center w-10 h-10 rounded-xl text-neutral-300 cursor-not-allowed">
+        <span className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-neutral-500 cursor-not-allowed">
           <ChevronLeft size={18} />
         </span>
       )}
@@ -53,7 +53,7 @@ export function Pagination({
         <>
           <a
             href={buildHref(1)}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
           >
             1
           </a>
@@ -66,7 +66,7 @@ export function Pagination({
         <a
           key={page}
           href={buildHref(page)}
-          className={`flex items-center justify-center w-10 h-10 rounded-xl text-sm font-medium transition-colors ${
+          className={`flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
             page === currentPage
               ? 'bg-brand text-white'
               : 'text-neutral-600 hover:bg-neutral-100'
@@ -83,7 +83,7 @@ export function Pagination({
           {end < totalPages - 1 && <span className="text-neutral-400 px-1">...</span>}
           <a
             href={buildHref(totalPages)}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
           >
             {totalPages}
           </a>
@@ -94,13 +94,13 @@ export function Pagination({
       {currentPage < totalPages ? (
         <a
           href={buildHref(currentPage + 1)}
-          className="flex items-center justify-center w-10 h-10 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
           aria-label="Page suivante"
         >
           <ChevronRight size={18} />
         </a>
       ) : (
-        <span className="flex items-center justify-center w-10 h-10 rounded-xl text-neutral-300 cursor-not-allowed">
+        <span className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-neutral-500 cursor-not-allowed">
           <ChevronRight size={18} />
         </span>
       )}
