@@ -1,5 +1,8 @@
 // packages/ui/src/index.ts — barrel export @jim/ui (seul fichier avec barrel autorisé)
 export { cn } from './utils/cn';
+// Composant Badge generique — source unique, utilise par tous les badges specialises
+export { Badge } from './badge';
+export type { BadgeTone, BadgeVariant, BadgeSize } from './badge';
 export { StatusBadge } from './status-badge';
 export type { AnnonceStatut } from './status-badge';
 export { UrgentBadge } from './urgent-badge';

@@ -1,6 +1,6 @@
-// Badge "Urgent" — visible dans les listes et cartes
-import { View, Text } from 'react-native';
-import { cn } from './utils/cn';
+// Badge "Urgent" — visible dans les listes et cartes.
+// Wrapper autour de <Badge/> — pattern unifie (palette tone="destructive" solid).
+import { Badge } from './badge';
 
 interface UrgentBadgeProps {
   className?: string;
@@ -8,15 +8,14 @@ interface UrgentBadgeProps {
 
 export function UrgentBadge({ className }: UrgentBadgeProps) {
   return (
-    <View
-      className={cn(
-        'flex-row items-center gap-1 bg-jim-destructive px-2.5 py-1 rounded-full',
-        className
-      )}
+    <Badge
+      label="Urgent"
+      tone="destructive"
+      variant="solid"
+      size="md"
+      icon="⚡"
       accessibilityLabel="Annonce urgente"
-    >
-      <Text className="text-white text-xs">⚡</Text>
-      <Text className="text-white text-xs font-bold">Urgent</Text>
-    </View>
+      className={className}
+    />
   );
 }

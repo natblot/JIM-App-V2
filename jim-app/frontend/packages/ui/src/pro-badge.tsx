@@ -1,28 +1,21 @@
-// Composant ProBadge — badge "Pro" dore pour les abonnes — Epic 9
-import { View, Text } from 'react-native';
-import { cn } from './utils/cn';
+// Composant ProBadge — badge "Pro" pour les abonnes — Epic 9.
+// Wrapper autour de <Badge/> — tone="warning" soft (teinte ambre/miel coherente).
+import { Badge, type BadgeSize } from './badge';
 
 interface ProBadgeProps {
-  size?: 'sm' | 'md';
+  size?: BadgeSize;
   className?: string;
 }
 
 export function ProBadge({ size = 'md', className }: ProBadgeProps) {
-  const isSmall = size === 'sm';
-
   return (
-    <View
-      className={cn(
-        'flex-row items-center rounded-full border',
-        'bg-amber-50 border-amber-300',
-        isSmall ? 'px-2 py-0.5' : 'px-3 py-1',
-        className,
-      )}
+    <Badge
+      label="Pro"
+      tone="warning"
+      variant="soft"
+      size={size}
       accessibilityLabel="Abonne Pro"
-    >
-      <Text className={cn('font-bold text-amber-700', isSmall ? 'text-xs' : 'text-xs')}>
-        Pro
-      </Text>
-    </View>
+      className={className}
+    />
   );
 }

@@ -98,7 +98,7 @@ export function FilterBar({
         {/* Bouton réinitialiser */}
         {hasActiveFilters && (
           <Pressable
-            className="h-9 px-3 rounded-full border border-jim-destructive/40 items-center justify-center active:opacity-70"
+            className="min-h-[44px] px-4 rounded-full border border-jim-destructive/40 items-center justify-center active:opacity-70"
             onPress={() => {
               setActivePanel(null);
               onReset();
@@ -220,7 +220,7 @@ function FilterBadge({ label, isActive, isOpen, onPress }: FilterBadgeProps) {
   return (
     <Pressable
       className={[
-        'h-9 px-4 rounded-full border items-center justify-center active:opacity-70',
+        'min-h-[44px] px-4 rounded-full border items-center justify-center active:opacity-70',
         isActive || isOpen
           ? 'bg-jim-primary border-jim-primary'
           : 'bg-jim-surface border-jim-border',
@@ -263,7 +263,7 @@ function OptionButton({ label, isSelected, onPress }: OptionButtonProps) {
   return (
     <Pressable
       className={[
-        'h-10 px-5 rounded-xl border items-center justify-center active:opacity-70',
+        'min-h-[44px] px-5 rounded-xl border items-center justify-center active:opacity-70',
         isSelected
           ? 'bg-jim-primary border-jim-primary'
           : 'bg-jim-surface border-jim-border',
