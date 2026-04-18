@@ -9,10 +9,6 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Next.js
-apps/web/.next/
-apps/web/out/
-
 # Build
 dist/
 *.tsbuildinfo

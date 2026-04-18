@@ -11,35 +11,34 @@ module.exports = {
       '2xl': '1536px',
     },
     extend: {
-      // Typographie — Outfit (proche de Genty Sans)
-      // Pour Genty Sans : installer localement et ajouter en premier dans la liste
+      // Typographie — Manrope (aligne design-tokens.css + web override)
       fontFamily: {
-        sans: ['var(--font-outfit)', 'Genty Sans', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-manrope)', 'Manrope', 'system-ui', 'sans-serif'],
       },
-      // Palette Orange Pastel JIM v2.0
+      // Palette Corail JIM v2.1 — source unique, aligne CLAUDE.md landing + dashboard
       colors: {
-        'jim-primary':        'oklch(0.65 0.14 45)',   /* #E8844A */
-        'jim-primary-mid':    'oklch(0.73 0.10 45)',   /* #F0A07A */
-        'jim-primary-soft':   'oklch(0.82 0.07 45)',   /* #F7C5A0 */
-        'jim-primary-pale':   'oklch(0.93 0.03 45)',   /* #FDEADE */
-        'jim-accent':         'oklch(0.57 0.17 38)',   /* #D4603A */
-        'jim-accent-warm':    'oklch(0.78 0.12 60)',   /* #F5B86A */
-        'jim-background':     'oklch(0.98 0.008 55)',  /* #FEF9F5 */
-        'jim-surface':        'oklch(1.00 0.00 0)',    /* #FFFFFF */
-        'jim-surface-alt':    'oklch(0.95 0.02 50)',   /* #FBF0E8 */
-        'jim-beige-dark':     'oklch(0.83 0.04 52)',   /* #DCBFA0 */
-        'jim-beige-mid':      'oklch(0.88 0.03 52)',   /* #EDD9C4 */
-        'jim-beige-light':    'oklch(0.93 0.02 52)',   /* #F7EDE0 */
-        'jim-text':           'oklch(0.20 0.04 45)',   /* #3A1F08 */
-        'jim-text-body':      'oklch(0.30 0.04 42)',   /* #5A3418 */
-        'jim-muted':          'oklch(0.52 0.06 45)',   /* #96694A */
-        'jim-border':         'oklch(0.88 0.03 52)',   /* #EDD9C4 */
-        'jim-success':        'oklch(0.63 0.07 148)',  /* #6B9E72 */
-        'jim-success-bg':     'oklch(0.95 0.03 148)',  /* #EAF3EB */
-        'jim-warning':        'oklch(0.65 0.12 70)',   /* #C8882A */
-        'jim-warning-bg':     'oklch(0.96 0.04 70)',   /* #FBF0DC */
-        'jim-destructive':    'oklch(0.53 0.14 28)',   /* #C45040 */
-        'jim-destructive-bg': 'oklch(0.95 0.03 28)',   /* #FAEBE8 */
+        'jim-primary':        '#ff7c5c',   /* corail principal — CTA, icones actives */
+        'jim-primary-mid':    '#ff9a80',   /* hover, variante claire */
+        'jim-primary-soft':   '#ffc5b3',   /* separateurs, accents doux */
+        'jim-primary-pale':   '#fff0ea',   /* backgrounds chips/badges */
+        'jim-accent':         '#e06245',   /* corail fonce, highlights */
+        'jim-accent-warm':    '#F5B86A',   /* ambre/miel */
+        'jim-background':     '#fdf6ed',   /* beige chaud — fond global */
+        'jim-surface':        '#FFFFFF',   /* carte, modal */
+        'jim-surface-alt':    '#FBF0E8',   /* surface secondaire */
+        'jim-beige-dark':     '#DCBFA0',
+        'jim-beige-mid':      '#EDD9C4',   /* bordure */
+        'jim-beige-light':    '#F7EDE0',
+        'jim-text':           '#3A1F08',   /* titres */
+        'jim-text-body':      '#5A3418',   /* corps */
+        'jim-muted':          '#7A5434',   /* secondaire (assombri pour WCAG AA) */
+        'jim-border':         '#EDD9C4',
+        'jim-success':        '#5D8F66',   /* vert sauge (assombri pour WCAG AA) */
+        'jim-success-bg':     '#EAF3EB',
+        'jim-warning':        '#B07824',   /* ambre (assombri pour WCAG AA) */
+        'jim-warning-bg':     '#FBF0DC',
+        'jim-destructive':    '#B84030',   /* rouge orange (assombri pour WCAG AA) */
+        'jim-destructive-bg': '#FAEBE8',
       },
       borderRadius: {
         sm:  '0.5rem',    /* 8px */
