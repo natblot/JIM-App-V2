@@ -53,3 +53,6 @@ export { RateLimitToast } from './rate-limit-toast';
 export { StarRating } from './star-rating';
 export { ScoreBadge } from './score-badge';
 export { AmbassadeurBadge } from './ambassadeur-badge';
+// Card profil kiné — résultats recherche + listes candidatures
+export { KineProfileCard } from './kine-profile-card';
+export type { KineProfileCardData } from './kine-profile-card';
