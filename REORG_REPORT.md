@@ -269,14 +269,17 @@ Ajouter dans `jim-app/.gitignore` :
 - **Commits** :
   - `5527a69 refactor: archive legacy landing HTML + ajoute REORG_REPORT.md`
   - `65588ef chore: supprime vestige jim-app/supabase + ignore supabase/.temp`
+  - `8ddf9fc docs: finalise REORG_REPORT avec sections 7-12 (phases 7+8)`
+  - `163e6e4 fix(scripts): check-edge-function-size pointe vers backend/supabase/functions`
+  - `c66c718 fix(scripts): check-edge-function-size portable macOS + Linux`
 - **PR** : à créer manuellement si souhaité (mode a → pas obligatoire)
 
 ## 11. Points non traités
 
-### Bug préexistant à fixer (hors scope, demandé par user en commit séparé)
+### Bugs préexistants fixés dans cette session (commits séparés)
 
-- **`jim-app/backend/scripts/check-edge-function-size.sh`** (lignes 7, 13) cherche `supabase/functions` relatif au CWD. Lancé via `pnpm check-edge-size` depuis `jim-app/`, il pointait vers le vestige `jim-app/supabase/functions/` (maintenant supprimé) → aujourd'hui il affiche "✓ Aucune Edge Function trouvée" de manière silencieuse au lieu de vérifier les tailles réelles dans `backend/supabase/functions/`.
-- **Fix recommandé** : remplacer `supabase/functions` → `backend/supabase/functions` (lignes 7 et 13), OU ajouter `cd "$(dirname "$0")/.."` en début de script pour se positionner dans `backend/`.
+- ✅ **`check-edge-function-size.sh` path cassé** — commit `163e6e4` : remplace `supabase/functions` par `backend/supabase/functions` (lignes 7+13). Le script lancé via `pnpm check-edge-size` depuis `jim-app/` pointait vers le vestige `jim-app/supabase/functions/` (maintenant supprimé).
+- ✅ **`check-edge-function-size.sh` `du -sb` macOS** — commit `c66c718` : remplace `du -sb` (GNU Linux only) par `du -sk * 1024` (portable macOS BSD + Linux). Precedemment sur macOS, `size` restait vide et la comparaison 2MB plantait silencieusement ligne 17. Les 28 Edge Functions sont maintenant correctement mesurees.
 
 ### Baseline cassée préexistante (hors scope reorg)
 
