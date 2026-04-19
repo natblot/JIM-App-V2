@@ -4,13 +4,13 @@
 
 MAX_SIZE=$((2 * 1024 * 1024))  # 2 MB en bytes
 
-if [ ! -d "supabase/functions" ]; then
+if [ ! -d "backend/supabase/functions" ]; then
   echo "✓ Aucune Edge Function trouvée"
   exit 0
 fi
 
 FAILED=0
-for dir in supabase/functions/*/; do
+for dir in backend/supabase/functions/*/; do
   if [ -d "$dir" ]; then
     size=$(du -sb "$dir" 2>/dev/null | cut -f1)
     name=$(basename "$dir")
