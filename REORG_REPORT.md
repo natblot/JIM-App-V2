@@ -168,12 +168,139 @@ Candidats principaux à analyser avec preuves 3-niveaux :
 
 ---
 
-## VALIDATION BLOQUANTE PHASE 3
+## 5. Exécution reorg (Phase 4 — complétée)
 
-Valides-tu :
+- Commit : `5527a69 refactor: archive legacy landing HTML + ajoute REORG_REPORT.md`
+- Déplacement : `jim-app/jim-landing-page.html` → `jim-app/docs/legacy-landing.html` (100% similarité, historique préservé)
+- **Pas d'autres changements** (pas de tsconfig/bundler/Docker/CI à modifier — portée minimale Option B).
+- **Tests post-reorg : 286/286 ✅** (identique baseline)
+- **`git log --follow jim-app/docs/legacy-landing.html`** remonte à `81bcfaa feat: commit initial JIM App V2` ✅
 
-1. **L'arborescence cible** (inchangée hors déplacement optionnel de `jim-landing-page.html`) — **oui / ajustements** ?
-2. **La liste des déplacements** (juste `jim-landing-page.html` → `docs/legacy-landing.html`) — **oui / ajustements** ?
-   - Sous-question : `jim-landing-page.html` doit-il être **déplacé** (archivé dans docs/) ou **supprimé** (traité Phase 5 comme dead-code) ?
+---
 
-Pour déclencher l'exécution, réponds avec le token exact : **`GO PHASE 4`** accompagné de tes validations.
+## 6. Détection dead-code (Phase 5)
+
+### Scope (validé utilisateur)
+
+- **In scope** : `jim-app/supabase/` (9 fichiers trackés — suspect vestige)
+- **Out of scope par décision utilisateur** : Firebase (`dataconnect/`, `src/dataconnect-generated/`, `.firebaserc`), BMAD (`_bmad/`, `_bmad-output/`)
+
+### Inventaire `jim-app/supabase/`
+
+| Fichier / Dossier | Contenu |
+|---|---|
+| `config.toml` | Config Supabase default (`supabase init`), commentaires de doc inclus |
+| `functions/` | **Dossier VIDE** (0 fichier tracké, sous-dirs absents) |
+| `snippets/` | **Dossier VIDE** (0 fichier tracké) |
+| `.temp/` (8 fichiers) | État CLI Supabase (`cli-latest`, `postgres-version`, `project-ref`, etc.) — **ne devrait pas être versionné** |
+
+### Analyse 3-niveaux
+
+| Chemin | Type | N1 (outil) | N2 (grep) | N3 (entrypoints) | Catégorie | Reco |
+|---|---|---|---|---|---|---|
+| `jim-app/supabase/config.toml` | Config | N/A (config, pas du code) | Seule réf = lui-même ligne 228 (self-ref `./supabase/templates/invite.html`) | CLAUDE.md + `package.json` utilisent `--workdir backend/supabase` (canonique) — jamais `--workdir supabase` | **CERTAIN** | `git rm` |
+| `jim-app/supabase/.temp/*` (8 fichiers) | CLI state | N/A (artefacts CLI locaux) | Aucune réf trouvée | `.gitignore` n'exclut pas `.temp/` (oubli — voir reco gitignore) | **CERTAIN** | `git rm` + ajout `.temp/` dans `.gitignore` |
+| `jim-app/supabase/functions/` (dossier vide) | Dossier | N/A | Réf cassée dans `backend/scripts/check-edge-function-size.sh:7,13` — voir note⚠️ | Le script cherche `supabase/functions` relatif au CWD. Lancé via `pnpm check-edge-size` depuis `jim-app/`, il tombe sur ce dossier VIDE et conclut à tort "Aucune Edge Function" | **CERTAIN** | `git rm -r` + fixer script (hors scope — voir points non traités) |
+| `jim-app/supabase/snippets/` (dossier vide) | Dossier | N/A | Aucune réf | Aucune | **CERTAIN** | `git rm -r` |
+
+### Note sur le niveau 1 (outil statique)
+
+Tous les éléments ciblés sont des **configs Supabase / artefacts CLI / dossiers vides** — aucun outil statique (ts-prune, knip, depcheck, vulture) n'est applicable ici. Par stricte lecture méthodo → DOUTEUX. Mais les niveaux 2+3 convergent sans ambiguïté avec la documentation CLAUDE.md (canonique = `backend/supabase`). Classement **CERTAIN** assumé et justifié.
+
+### ⚠️ Bug préexistant découvert (hors scope)
+
+`backend/scripts/check-edge-function-size.sh` utilise le chemin relatif `supabase/functions` (lignes 7, 13). Lancé via `pnpm check-edge-size` depuis `jim-app/`, il pointe vers `jim-app/supabase/functions/` (VIDE) au lieu de `jim-app/backend/supabase/functions/`. Le script échoue silencieusement avec "Aucune Edge Function trouvée" → la vérification de taille 2MB n'est **pas effective** aujourd'hui.
+
+**Fix recommandé (hors scope reorg)** : remplacer `supabase/functions` → `backend/supabase/functions` dans le script, OU ajouter `cd "$(dirname "$0")/../supabase"` en début.
+
+### Candidats écartés (conservés)
+
+- Firebase complet (`dataconnect/` racine, `src/dataconnect-generated/`, `.firebaserc`) — décision user (futur push notifs)
+- BMAD (`_bmad/`, `_bmad-output/`) — décision user (garder accessible)
+- Symlinks `jim-app/skills/*` — jamais touchés (méthodo)
+
+### Recommandation complémentaire
+
+Ajouter dans `jim-app/.gitignore` :
+```
+# Supabase CLI state (ne pas commiter)
+**/supabase/.temp/
+```
+
+---
+
+## 7. Validation dead-code
+
+- Token reçu : `Go Phase 7` (variante casse acceptée, intention non ambiguë) + portée **'toutes'**
+- Items conservés : aucun (PROBABLE/DOUTEUX absents — toute la liste était CERTAIN)
+
+## 8. Exécution dead-code (Phase 7 — complétée)
+
+- Commit : `65588ef chore: supprime vestige jim-app/supabase + ignore supabase/.temp`
+- 10 fichiers modifiés, **-392 lignes** / +3 lignes
+- Fichiers supprimés (9) :
+  - `jim-app/supabase/config.toml`
+  - `jim-app/supabase/.temp/cli-latest`
+  - `jim-app/supabase/.temp/gotrue-version`
+  - `jim-app/supabase/.temp/pooler-url`
+  - `jim-app/supabase/.temp/postgres-version`
+  - `jim-app/supabase/.temp/project-ref`
+  - `jim-app/supabase/.temp/rest-version`
+  - `jim-app/supabase/.temp/storage-migration`
+  - `jim-app/supabase/.temp/storage-version`
+- Dossiers vides filesystem nettoyés : `jim-app/supabase/{functions,snippets,.temp}` + `jim-app/supabase` lui-même supprimés (rmdir non-git)
+- `.gitignore` : ajout `**/supabase/.temp/` pour prévenir re-commit accidentel
+- Dépendances : aucune retirée (hors scope)
+- Symboles : aucun retiré (hors scope)
+- **Tests post-dead-code : 286/286 ✅** (identique baseline)
+
+## 9. Build status : avant / après
+
+| Étape | Baseline (main) | Après reorg Phase 4 | Après dead-code Phase 7 | Delta |
+|---|---|---|---|---|
+| Tests | 286/286 ✅ | 286/286 ✅ | 286/286 ✅ | 0 régression |
+| Typecheck | 3 erreurs préexistantes | 3 erreurs préexistantes | 3 erreurs préexistantes | 0 régression (snapshot Option γ identique) |
+| Lint | HANG préexistant | Non relancé | Non relancé | N/A |
+
+## 10. Historique git
+
+- **Branche** : `refactor/reorg-20260419` (2 commits d'avance sur `main`)
+- **Vérification `git log --follow`** : `jim-app/docs/legacy-landing.html` remonte à `81bcfaa feat: commit initial JIM App V2` ✅
+- **Commits** :
+  - `5527a69 refactor: archive legacy landing HTML + ajoute REORG_REPORT.md`
+  - `65588ef chore: supprime vestige jim-app/supabase + ignore supabase/.temp`
+- **PR** : à créer manuellement si souhaité (mode a → pas obligatoire)
+
+## 11. Points non traités
+
+### Bug préexistant à fixer (hors scope, demandé par user en commit séparé)
+
+- **`jim-app/backend/scripts/check-edge-function-size.sh`** (lignes 7, 13) cherche `supabase/functions` relatif au CWD. Lancé via `pnpm check-edge-size` depuis `jim-app/`, il pointait vers le vestige `jim-app/supabase/functions/` (maintenant supprimé) → aujourd'hui il affiche "✓ Aucune Edge Function trouvée" de manière silencieuse au lieu de vérifier les tailles réelles dans `backend/supabase/functions/`.
+- **Fix recommandé** : remplacer `supabase/functions` → `backend/supabase/functions` (lignes 7 et 13), OU ajouter `cd "$(dirname "$0")/.."` en début de script pour se positionner dans `backend/`.
+
+### Baseline cassée préexistante (hors scope reorg)
+
+- **Typecheck** : 3 erreurs dans `@jim/shared` (hooks `useCandidaturesRecues`, `useConversations`, `useVilleAutocomplete`) — à fixer dans une session dédiée typage.
+- **Lint** : ESLint hang à 0% CPU. Cause probable : `src/dataconnect-generated/` n'est pas dans `eslint.config.mjs` ignores → exploration infinie ? À investiguer.
+
+### Hors scope par décision user (conservés)
+
+- **Firebase stack** (`dataconnect/`, `src/dataconnect-generated/`, `.firebaserc`, `firebase-debug.log` non-tracké) : conservé pour push notifications futures.
+- **BMAD** (`_bmad/` 865 fichiers + `_bmad-output/` 26 fichiers) : conservé à la racine.
+- **Symlinks Claude skills** (`jim-app/skills/*`) : non touchés par méthodo.
+
+### Suggestions passes futures
+
+- Audit dead-code TS/JS avec `knip` ou `ts-prune` une fois le lint fixé (hors scope initial).
+- Question stratégique : le wrapper `jim-app/` est toujours présent. Si un jour le repo se simplifie (Firebase retiré, BMAD migré ailleurs), une Option A (aplatir `jim-app/` vers racine) deviendra triviale.
+
+## 12. Rollback
+
+- **Branche** : `refactor/reorg-20260419`
+- **Base** : `main` à `5622df6 feat(landing): pivot hybride hero editorial + KanbanNav`
+- **Commit de départ (avant reorg)** : `9834570 chore(bmad): ajoute session brainstorming 2026-04-17-1747` (dernier commit sur `main` avant création branche)
+- **Rollback total** : `git checkout main && git branch -D refactor/reorg-20260419`
+- **Rollback partiel (dead-code uniquement)** : `git revert 65588ef` sur la branche
+- **Rollback partiel (reorg landing)** : `git revert 5527a69` sur la branche
+- **Si PR mergée** : `git revert <merge-commit> -m 1` sur `main`
+
