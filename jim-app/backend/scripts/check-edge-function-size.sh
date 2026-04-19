@@ -12,7 +12,8 @@ fi
 FAILED=0
 for dir in backend/supabase/functions/*/; do
   if [ -d "$dir" ]; then
-    size=$(du -sb "$dir" 2>/dev/null | cut -f1)
+    size_kb=$(du -sk "$dir" 2>/dev/null | cut -f1)
+    size=$((size_kb * 1024))
     name=$(basename "$dir")
     if [ "$size" -gt "$MAX_SIZE" ]; then
       echo "❌ $name: ${size} bytes > 2MB limite"
