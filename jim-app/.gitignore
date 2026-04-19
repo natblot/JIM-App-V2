@@ -35,6 +35,9 @@ yarn-error.log*
 *.swp
 *.swo
 
+# Supabase CLI state (ne pas commiter)
+**/supabase/.temp/
+
 # Sentry
 .sentryclirc
 
