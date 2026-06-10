@@ -169,8 +169,7 @@ Design retenu : Kanban Dashboard (PAS Airbnb marketplace).
 ### Secrets Edge Functions
 
 ```
-FCM_PROJECT_ID=<identifiant projet Firebase>
-FCM_ACCESS_TOKEN=<token FCM (rafraichir manuellement en MVP)>
+FCM_SERVICE_ACCOUNT_B64=<service account Firebase (JSON encode base64)>
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 STRIPE_PRO_PRICE_ID=price_test_xxx
@@ -220,7 +219,7 @@ Fichiers : `~/.claude/agents/`
 |---|---|---|
 | BC-2 | Mineur | Warning React key dans ContractClauses |
 | BC-4 | Cleanup | missions-section.tsx et listings-grid.tsx orphelins |
-| BC-5 | Cleanup | frontend/apps/web/src/scripts/ non-tracke git |
+| BC-5 | Resolu | Scripts seed deplaces vers frontend/apps/web/scripts/ (hors src/) + gitignore |
 | BC-6 | UX | dashboard/overview.tsx embed profiles a refactor en split query |
 | BC-7 | Donnees | Annonce seed sans location PostGIS → "Pres de moi" vide |
 | BC-8 | UX a11y | button sans type dans home-grid.tsx |

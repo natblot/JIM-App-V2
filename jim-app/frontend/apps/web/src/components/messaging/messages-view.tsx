@@ -3,7 +3,6 @@
 // Composant principal de la messagerie — fenetre contenue avec coins arrondis
 // Layout : conversations | chat | contact panel (sans sidebar JIM)
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getSupabase } from '../../lib/supabase-browser';
 import { useConversations } from '@jim/shared/hooks/useConversations';
 import { ConversationList } from './conversation-list';
@@ -11,20 +10,8 @@ import { ChatView } from './chat-view';
 import { ContactPanel } from './contact-panel';
 import { EmptyChat } from './empty-chat';
 
-// QueryClient instancie une seule fois au niveau du module
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
-});
-
+// Utilise le QueryClient du QueryProvider de (app)/layout.tsx — pas de provider local
 export function MessagesView() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <MessagesViewInner />
-    </QueryClientProvider>
-  );
-}
-
-function MessagesViewInner() {
   const supabase = useMemo(() => getSupabase(), []);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);

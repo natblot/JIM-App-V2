@@ -33,6 +33,21 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
   );
 
+  // Deduplication — Stripe peut rejouer jusqu'a 10x le meme evenement
+  const { error: insertError } = await supabaseAdmin
+    .from('stripe_events')
+    .insert({ event_id: event.id, event_type: event.type });
+
+  if (insertError) {
+    // Conflict = evenement deja traite (PK violation sur event_id)
+    if (insertError.code === '23505') {
+      console.log(`Webhook ${event.id} already processed — skipping`);
+      return Response.json({ received: true, action: 'already_processed' });
+    }
+    // Autre erreur DB : on laisse passer (mieux vaut traiter 2x que rater)
+    console.error('stripe_events insert error:', insertError);
+  }
+
   try {
     const result = await handleWebhookEvent(event, supabaseAdmin);
     console.log(`Webhook ${event.type}: ${result.action} (handled: ${result.handled})`);

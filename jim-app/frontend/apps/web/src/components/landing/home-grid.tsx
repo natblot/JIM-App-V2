@@ -3,7 +3,7 @@
 // Grille d'accueil kanban — 3 colonnes (Urgentes, Pres de moi, Nouveau)
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, X, SearchX } from 'lucide-react';
+import { Loader2, X, SearchX, Zap, MapPin, Clock } from 'lucide-react';
 import { useSearchAnnonces } from '@jim/shared';
 import type { GeoAnnonce, GeoSearchFilters } from '@jim/shared';
 import { useAuthContext } from '../providers/auth-provider';
@@ -44,7 +44,7 @@ function annonceToListing(annonce: AnnonceRow | GeoAnnonce): ListingData {
   return {
     id: annonce.id,
     ville: annonce.ville ? `${annonce.ville}, France` : 'France',
-    description: annonce.description ?? `Remplacement ${annonce.type_annonce ?? 'kinesitherapie'} — ${retro}% retrocession`,
+    description: annonce.description ?? `Remplacement ${annonce.type_annonce ?? 'kinesitherapie'} · ${retro}% retrocession`,
     retrocessionPct: retro,
     ...(firstPhoto ? { image: firstPhoto } : {}),
     specialites: annonce.specialites ?? [],
@@ -101,27 +101,33 @@ interface KanbanColumnProps {
   listings: ListingData[];
 }
 
-// Messages contextuels par colonne quand vide — oriente l'utilisateur
-const EMPTY_MESSAGES: Record<string, { title: string; hint: string; emoji: string }> = {
+// Configuration des états vides par colonne
+const EMPTY_CONFIG: Record<string, { title: string; hint: string; iconBg: string; iconColor: string; Icon: typeof Zap }> = {
   Urgentes: {
-    emoji: '⚡',
-    title: 'Rien d\'urgent',
-    hint: 'Les annonces signalees "urgentes" apparaitront ici en premier.',
+    title: "Rien d'urgent",
+    hint: 'Les annonces signalées urgentes apparaîtront ici en premier.',
+    iconBg: 'bg-[#fff4e0]',
+    iconColor: 'text-jim-accent-warm',
+    Icon: Zap,
   },
   'Pres de moi': {
-    emoji: '📍',
-    title: 'Active ta localisation',
-    hint: 'Les missions dans un rayon de 50 km autour de toi s\'afficheront ici.',
+    title: 'Activez votre géolocalisation',
+    hint: 'Les missions dans un rayon de 50 km autour de vous s\'afficheront ici.',
+    iconBg: 'bg-jim-primary-pale',
+    iconColor: 'text-jim-primary',
+    Icon: MapPin,
   },
   Nouveau: {
-    emoji: '✨',
     title: 'En attente',
-    hint: 'Les dernieres annonces publiees apparaitront ici.',
+    hint: 'Les dernières annonces publiées apparaîtront ici.',
+    iconBg: 'bg-jim-success-bg',
+    iconColor: 'text-jim-success',
+    Icon: Clock,
   },
 };
 
 function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
-  const emptyState = EMPTY_MESSAGES[title];
+  const cfg = EMPTY_CONFIG[title];
 
   return (
     <div className="kanban-column flex-shrink-0">
@@ -129,7 +135,7 @@ function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
       <div className="flex items-center gap-2 px-5 pt-5 pb-3">
         <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
         <h3 className="text-sm font-bold text-jim-text">{title}</h3>
-        <span className="text-xs text-jim-muted font-medium ml-auto">{listings.length}</span>
+        <span className="text-xs text-jim-muted font-medium ml-auto bg-white/60 px-2 py-0.5 rounded-full">{listings.length}</span>
       </div>
 
       {/* Cards scrollables */}
@@ -138,17 +144,15 @@ function KanbanColumn({ title, dotColor, listings }: KanbanColumnProps) {
           listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))
-        ) : emptyState ? (
-          <div className="flex flex-col items-center justify-center text-center py-10 px-4 border border-dashed border-jim-border rounded-2xl bg-jim-surface-alt/40">
-            <span className="text-3xl mb-2" aria-hidden>
-              {emptyState.emoji}
-            </span>
-            <p className="text-sm font-semibold text-jim-text mb-1">
-              {emptyState.title}
-            </p>
-            <p className="text-xs text-jim-muted leading-relaxed">
-              {emptyState.hint}
-            </p>
+        ) : cfg ? (
+          <div className="bg-jim-surface border border-[rgba(58,31,8,0.06)] rounded-[20px] px-6 py-7 flex flex-row items-center gap-[18px] min-h-[200px] shadow-[0_1px_2px_rgba(58,31,8,.03)]">
+            <div className={`w-[52px] h-[52px] rounded-[14px] flex items-center justify-center flex-shrink-0 ${cfg.iconBg} ${cfg.iconColor}`}>
+              <cfg.Icon size={24} strokeWidth={2} />
+            </div>
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <p className="text-[14px] font-bold text-jim-text m-0 tracking-[-0.01em]">{cfg.title}</p>
+              <p className="text-[12px] text-jim-muted m-0 leading-[1.45] max-w-[260px]">{cfg.hint}</p>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center py-12 text-sm text-jim-muted">
@@ -278,7 +282,7 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
       {showBanner && (
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-jim-text">
               {isGeoSearchActive
                 ? `Remplacements autour de ${ville}`
                 : filters.type
@@ -287,7 +291,7 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
                 ? 'Annonces urgentes'
                 : 'Resultats filtres'}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-jim-muted">
               {isLoading
                 ? 'Recherche en cours...'
                 : `${listings.length} resultat${listings.length > 1 ? 's' : ''}`}
@@ -297,7 +301,7 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
             type="button"
             onClick={handleClearSearch}
             aria-label="Effacer la recherche"
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
+            className="flex items-center gap-1.5 text-sm text-jim-muted hover:text-jim-text-body border border-jim-border rounded-full px-3 py-1.5 hover:bg-jim-beige-light/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
           >
             <X size={14} /> Effacer
           </button>
@@ -307,13 +311,13 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
       {/* Chargement */}
       {isLoading && (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={32} className="animate-spin text-brand" />
+          <Loader2 size={32} className="animate-spin text-jim-primary" />
         </div>
       )}
 
       {/* Erreur */}
       {isGeoSearchActive && search.isError && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-6 py-4 text-sm text-red-700">
+        <div className="bg-jim-destructive-bg border border-jim-destructive/20 rounded-xl px-6 py-4 text-sm text-jim-destructive">
           Une erreur est survenue lors de la recherche. Veuillez reessayer.
         </div>
       )}
@@ -321,15 +325,15 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
       {/* Etat vide */}
       {!isLoading && listings.length === 0 && showBanner && (
         <div className="text-center py-16">
-          <SearchX size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-lg font-medium text-gray-700 mb-2">Aucune mission trouvee</p>
-          <p className="text-sm text-gray-500 mb-4">
+          <SearchX size={48} className="mx-auto text-jim-beige-mid mb-4" />
+          <p className="text-lg font-medium text-jim-text-body mb-2">Aucune mission trouvee</p>
+          <p className="text-sm text-jim-muted mb-4">
             Essayez d&apos;elargir votre recherche ou de modifier vos criteres.
           </p>
           <button
             type="button"
             onClick={handleClearSearch}
-            className="text-sm font-medium text-gray-700 border border-gray-300 rounded-xl px-4 py-2 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
+            className="text-sm font-medium text-jim-text-body border border-jim-border rounded-xl px-4 py-2 hover:bg-jim-beige-light/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-jim-primary"
           >
             Reinitialiser les filtres
           </button>
@@ -341,17 +345,17 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
         <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
           <KanbanColumn
             title="Urgentes"
-            dotColor="bg-orange-500"
+            dotColor="bg-jim-primary"
             listings={urgentListings}
           />
           <KanbanColumn
             title="Pres de moi"
-            dotColor="bg-blue-500"
+            dotColor="bg-jim-accent-warm"
             listings={nearbyListings}
           />
           <KanbanColumn
             title="Nouveau"
-            dotColor="bg-green-500"
+            dotColor="bg-jim-success"
             listings={recentListings}
           />
         </div>
@@ -361,25 +365,20 @@ export function HomeGrid({ initialAnnonces }: HomeGridProps) {
       {!isLoading && listings.length === 0 && !showBanner && (
         <>
           {/* Banniere d'accueil — explique la metaphore kanban */}
-          <div className="mb-4 rounded-2xl border border-jim-primary/20 bg-gradient-to-br from-jim-primary-pale via-white to-jim-primary-pale/50 px-5 py-4 flex items-start gap-3">
-            <span className="text-2xl flex-shrink-0 mt-0.5" aria-hidden>
-              👋
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-jim-text mb-0.5">
-                Bienvenue sur JIM
-              </p>
-              <p className="text-xs text-jim-muted leading-relaxed">
-                Les missions s&apos;organisent en 3 colonnes : <strong className="text-jim-text">urgentes</strong>,
-                {' '}<strong className="text-jim-text">pres de toi</strong>,
-                {' '}<strong className="text-jim-text">nouvelles</strong>. Active la geoloc pour voir les missions proches.
-              </p>
-            </div>
+          <div className="mb-4 rounded-2xl border border-jim-primary/20 bg-jim-primary-pale/60 px-5 py-4">
+            <p className="text-sm font-semibold text-jim-text mb-0.5">
+              Bienvenue sur JIM
+            </p>
+            <p className="text-xs text-jim-muted leading-relaxed">
+              Les missions s&apos;organisent en 3 colonnes : <strong className="text-jim-text">urgentes</strong>,
+              {' '}<strong className="text-jim-text">pres de vous</strong>,
+              {' '}<strong className="text-jim-text">nouvelles</strong>. Activez la geolocalisation pour voir les missions proches.
+            </p>
           </div>
           <div className="flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-x-auto no-scrollbar pb-4">
-            <KanbanColumn title="Urgentes" dotColor="bg-orange-500" listings={[]} />
-            <KanbanColumn title="Pres de moi" dotColor="bg-blue-500" listings={[]} />
-            <KanbanColumn title="Nouveau" dotColor="bg-green-500" listings={[]} />
+            <KanbanColumn title="Urgentes" dotColor="bg-jim-primary" listings={[]} />
+            <KanbanColumn title="Pres de moi" dotColor="bg-jim-accent-warm" listings={[]} />
+            <KanbanColumn title="Nouveau" dotColor="bg-jim-success" listings={[]} />
           </div>
         </>
       )}

@@ -11,7 +11,7 @@ export function Footer() {
   const isLanding = pathname === '/';
 
   // Glass morphism beige chaud
-  const base = 'bg-white/80 backdrop-blur-md border-t border-gray-100 px-8 py-4 text-[11px] text-gray-500';
+  const base = 'bg-jim-surface/80 backdrop-blur-md border-t border-jim-border px-8 py-4 text-[11px] text-jim-muted';
   // Landing : fixed bottom en dashboard mode uniquement lg+ (laisse place a la
   // CTA sticky mobile + evite chevauchement). Les autres pages restent statiques.
   const variant = isLanding
@@ -25,23 +25,20 @@ export function Footer() {
         <div className="flex flex-wrap items-center gap-2 md:gap-4 justify-center">
           <span>&copy; 2026 JIM Inc.</span>
           <span className="hidden md:inline">&bull;</span>
-          <a href="/cgu" className="font-bold uppercase tracking-wide hover:text-gray-700 transition-colors">Terms</a>
+          <a href="/cgu" className="font-medium hover:text-jim-text-body transition-colors">CGU</a>
           <span className="hidden md:inline">&bull;</span>
-          <a href="/sitemap.xml" className="font-bold uppercase tracking-wide hover:text-gray-700 transition-colors">Sitemap</a>
+          <a href="/sitemap.xml" className="font-medium hover:text-jim-text-body transition-colors">Plan du site</a>
           <span className="hidden md:inline">&bull;</span>
-          <a href="/confidentialite" className="font-bold uppercase tracking-wide hover:text-gray-700 transition-colors">Privacy</a>
+          <a href="/confidentialite" className="font-medium hover:text-jim-text-body transition-colors">Confidentialite</a>
         </div>
 
         {/* Settings droite */}
         <div className="flex items-center gap-6">
-          <button type="button" className="flex items-center gap-2 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
-            <Globe size={12} /> Francais, FR
+          <button type="button" className="flex items-center gap-2 font-medium text-jim-muted hover:text-jim-text-body transition-colors">
+            <Globe size={12} /> Francais
           </button>
-          <button type="button" className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
-            EUR
-          </button>
-          <button type="button" className="flex items-center gap-1 font-bold uppercase tracking-wide text-gray-600 hover:text-gray-800 transition-colors">
-            Support <ChevronUp size={10} className="ml-0.5" />
+          <button type="button" className="flex items-center gap-1 font-medium text-jim-muted hover:text-jim-text-body transition-colors">
+            Aide <ChevronUp size={10} className="ml-0.5" />
           </button>
         </div>
       </div>

@@ -121,14 +121,14 @@ export function useConversations(supabase: Supabase) {
 
   // Realtime — écoute les INSERT et UPDATE sur les conversations de l'utilisateur
   useEffect(() => {
-    let userId: string | null = null;
+    // channel doit être dans la closure externe pour que la cleanup React puisse le voir
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    // Récupérer l'userId pour construire le channel filtré
     void supabase.auth.getUser().then(({ data }) => {
-      userId = data.user?.id ?? null;
+      const userId = data.user?.id ?? null;
       if (!userId) return;
 
-      const channel = supabase
+      channel = supabase
         .channel(`conversations-${userId}`)
         .on(
           'postgres_changes',
@@ -186,11 +186,12 @@ export function useConversations(supabase: Supabase) {
           }
         )
         .subscribe();
-
-      return () => {
-        void supabase.removeChannel(channel);
-      };
     });
+
+    // Cleanup retourné depuis useEffect — React l'appelle au démontage
+    return () => {
+      if (channel) void supabase.removeChannel(channel);
+    };
   }, [supabase, queryClient]);
 
   return useQuery({

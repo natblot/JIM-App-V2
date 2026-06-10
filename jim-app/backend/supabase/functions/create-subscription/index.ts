@@ -1,7 +1,16 @@
 // Edge Function create-subscription — Epic 9, Story 9.6
 // Abonnement Pro (5,90 EUR/mois) via Stripe Billing — 0% commission
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'npm:zod@3';
 import { createCustomerIfNeeded, createProSubscription, cancelProSubscription } from '../_shared/stripe/stripe.service.ts';
+import { checkRateLimit, rateLimitHeaders } from '../_shared/rate-limiter.ts';
+import { extractRequestInfo } from '../_shared/audit.ts';
+
+const subscribeSchema = z.object({
+  payment_method_id: z
+    .string()
+    .regex(/^pm_[a-zA-Z0-9]+$/, 'payment_method_id invalide'),
+});
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -31,13 +40,31 @@ Deno.serve(async (req: Request) => {
   }
 
   const body = await req.json().catch(() => ({}));
+  const { ipAddress } = extractRequestInfo(req);
 
   // POST = souscrire, DELETE = annuler
   if (req.method === 'POST') {
     if (profile.is_pro) return json({ error: { code: 'ALREADY_PRO', message: 'Vous etes deja abonne Pro' } }, 409);
 
-    const { payment_method_id } = body;
-    if (!payment_method_id) return json({ error: { code: 'VALIDATION_ERROR', message: 'payment_method_id requis' } }, 422);
+    // Rate limit : 5 souscriptions/h pour eviter l'abus de cartes
+    const rl = await checkRateLimit(supabaseAdmin, user.id, ipAddress, {
+      endpoint: 'create-subscription',
+      maxRequests: 5,
+      window: '1 hour',
+    });
+    if (!rl.allowed) {
+      return new Response(
+        JSON.stringify({ error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Trop de tentatives, réessayez dans une heure' } }),
+        { status: 429, headers: { ...cors, 'Content-Type': 'application/json', ...rateLimitHeaders(rl) } },
+      );
+    }
+
+    const parsed = subscribeSchema.safeParse(body);
+    if (!parsed.success) {
+      const message = parsed.error.errors[0]?.message ?? 'Paramètres invalides';
+      return json({ error: { code: 'VALIDATION_ERROR', message } }, 422);
+    }
+    const { payment_method_id } = parsed.data;
 
     try {
       const customerId = await createCustomerIfNeeded(user.id, profile.email);

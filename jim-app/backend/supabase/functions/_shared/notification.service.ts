@@ -200,15 +200,15 @@ function buildFcmPayload(
   switch (notif.event_type) {
     case 'ANNONCE_CREEE':
       return {
-        title: `Nouvelle annonce à ${String(p.distance_km ?? '?')} km`,
-        body: `${String(p.ville ?? '')}, ${String(p.dates ?? '')}`,
+        title: 'Nouvelle annonce disponible',
+        body: 'Une annonce correspond à vos critères — ouvrez JIM',
         data: { deep_link: `annonces/${String(p.annonce_id ?? '')}` },
       };
 
     case 'ANNONCE_URGENTE':
       return {
-        title: `Annonce urgente à ${String(p.distance_km ?? '?')} km`,
-        body: `${String(p.ville ?? '')}, ${String(p.dates ?? '')}`,
+        title: 'Annonce urgente disponible',
+        body: 'Une annonce urgente correspond à vos critères — ouvrez JIM',
         data: { deep_link: `annonces/${String(p.annonce_id ?? '')}` },
       };
 

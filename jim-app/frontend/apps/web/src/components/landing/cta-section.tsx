@@ -49,7 +49,7 @@ export function CtaSection() {
 
         <FadeIn delay={4}>
           <p className="mt-[18px] text-[13px] text-jim-muted">
-            Gratuit au lancement · Sans engagement · RPPS verifie
+            Gratuit pendant la beta · Sans engagement · RPPS verifie
           </p>
         </FadeIn>
       </div>

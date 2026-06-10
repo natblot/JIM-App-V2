@@ -61,7 +61,7 @@ export function SocialSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TESTIMONIALS.map((t, i) => (
             <FadeIn key={t.name} delay={(i + 1) as 1 | 2 | 3}>
-              <div className="bg-white rounded-[24px] p-7 shadow-jim border border-jim-border hover:-translate-y-1 hover:shadow-jim-md transition-all duration-300">
+              <div className="bg-jim-surface rounded-[24px] p-7 shadow-jim border border-jim-border hover:-translate-y-1 hover:shadow-jim-hover transition-all duration-300">
                 {/* Etoiles */}
                 <div className="text-jim-accent-warm text-base tracking-[2px] mb-3.5">
                   {'★'.repeat(t.stars)}

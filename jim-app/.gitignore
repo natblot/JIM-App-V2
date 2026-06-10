@@ -18,6 +18,11 @@ dist/
 .env.local
 .env.production
 
+# Secrets — Firebase service accounts, Stripe webhook secrets, etc.
+*-adminsdk-*.json
+*-firebase-adminsdk-*.json
+service-account*.json
+
 # OS
 .DS_Store
 *.pem
@@ -46,3 +51,6 @@ yarn-error.log*
 
 # Test
 coverage/
+
+# Scripts de seed — utilisent SUPABASE_SERVICE_ROLE_KEY, ne jamais commiter
+frontend/apps/web/scripts/seed-*.ts

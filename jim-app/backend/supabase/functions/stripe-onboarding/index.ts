@@ -4,6 +4,31 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createConnectedAccount, createAccountLink, getAccountStatus } from '../_shared/stripe/stripe.service.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
+
+// Hostnames exacts autorises pour les redirections Stripe
+const ALLOWED_HOSTNAMES = new Set(['jim.app']);
+// Domaines dont les sous-domaines sont autorises (*.jim.app)
+const ALLOWED_PARENT_DOMAINS = ['jim.app'];
+// Pour autoriser un preview Vercel specifique, ajouter son hostname exact dans ALLOWED_HOSTNAMES
+// ex: ALLOWED_HOSTNAMES.add('jim-app-git-main-monequipe.vercel.app')
+
+function isAllowedRedirectUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Rejeter toute URL avec userinfo (bypass potentiel)
+    if (parsed.username || parsed.password) return false;
+    // Deep link mobile
+    if (parsed.protocol === 'jim:') return true;
+    // HTTPS uniquement
+    if (parsed.protocol !== 'https:') return false;
+    // Hostname exact
+    if (ALLOWED_HOSTNAMES.has(parsed.hostname)) return true;
+    // Sous-domaines autorises — comparaison sur hostname parse uniquement
+    return ALLOWED_PARENT_DOMAINS.some(domain => parsed.hostname.endsWith(`.${domain}`));
+  } catch {
+    return false;
+  }
+}
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req: Request) => {
@@ -24,6 +49,9 @@ Deno.serve(async (req: Request) => {
     const { refresh_url, return_url } = body;
     if (!refresh_url || !return_url) {
       return json({ error: { code: 'VALIDATION_ERROR', message: 'refresh_url et return_url requis' } }, 422);
+    }
+    if (!isAllowedRedirectUrl(refresh_url) || !isAllowedRedirectUrl(return_url)) {
+      return json({ error: { code: 'VALIDATION_ERROR', message: 'URL de redirection invalide' } }, 422);
     }
 
     // Recuperer le profil

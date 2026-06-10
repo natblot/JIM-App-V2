@@ -26,7 +26,7 @@ function getStripe(): Stripe {
   if (!key.startsWith('sk_test_')) {
     throw new Error('SECURITE: Seules les cles test sont autorisees avant HDS');
   }
-  return new Stripe(key, { apiVersion: '2024-12-18.acacia' });
+  return new Stripe(key, { apiVersion: '2024-12-18.acacia', httpClient: Stripe.createFetchHttpClient() });
 }
 
 // --- Onboarding ---
@@ -152,7 +152,10 @@ export async function preparePayment(
 export async function executePayment(
   paiement: PaiementRow,
   paymentMethodId: string,
+  destinationAccountId: string,
 ): Promise<{ paymentIntentId: string }> {
+  if (!destinationAccountId) throw new Error('MISSING_DESTINATION_ACCOUNT');
+
   const stripe = getStripe();
 
   const paymentIntent = await stripe.paymentIntents.create({
@@ -160,7 +163,7 @@ export async function executePayment(
     currency: 'eur',
     payment_method: paymentMethodId,
     transfer_data: {
-      destination: '', // sera rempli par l'appelant avec le stripe_account_id du remplacant
+      destination: destinationAccountId,
     },
     application_fee_amount: paiement.commission_jim_cents,
     confirm: true,

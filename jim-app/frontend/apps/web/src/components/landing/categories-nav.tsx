@@ -62,8 +62,8 @@ export function CategoriesNav() {
             aria-pressed={active ? 'true' : 'false'}
             className={`min-h-[44px] inline-flex items-center px-4 rounded-full text-[11px] font-bold uppercase tracking-wide transition-all whitespace-nowrap ${
               active
-                ? 'bg-white text-brand shadow-sm'
-                : 'bg-white/60 backdrop-blur text-slate-500 hover:bg-white/80 hover:text-slate-700'
+                ? 'bg-jim-surface text-jim-primary shadow-sm border border-jim-border'
+                : 'bg-jim-surface/60 backdrop-blur text-jim-muted hover:bg-jim-surface/90 hover:text-jim-text-body border border-transparent'
             }`}
           >
             {cat.label}

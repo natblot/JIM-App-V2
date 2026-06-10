@@ -17,7 +17,7 @@ Deux points nécessitent une correction avant mise en production :
 
 2. **HAUT (F3)** — Le payload de la notification `CANDIDATURE_RECUE` (trigger 026) inclut `candidat_prenom` en clair dans `notification_queue.payload`. Ce prénom est ensuite potentiellement inclus dans le payload FCM envoyé au titulaire, violant NFR18 ("zéro donnée personnelle dans les push").
 
-3. **HAUT (F6)** — Le token FCM statique (`FCM_ACCESS_TOKEN`) est un access token Firebase à durée de vie limitée (~1h) stocké en secret Supabase. Sans rotation automatique, le dispatcher tombera silencieusement en erreur à expiration sans alerte. Ce n'est pas un finding de sécurité stricto sensu, mais un risque opérationnel classé HAUT.
+3. **HAUT (F6) — RÉSOLU (2026-05-10)** — Le token FCM statique (`FCM_ACCESS_TOKEN`) est désormais remplacé par un flux OAuth2 service account avec rotation automatique (`_shared/fcm/access-token.ts`, secret `FCM_SERVICE_ACCOUNT_B64`). Cf. F6 ci-dessous pour le détail de la correction.
 
 Les corrections des Epics précédents (F4, F7, F20 de Epic 6) ont bien été intégrées dans les migrations 032 et confirment la bonne gestion du cycle d'audit.
 
@@ -32,7 +32,7 @@ Les corrections des Epics précédents (F4, F7, F20 de Epic 6) ont bien été in
 | F3 | Payload CANDIDATURE_RECUE — prénom remplaçant dans notification_queue | À CORRIGER | HAUT | Avant prod |
 | F4 | match_remplacants — GRANT EXECUTE TO service_role uniquement | CONFORME | — | Aucune |
 | F5 | match_remplacants — pas de fuite de candidatures concurrentes | CONFORME | — | Aucune |
-| F6 | Token FCM statique — risque d'expiration silencieuse | ATTENTION | HAUT | Avant prod |
+| F6 | Token FCM statique — risque d'expiration silencieuse | RÉSOLU (2026-05-10) | HAUT | Migration vers OAuth2 service account (`_shared/fcm/access-token.ts`) |
 | F7 | Trigger dispatch_notification_immediate — déclenchable manuellement | À VÉRIFIER | HAUT | Voir détail |
 | F8 | daily_push_count — reset pg_cron non migré, manipulable côté client | ATTENTION | MOYEN | Avant prod |
 | F9 | Payload FCM — ANNONCE_CREEE contient date_debut/date_fin (non personnel) | CONFORME | — | Aucune |
@@ -165,30 +165,37 @@ Le titre et corps de la push FCM côté dispatcher devront être : `"Nouvelle ca
 
 ---
 
-### F6 — HAUT : Token FCM statique — risque d'expiration silencieuse
+### F6 — HAUT : Token FCM statique — risque d'expiration silencieuse — RÉSOLU (2026-05-10)
 
-**Source :** `supabase/functions/_shared/fcm.adapter.ts` lignes 65-71
+**Source :** `supabase/functions/_shared/fcm.adapter.ts` (avant correction : lignes 65-71)
 
-**Description :**
+**Description initiale :**
 
-La fonction `getFirebaseAccessToken()` lit un token statique depuis `FCM_ACCESS_TOKEN` en variable d'environnement :
+La fonction `getFirebaseAccessToken()` lisait un token statique depuis `FCM_ACCESS_TOKEN` en variable d'environnement, durée de vie ~1h, sans rotation automatique. Toutes les notifications push cessaient silencieusement à expiration.
 
-```typescript
-const token = Deno.env.get('FCM_ACCESS_TOKEN');
+**Correction appliquée (2026-05-10) :**
+
+Implémentation du flux OAuth2 service account dans `_shared/fcm/access-token.ts` :
+
+- Le service account Firebase JSON est stocké en base64 dans le secret `FCM_SERVICE_ACCOUNT_B64`.
+- À chaque appel, `getFcmAccessToken()` retourne un access token mis en cache au niveau du module et rafraîchi 5 minutes avant expiration via signature JWT RS256 (Web Crypto API) + token exchange Google OAuth2.
+- Le `project_id` est lu directement depuis le service account (plus de secret `FCM_PROJECT_ID` séparé).
+- Aucune dépendance externe : signature JWT via `crypto.subtle.sign` natif Deno.
+- Aucun log du JWT ni du payload service account (NFR sécurité CLAUDE.md).
+
+Migration secrets Supabase :
+
+```bash
+# 1. Encoder le service account JSON Firebase
+cat jim-firebase-adminsdk-xxxxx.json | base64 | tr -d '\n' | pbcopy
+
+# 2. Set le nouveau secret
+supabase secrets set FCM_SERVICE_ACCOUNT_B64=<contenu-collé> --workdir backend/supabase
+
+# 3. Supprimer les anciens secrets
+supabase secrets unset FCM_ACCESS_TOKEN --workdir backend/supabase
+supabase secrets unset FCM_PROJECT_ID --workdir backend/supabase
 ```
-
-Les access tokens Firebase OAuth2 ont une durée de vie de 3600 secondes (1 heure). Passée cette durée, FCM retourne une erreur `401 Unauthorized`. Le commentaire dans le code indique explicitement : *"MVP : token statique depuis les env vars (rafraîchi manuellement). Phase 2 : OAuth2 avec service account JSON."*
-
-Ce n'est pas un finding de sécurité au sens strict (le token n'est pas exposé), mais l'expiration silencieuse du token est un risque opérationnel classé HAUT car :
-1. Toutes les notifications push cesseront de fonctionner sans alerte visible.
-2. Le dispatcher retournera `{ ok: true }` même si les push échouent (la gestion d'erreur FCM est dans l'adaptateur, mais l'Edge Function ne remonte pas ces erreurs à l'appelant).
-3. `daily_push_count` s'incrémentera (ou pas, selon le flux) sans que les pushs soient réellement envoyées.
-
-**Correction recommandée (avant prod) :**
-
-Mettre en place le flux OAuth2 avec le service account Firebase, ou à minima créer un endpoint de healthcheck qui vérifie la validité du token FCM et déclenche une alerte (Slack/email ops) à expiration.
-
-Pour le MVP, au minimum s'assurer que le token est un token long-lived de type service account (pas un access token OAuth temporaire), ou implémenter l'impersonation via `FCM_SERVICE_ACCOUNT_JSON` comme prévu en Phase 2.
 
 ---
 
@@ -329,7 +336,7 @@ La colonne `email_digest_enabled BOOLEAN DEFAULT false` est créée en migration
 | 1 — CRITIQUE | F1 — fcm_token exposé | Créer vue `profiles_public` excluant fcm_token, location, push_*, daily_push_count | 039 |
 | 2 — HAUT | F3 — prénom dans CANDIDATURE_RECUE | Retirer `candidat_prenom` du payload trigger 026, remplacer par message générique | 040 |
 | 3 — HAUT | F8 — daily_push_count manipulable | Trigger BEFORE UPDATE sur profiles bloquant modification de daily_push_count par authenticated | 040 |
-| 4 — HAUT | F6 — token FCM statique | Implémenter OAuth2 service account ou rotation automatique | Phase 2 |
+| 4 — HAUT | F6 — token FCM statique | OAuth2 service account avec cache + rotation auto | RÉSOLU 2026-05-10 (`_shared/fcm/access-token.ts`) |
 | 5 — HAUT | F7 — INSERT notification_queue | Vérifier absence de policy INSERT authenticated sur notification_queue | Vérification DB |
 
 ---
@@ -338,7 +345,7 @@ La colonne `email_digest_enabled BOOLEAN DEFAULT false` est créée en migration
 
 | Priorité | Recommandation | Justification |
 |----------|---------------|---------------|
-| Phase 2 | OAuth2 service account pour FCM (`FCM_SERVICE_ACCOUNT_JSON`) | Remplace le token statique — rotation automatique toutes les heures, aucune intervention manuelle |
+| ~~Phase 2~~ RÉSOLU 2026-05-10 | OAuth2 service account pour FCM (`FCM_SERVICE_ACCOUNT_B64`) | Implémenté dans `_shared/fcm/access-token.ts` — rotation automatique avec cache module-level |
 | Phase 2 | Vue `profiles_public` ou column-level security sur profiles | Protège fcm_token, location, push_*, daily_push_count de l'exposition publique |
 | Phase 2 | Trigger BEFORE UPDATE sur profiles — colonnes système immuables | Empêcher la manipulation de daily_push_count, last_push_sent_at, rpps_verified côté client |
 | Phase 2 | Monitoring des erreurs FCM et alerte opérationnelle | Détecter l'expiration du token, les pics d'erreurs UNREGISTERED, les boucles de dispatch |

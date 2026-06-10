@@ -117,6 +117,95 @@ h3 { font-size: clamp(1rem, 2.5vw, 1.25rem); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Hero visual — floating card animation ── */
+@keyframes hvFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.animate-hv-1 { animation: hvFloat 5s ease-in-out infinite; }
+.animate-hv-2 { animation: hvFloat 6s ease-in-out infinite -2s; }
+.animate-hv-3 { animation: hvFloat 7s ease-in-out infinite -1s; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-hv-1, .animate-hv-2, .animate-hv-3 { animation: none; }
+}
+
+/* ── Header — expanding publish button ── */
+.header-publish {
+  position: relative;
+  height: 44px;
+  width: 44px;
+  border-radius: 9999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  outline: none;
+  will-change: width;
+  transition: width 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border: 0;
+}
+.header-publish:hover,
+.header-publish:focus-visible {
+  width: 218px;
+  box-shadow: 0 10px 26px -6px rgba(58,31,8,.4);
+}
+.header-publish .hp-label {
+  position: absolute;
+  top: 50%;
+  left: 50px;
+  transform: translateY(-50%) translateX(-6px);
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+.header-publish:hover .hp-label,
+.header-publish:focus-visible .hp-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+@media (max-width: 640px) {
+  .header-publish:hover,
+  .header-publish:focus-visible { width: 44px; }
+  .header-publish:hover .hp-label,
+  .header-publish:focus-visible .hp-label { opacity: 0; }
+}
+
+/* Pulse ring on publish button coral circle */
+@keyframes pcPulse {
+  0%   { transform: scale(1); opacity: .55; }
+  70%  { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+.header-publish .pc-ring {
+  animation: pcPulse 2.6s cubic-bezier(0.16,1,0.3,1) infinite;
+}
+.header-publish:hover .pc-ring,
+.header-publish:focus-visible .pc-ring { animation-play-state: paused; }
+
+/* ── Listing card — road-draw animation (map toggle) ── */
+@keyframes roadDraw { to { stroke-dashoffset: 0; } }
+.road-anim-main { animation: roadDraw 0.8s cubic-bezier(0.2,0.8,0.2,1) forwards; }
+.road-anim-mid  { animation: roadDraw 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.18s forwards; }
+.road-anim-sec  { animation: roadDraw 0.55s cubic-bezier(0.2,0.8,0.2,1) 0.32s forwards; }
+
+/* ── Profile dropdown — staggered item entrance ── */
+.me-menu-open .me-menu-item { opacity: 1; transform: translateX(0); }
+.me-menu-open .me-menu-item:nth-child(1) { transition-delay: 0.05s; }
+.me-menu-open .me-menu-item:nth-child(2) { transition-delay: 0.10s; }
+.me-menu-open .me-menu-item:nth-child(3) { transition-delay: 0.15s; }
+.me-menu-open .me-menu-item:nth-child(4) { transition-delay: 0.20s; }
+.me-menu-item {
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background 0.18s;
+}
+
 /* === Messagerie === */
 
 /* Icones Material Symbols */

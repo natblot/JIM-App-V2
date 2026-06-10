@@ -1,5 +1,8 @@
-// Adaptateur FCM HTTP v1 — envoi de push notifications via Firebase Cloud Messaging
-// NFR18 : aucune donnée personnelle dans les payloads
+// Adaptateur FCM HTTP v1 — envoi de push notifications via Firebase Cloud Messaging.
+// Auth OAuth2 service account (cf. ./fcm/access-token.ts).
+// NFR18 : aucune donnée personnelle dans les payloads.
+
+import { getFcmAccessToken } from './fcm/access-token.ts';
 
 /**
  * Envoie une push notification via FCM HTTP v1.
@@ -13,11 +16,8 @@ export async function sendFcmPush(
   data: Record<string, string>,
   priority: 'normal' | 'high' = 'normal',
 ): Promise<boolean> {
-  const projectId = Deno.env.get('FCM_PROJECT_ID');
-  if (!projectId) throw new Error('FCM_PROJECT_ID manquant');
-
+  const { token: accessToken, projectId } = await getFcmAccessToken();
   const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
-  const accessToken = await getFirebaseAccessToken();
 
   const response = await fetch(fcmUrl, {
     method: 'POST',
@@ -55,17 +55,4 @@ export async function sendFcmPush(
   }
 
   return true;
-}
-
-/**
- * Obtient un access token Firebase valide.
- * MVP : token statique depuis les env vars (rafraîchi manuellement).
- * Phase 2 : OAuth2 avec service account JSON (FCM_SERVICE_ACCOUNT_JSON).
- */
-async function getFirebaseAccessToken(): Promise<string> {
-  const token = Deno.env.get('FCM_ACCESS_TOKEN');
-  if (!token) {
-    throw new Error('FCM_ACCESS_TOKEN manquant — configurer dans les secrets Supabase');
-  }
-  return token;
 }

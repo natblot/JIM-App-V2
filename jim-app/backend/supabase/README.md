@@ -80,8 +80,7 @@ SELECT cron.schedule('execute-account-deletions', '0 4 * * *', ...);
 | SUPABASE_ANON_KEY | Auto-injecte |
 | SUPABASE_SERVICE_ROLE_KEY | Auto-injecte |
 | ANNUAIRE_SANTE_API_KEY | verify-rpps, search-rpps |
-| FCM_PROJECT_ID | dispatch-notifications |
-| FCM_ACCESS_TOKEN | dispatch-notifications |
+| FCM_SERVICE_ACCOUNT_B64 | dispatch-notifications (service account Firebase, JSON base64) |
 | STRIPE_SECRET_KEY | stripe-*, create-payment, create-subscription |
 | STRIPE_WEBHOOK_SECRET | stripe-webhook |
 | STRIPE_PRO_PRICE_ID | create-subscription |

@@ -21,6 +21,7 @@ dist/
 .env
 .env.local
 .env.production
+.env*.bak
 
 # OS
 .DS_Store
@@ -64,3 +65,15 @@ tmp/
 
 # BMAD output (generated)
 # _bmad-output/
+.gstack/
+
+# Tool artifacts
+.impeccable/
+.playwright-mcp/
+AUDIT/
+
+# Confidential business documents (repo is public)
+*.docx
+*.xlsx
+Statuts_SASU_JobInMed.pdf
+jim-design-system-template/project/uploads/

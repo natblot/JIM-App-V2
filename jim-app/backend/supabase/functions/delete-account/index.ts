@@ -15,8 +15,13 @@ Deno.serve(async (req: Request) => {
   const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
   const body = await req.json().catch(() => ({}));
 
-  // Mode 2 : execution par pg_cron (service_role avec deletion_id)
+  // Mode 2 : execution par pg_cron — l'appelant doit presenter la service_role_key en Authorization
   if (body.deletion_id) {
+    const callerAuth = req.headers.get('Authorization');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    if (!callerAuth || callerAuth !== `Bearer ${serviceRoleKey}`) {
+      return json({ error: { code: 'FORBIDDEN', message: 'Acces reserve au service interne' } }, 403);
+    }
     return await executeDeletion(supabaseAdmin, body.deletion_id);
   }
 
@@ -162,7 +167,6 @@ async function executeDeletion(supabaseAdmin: ReturnType<typeof createClient>, d
       .eq('id', deletionId);
 
     // 9. Desactiver le compte auth
-    await supabaseAdmin.auth.admin.updateUserById(userId, { ban_duration: 'none' });
     await supabaseAdmin.auth.admin.deleteUser(userId);
 
     // 10. Log audit

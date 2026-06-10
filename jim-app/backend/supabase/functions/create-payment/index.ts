@@ -2,6 +2,7 @@
 // Calcul retrocession + creation du paiement (brouillon → en_attente_validation)
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { preparePayment } from '../_shared/stripe/stripe.service.ts';
+import { createPaymentSchema } from '../_shared/payment.schema.deno.ts';
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -17,15 +18,13 @@ Deno.serve(async (req: Request) => {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return json({ error: { code: 'AUTH_INVALID', message: 'Utilisateur non authentifie' } }, 401);
 
-  const body = await req.json().catch(() => ({}));
-  const { contrat_id, montant_encaisse_cents, source_montant } = body;
-
-  // Validation basique
-  if (!contrat_id || typeof contrat_id !== 'string') return json({ error: { code: 'VALIDATION_ERROR', message: 'contrat_id requis' } }, 422);
-  if (!montant_encaisse_cents || typeof montant_encaisse_cents !== 'number' || montant_encaisse_cents <= 0) {
-    return json({ error: { code: 'VALIDATION_ERROR', message: 'montant_encaisse_cents doit etre un entier positif' } }, 422);
+  const rawBody = await req.json().catch(() => ({}));
+  const parsed = createPaymentSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    const message = parsed.error.errors[0]?.message ?? 'Paramètres invalides';
+    return json({ error: { code: 'VALIDATION_ERROR', message } }, 422);
   }
-  if (montant_encaisse_cents > 100_000_00) return json({ error: { code: 'VALIDATION_ERROR', message: 'Montant maximum : 100 000 EUR' } }, 422);
+  const { contrat_id, montant_encaisse_cents, source_montant } = parsed.data;
 
   const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
 

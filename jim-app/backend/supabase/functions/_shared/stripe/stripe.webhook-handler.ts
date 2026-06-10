@@ -22,9 +22,11 @@ interface SupabaseAdminClient {
 function getStripe(): Stripe {
   const key = Deno.env.get('STRIPE_SECRET_KEY');
   if (!key) throw new Error('STRIPE_SECRET_KEY manquante');
+  if (!key.startsWith('sk_test_')) {
+    throw new Error('SECURITE: Seules les cles test sont autorisees avant HDS');
+  }
   return new Stripe(key, {
     apiVersion: '2024-12-18.acacia',
-    // Deno necessite un HttpClient base Fetch (pas Node http)
     httpClient: Stripe.createFetchHttpClient(),
   });
 }

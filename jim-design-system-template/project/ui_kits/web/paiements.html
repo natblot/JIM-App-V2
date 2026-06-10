@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIM — Paiements</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="search-bar.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="search-bar.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--jim-background);color:var(--jim-text);font-family:var(--font-sans);min-height:100vh}
+
+  /* Header — floating pill (shared with index/messagerie) */
+  .header-wrap{position:sticky;top:0;z-index:40;padding:18px 24px 0;display:flex;justify-content:center;pointer-events:none}
+  .header{pointer-events:auto;display:inline-flex;align-items:center;gap:10px;padding:7px 7px 7px 22px;background:rgba(255,255,255,.78);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(58,31,8,.06);border-radius:999px;box-shadow:0 18px 50px -20px rgba(58,31,8,.25),0 2px 6px rgba(58,31,8,.04);position:static;height:auto}
+  .brand{display:inline-flex;align-items:center;text-decoration:none;margin-right:8px}
+  .brand img{height:26px;width:auto;display:block;margin:0}
+  .nav{position:relative;display:flex;gap:2px;padding:0;border-radius:999px}
+  .nav-pill{position:absolute;top:0;left:0;height:100%;background:var(--jim-primary-pale);border-radius:999px;transition:transform .4s cubic-bezier(.22,1,.36,1),width .4s cubic-bezier(.22,1,.36,1),opacity .25s;pointer-events:none;z-index:0;opacity:0;will-change:transform,width}
+  .nav-pill.ready{opacity:1}
+  .nav a{position:relative;font-size:14px;font-weight:600;color:var(--jim-text);text-decoration:none;padding:10px 18px;border-radius:999px;transition:color .25s,font-weight .25s;z-index:1;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .nav a.active{color:var(--jim-primary);font-weight:700}
+  .header-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+  /* ── Publier une annonce — coral "+" that expands to a brown pill on approach ── */
+  .publish-cta{position:relative;height:44px;width:44px;border-radius:999px;background:var(--jim-text);overflow:hidden;flex-shrink:0;cursor:pointer;text-decoration:none;outline:0;will-change:width;transition:width .5s cubic-bezier(.16,1,.3,1),box-shadow .35s}
+  .publish-cta:hover,.publish-cta:focus-visible{width:218px;box-shadow:0 10px 26px -6px rgba(58,31,8,.4)}
+  .pc-circle{position:absolute;top:4px;left:4px;width:36px;height:36px;background:var(--jim-primary);border-radius:999px;box-shadow:0 4px 12px rgba(255,124,92,.5);transition:box-shadow .3s}
+  .publish-cta:hover .pc-circle,.publish-cta:focus-visible .pc-circle{box-shadow:0 4px 16px rgba(255,124,92,.65)}
+  /* idle pulse ring — invites the click, pauses on hover */
+  .pc-circle::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--jim-primary);opacity:0;animation:pcPulse 2.6s cubic-bezier(.16,1,.3,1) infinite}
+  .publish-cta:hover .pc-circle::after,.publish-cta:focus-visible .pc-circle::after{animation-play-state:paused;opacity:0}
+  @keyframes pcPulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.55);opacity:0}100%{transform:scale(1.55);opacity:0}}
+  .pc-ico{position:absolute;top:50%;left:22px;transform:translate(-50%,-50%);color:#fff;display:inline-flex}
+  .pc-lbl{position:absolute;top:50%;left:50px;transform:translateY(-50%) translateX(-6px);white-space:nowrap;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:-.01em;color:#fff;opacity:0;transition:opacity .35s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+  .publish-cta:hover .pc-lbl,.publish-cta:focus-visible .pc-lbl{opacity:1;transform:translateY(-50%) translateX(0);transition:opacity .4s ease .08s,transform .5s cubic-bezier(.16,1,.3,1) .04s}
+  @media(max-width:640px){.publish-cta:hover,.publish-cta:focus-visible{width:44px}.publish-cta:hover .pc-lbl,.publish-cta:focus-visible .pc-lbl{opacity:0}}
+  /* search bar styles live in search-bar.css */
+  .nav-me{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--jim-primary),var(--jim-accent));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;line-height:1;letter-spacing:.02em;flex-shrink:0;transition:box-shadow .2s}
+  .nav-me:hover{box-shadow:0 0 0 3px var(--jim-primary-soft)}
+  /* ── Profile dropdown menu ── */
+  .me-wrap{position:relative;flex-shrink:0}
+  .nav-me.open{box-shadow:0 0 0 3px var(--jim-primary-soft),0 6px 18px -6px rgba(255,124,92,.5)}
+  .me-menu{position:absolute;top:calc(100% + 20px);right:0;width:256px;background:rgba(255,255,255,.9);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(58,31,8,.07);border-radius:18px;box-shadow:0 24px 60px -18px rgba(58,31,8,.32),0 2px 8px rgba(58,31,8,.06);padding:7px;z-index:60;transform-origin:top right;opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;will-change:transform,opacity;transition:opacity .16s ease,transform .28s cubic-bezier(.22,1,.36,1)}
+  .me-menu.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;transition:opacity .2s ease,transform .34s cubic-bezier(.22,1,.36,1)}
+  .me-head{display:flex;align-items:center;gap:11px;padding:10px 11px 12px;margin:0 0 5px;border-bottom:1px solid var(--jim-beige-light)}
+  .me-head .me-av{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--jim-primary),var(--jim-accent));color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+  .me-head-txt{min-width:0}
+  .me-name{font-size:14px;font-weight:700;color:var(--jim-text);margin:0;letter-spacing:-.01em;line-height:1.2}
+  .me-role{font-size:11px;color:var(--jim-muted);margin:2px 0 0;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+  .me-item{display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:12px;text-decoration:none;cursor:pointer;opacity:0;transform:translateY(6px);will-change:transform,opacity;transition:opacity .22s ease,transform .34s cubic-bezier(.22,1,.36,1),background .18s}
+  .me-menu.open .me-item{opacity:1;transform:translateY(0)}
+  .me-menu.open .me-item:nth-of-type(1){transition-delay:.04s}
+  .me-menu.open .me-item:nth-of-type(2){transition-delay:.07s}
+  .me-menu.open .me-item:nth-of-type(3){transition-delay:.1s}
+  .me-menu.open .me-item:nth-of-type(4){transition-delay:.13s}
+  .me-item:hover{background:var(--jim-surface-alt)}
+  .me-ico{width:34px;height:34px;border-radius:10px;background:var(--jim-surface-alt);color:var(--jim-text-body);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .18s,color .18s}
+  .me-item:hover .me-ico{background:var(--jim-primary-pale);color:var(--jim-primary)}
+  .me-tt{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  .me-t{font-size:14px;font-weight:600;color:var(--jim-text);letter-spacing:-.01em}
+  .me-s{font-size:11px;font-weight:500;color:var(--jim-muted);margin-top:1px}
+  .me-badge{margin-left:auto;background:var(--jim-primary);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;flex-shrink:0}
+  .me-chev{margin-left:auto;color:var(--jim-beige-dark);flex-shrink:0;transition:transform .2s,color .18s}
+  .me-item:hover .me-chev{color:var(--jim-primary);transform:translateX(2px)}
+  @media(max-width:980px){.nav{display:none}}
+  @media(max-width:640px){.header-wrap{padding:12px 12px 0}.header{padding:6px 6px 6px 14px;gap:6px}.nav-me{display:none}}
+
+  /* Page chrome */
+  .page{max-width:1380px;margin:0 auto;padding:24px 24px 60px;position:relative}
+  @media(max-width:760px){.page{padding:24px 18px 60px}}
+
+  .page-head{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+  .page-head-l{display:flex;align-items:center;gap:18px}
+  .page-title-wrap h1{font-size:clamp(26px,3vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--jim-text);margin:0;white-space:nowrap}
+  .page-title-wrap h1 em{font-weight:800;color:var(--jim-primary)}
+  .page-title-wrap p{font-size:12.5px;color:var(--jim-muted);margin:4px 0 0}
+  .crumbs{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--jim-muted);font-weight:700;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;background:#fff;border:1px solid var(--jim-beige-mid);border-radius:999px;white-space:nowrap}
+  .crumbs .cur{color:var(--jim-text)}
+  .crumbs .sep{opacity:.4}
+
+  .page-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .range-switch{display:inline-flex;background:#fff;border:1px solid var(--jim-beige-mid);border-radius:12px;padding:3px}
+  .range-btn{background:transparent;border:0;padding:7px 12px;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;color:var(--jim-muted);cursor:pointer;white-space:nowrap}
+  .range-btn.active{background:var(--jim-text);color:#fff}
+  .var-switch{display:inline-flex;background:#fff;border:1px solid var(--jim-beige-mid);border-radius:12px;padding:3px;box-shadow:0 1px 2px rgba(58,31,8,.04)}
+  .var-btn{background:transparent;border:0;padding:7px 13px;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;color:var(--jim-muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .var-btn:hover{color:var(--jim-text)}
+  .var-btn.active{background:var(--jim-primary);color:#fff;box-shadow:0 2px 6px rgba(255,124,92,.28)}
+  .var-btn .num{;font-size:13px;font-weight:400;opacity:.7}
+
+  /* ═══ Shared ═══ */
+  .card{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .card-title{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:var(--jim-muted);font-weight:700;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .card-title .link{color:var(--jim-primary);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.1em;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+  .btn{display:inline-flex;align-items:center;gap:7px;background:var(--jim-text);color:#fff;border:0;padding:10px 15px;border-radius:11px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .btn.primary{background:var(--jim-primary);box-shadow:0 6px 14px rgba(255,124,92,.28)}
+  .btn.primary:hover{background:var(--jim-accent)}
+  .btn.ghost{background:transparent;color:var(--jim-text);border:1px solid var(--jim-beige-mid)}
+  .btn.ghost:hover{background:var(--jim-surface-alt)}
+  .btn.sm{padding:6px 11px;font-size:11.5px;border-radius:9px}
+  .status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .status.escrow{background:#fff4ea;color:#b45309}
+  .status.paid{background:#dcfce7;color:#166534}
+  .status.pending{background:#ffe4d6;color:var(--jim-primary)}
+  .status.scheduled{background:#dbeafe;color:#1e40af}
+
+  .variation{display:none}
+  .variation.active{display:block;animation:varIn .42s cubic-bezier(.22,1,.36,1) both}
+  @keyframes varIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  }
+
+  /* ════════════ KPI row (shared across all) ════════════ */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.kpi-row{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--jim-border);border-radius:14px;padding:14px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(58,31,8,.03);display:flex;flex-direction:column;gap:8px}
+  .kpi.hero{background:linear-gradient(135deg,#fff8f2,#fef0e4);border-color:var(--jim-primary-pale)}
+  .kpi-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--jim-muted);font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .kpi-ico{width:26px;height:26px;border-radius:8px;background:var(--jim-surface-alt);color:var(--jim-text-body);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .kpi.hero .kpi-ico{background:var(--jim-primary);color:#fff}
+  .kpi-delta{font-size:10px;font-weight:700;padding:3px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+  .kpi-delta.up{background:#dcfce7;color:#166534}
+  .kpi-delta.down{background:#fee2e2;color:#b91c1c}
+  .kpi-delta.neutral{background:var(--jim-surface-alt);color:var(--jim-muted)}
+  .kpi-n{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--jim-text);font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+  .kpi-n em{font-weight:800;color:var(--jim-primary);font-size:.65em}
+  .kpi-d{font-size:11px;color:var(--jim-muted);margin-top:-2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-spark{height:32px;margin-top:auto;width:100%}
+
+  /* ════════════ V1 — DASHBOARD ════════════ */
+  /* Section headers that organise the dashboard into clear phases */
+  .sec-hd{display:flex;align-items:baseline;gap:14px;margin:0 0 14px;padding:0 2px}
+  .sec-hd-n{font-weight:800;color:var(--jim-primary);font-size:14px;letter-spacing:-.01em;min-width:22px}
+  .sec-hd-t{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--jim-text);margin:0}
+  .sec-hd-s{font-size:11.5px;color:var(--jim-muted);margin-left:auto;font-weight:500}
+  .sec-hd-line{flex:1;height:1px;background:linear-gradient(to right,var(--jim-beige-mid),transparent);margin:0 4px}
+  .sec{margin-bottom:18px}
+  .sec:last-child{margin-bottom:0}
+
+  .dash-grid{display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+  @media(max-width:1100px){.dash-grid{grid-template-columns:1fr}}
+
+  /* ═══ Calculator (micro-BNC simulator) ═══ */
+  .calc-card{background:#fff;border:1px solid var(--jim-border);border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05);display:grid;grid-template-columns:320px 1fr;min-height:280px}
+  @media(max-width:960px){.calc-card{grid-template-columns:1fr}}
+  .calc-left{background:linear-gradient(165deg,#fff8f2 0%,#fef0e4 100%);padding:24px;border-right:1px solid var(--jim-beige-mid);display:flex;flex-direction:column;gap:18px;position:relative;overflow:hidden}
+  @media(max-width:960px){.calc-left{border-right:0;border-bottom:1px solid var(--jim-beige-mid)}}
+  .calc-left::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,var(--jim-primary-pale),transparent 70%);opacity:.6;pointer-events:none}
+  .calc-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:var(--jim-primary);font-weight:700;display:inline-flex;align-items:center;gap:6px;z-index:1}
+  .calc-eyebrow .bdg{background:var(--jim-primary);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;letter-spacing:.08em}
+  .calc-h{font-family:var(--font-sans);font-size:22px;font-weight:800;line-height:1.15;letter-spacing:-.02em;color:var(--jim-text);margin:0;z-index:1}
+  .calc-h em{color:var(--jim-primary)}
+  .calc-profile{display:flex;flex-direction:column;gap:8px;z-index:1}
+  .calc-profile-row{display:flex;gap:6px;flex-wrap:wrap}
+  .calc-chip{background:#fff;border:1px solid var(--jim-beige-mid);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:600;color:var(--jim-text-body);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+  .calc-chip:hover{border-color:var(--jim-primary)}
+  .calc-chip.active{background:var(--jim-primary);color:#fff;border-color:var(--jim-primary);box-shadow:0 2px 6px rgba(255,124,92,.25)}
+  .calc-slider-wrap{z-index:1;margin-top:auto}
+  .calc-slider-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--jim-muted);font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between}
+  .calc-slider-val{font-size:28px;font-weight:800;letter-spacing:-.025em;color:var(--jim-text);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:12px}
+  .calc-slider-val em{font-weight:800;font-size:.6em;color:var(--jim-primary);margin-left:2px}
+  input[type=range].calc-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--jim-beige-mid);border-radius:999px;outline:none}
+  input[type=range].calc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--jim-primary);border:3px solid #fff;box-shadow:0 2px 6px rgba(255,124,92,.35);cursor:pointer}
+  input[type=range].calc-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--jim-primary);border:3px solid #fff;box-shadow:0 2px 6px rgba(255,124,92,.35);cursor:pointer;border:0}
+  .calc-slider-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--jim-muted);font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+
+  .calc-right{padding:22px 24px;display:flex;flex-direction:column;gap:0}
+  .calc-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:10px}
+  .calc-title h3{margin:0;font-size:13px;font-weight:800;letter-spacing:-.01em;color:var(--jim-text)}
+  .calc-title small{font-size:10.5px;color:var(--jim-muted);font-weight:500}
+  .calc-row{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px dashed var(--jim-beige-mid);font-size:13px}
+  .calc-row:first-of-type{border-top:0}
+  .calc-row .ico{width:26px;height:26px;border-radius:7px;background:var(--jim-surface-alt);display:flex;align-items:center;justify-content:center;color:var(--jim-text-body)}
+  .calc-row .lbl-wrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .calc-row .lbl{font-weight:600;color:var(--jim-text);letter-spacing:-.005em}
+  .calc-row .sub{font-size:10.5px;color:var(--jim-muted);font-variant-numeric:tabular-nums}
+  .calc-row .val{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}
+  .calc-row .val.neg{color:#b45309}
+  .calc-row.base .val{color:var(--jim-text)}
+  .calc-row.total{border-top:2px solid var(--jim-text);border-bottom:0;margin-top:6px;padding:14px 0 10px;background:linear-gradient(to right,rgba(255,124,92,.04),transparent);border-radius:0;grid-template-columns:1fr auto}
+  .calc-row.total .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--jim-muted);font-weight:700}
+  .calc-row.total .val{font-size:26px;font-weight:800;color:var(--jim-text);letter-spacing:-.025em}
+  .calc-row.total .val em{font-weight:800;font-size:.55em;color:var(--jim-primary);margin-left:3px}
+  .calc-reg{margin-top:10px;padding:12px 14px;background:var(--jim-surface-alt);border:1px dashed var(--jim-beige-mid);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+  .calc-reg .l{display:flex;align-items:center;gap:8px;color:var(--jim-text-body)}
+  .calc-reg .l i{color:#b45309}
+  .calc-reg .v{font-weight:800;font-variant-numeric:tabular-nums;color:#b45309;white-space:nowrap}
+  .calc-foot{margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10.5px;color:var(--jim-muted);flex-wrap:wrap}
+  .calc-foot .src{display:inline-flex;align-items:center;gap:5px}
+
+  .chart-card{background:#fff;border:1px solid var(--jim-border);border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .chart-head{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+  .chart-head h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--jim-text)}
+  .chart-head h3 em{font-weight:800;color:var(--jim-primary)}
+  .chart-head p{margin:4px 0 0;font-size:12px;color:var(--jim-muted)}
+  .chart-legend{display:flex;gap:14px;font-size:11px;color:var(--jim-text-body);font-weight:600;flex-wrap:wrap}
+  .legend-dot{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .legend-dot::before{content:"";width:10px;height:10px;border-radius:3px;background:currentColor}
+  .legend-dot.paid{color:var(--jim-primary)}
+  .legend-dot.escrow{color:#f59e0b}
+  .legend-dot.proj{color:var(--jim-text-body);display:inline-flex;align-items:center;gap:6px}
+  .legend-dot.proj::before{background:transparent;border:1.5px dashed var(--jim-text-body);border-radius:2px}
+
+  .chart-canvas{position:relative;width:100%;height:280px}
+  .chart-canvas svg{width:100%;height:100%;overflow:visible}
+  .chart-tooltip{position:absolute;background:var(--jim-text);color:#fff;padding:8px 12px;border-radius:10px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:3;box-shadow:0 8px 20px rgba(0,0,0,.2);white-space:nowrap}
+  .chart-tooltip .tt-t{font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:9px;opacity:.7;margin-bottom:3px}
+  .chart-tooltip .tt-n{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  .chart-tooltip .tt-s{color:rgba(255,255,255,.65);font-size:10px}
+
+  .chart-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-top:18px;border-top:1px dashed var(--jim-beige-mid);margin-top:4px}
+  .cs-t{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--jim-muted);font-weight:700;margin-bottom:4px}
+  .cs-n{font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--jim-text);font-variant-numeric:tabular-nums;line-height:1}
+  .cs-d{font-size:11px;color:var(--jim-muted);margin-top:3px}
+
+  /* Right sidebar */
+  .dash-side{display:flex;flex-direction:column;gap:12px}
+
+  /* Balance hero card */
+  .balance-card{background:linear-gradient(135deg,#2a1608,#3a1f08 60%,#4a2910);color:#fff;border-radius:20px;padding:24px;position:relative;overflow:hidden}
+  .balance-card::before{content:"";position:absolute;top:-80px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,124,92,.45),transparent 70%);pointer-events:none}
+  .balance-card::after{content:"";position:absolute;bottom:-100px;left:-30px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,180,120,.18),transparent 70%);pointer-events:none}
+  .balance-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,.55);font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;z-index:1}
+  .balance-eyebrow .live{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25)}
+  .balance-n{font-size:46px;font-weight:800;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums;margin:0;position:relative;z-index:1;white-space:nowrap}
+  .balance-n em{font-weight:800;color:var(--jim-primary);font-size:.5em;margin-left:4px}
+  .balance-sub{font-size:12px;color:rgba(255,255,255,.7);margin:8px 0 0;line-height:1.5;position:relative;z-index:1}
+  .balance-cta{margin-top:18px;width:100%;background:var(--jim-primary);color:#fff;border:0;padding:12px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;position:relative;z-index:1;box-shadow:0 6px 16px rgba(255,124,92,.4)}
+  .balance-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;position:relative;z-index:1}
+  .bs{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
+  .bs-l{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+  .bs-l .dot{width:6px;height:6px;border-radius:50%;background:var(--jim-primary)}
+  .bs-l .dot.esc{background:#f59e0b}
+  .bs-n{font-size:16px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bs-s{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px}
+
+  /* Mix donut */
+  .mix-card{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .mix-grid{display:grid;grid-template-columns:110px 1fr;gap:18px;align-items:center}
+  .donut{width:110px;height:110px;position:relative}
+  .donut svg{width:100%;height:100%}
+  .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .donut-center .n{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .donut-center .l{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--jim-muted);font-weight:700;margin-top:3px}
+  .mix-list{display:flex;flex-direction:column;gap:9px}
+  .mix-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px}
+  .mix-item .dot{width:9px;height:9px;border-radius:3px}
+  .mix-item .l{color:var(--jim-text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mix-item .v{color:var(--jim-muted);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* Escrow queue */
+  .escrow-queue{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .eq-item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px dashed var(--jim-beige-mid)}
+  .eq-item:first-of-type{border-top:0;padding-top:4px}
+  .eq-av{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
+  .eq-av.g2{background:linear-gradient(135deg,#3b82f6,#7c3aed)}
+  .eq-body{min-width:0}
+  .eq-t{font-size:12.5px;font-weight:700;color:var(--jim-text);margin:0;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .eq-progress{height:4px;background:var(--jim-surface-alt);border-radius:999px;margin-top:6px;overflow:hidden}
+  .eq-progress .bar{height:100%;background:linear-gradient(90deg,#f59e0b,#ea580c);border-radius:999px}
+  .eq-progress.neutral .bar{background:linear-gradient(90deg,var(--jim-primary),var(--jim-accent))}
+  .eq-s{font-size:10.5px;color:var(--jim-muted);margin:4px 0 0;display:flex;justify-content:space-between;gap:8px}
+  .eq-s b{color:var(--jim-text);font-weight:600}
+  .eq-n{font-size:14px;font-weight:800;color:var(--jim-text);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ════════════ Main history + right stack (shared with dashboard) ════════════ */
+  .lower-grid{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:0;align-items:start}
+  @media(max-width:1100px){.lower-grid{grid-template-columns:1fr}}
+
+  .tbl-wrap{background:#fff;border:1px solid var(--jim-border);border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .tbl-hd{padding:18px 22px;border-bottom:1px solid var(--jim-border);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .tbl-hd h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.015em}
+  .tbl-hd h3 small{font-weight:500;color:var(--jim-muted);margin-left:6px;font-size:12px}
+  .tbl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .tbl-search{background:var(--jim-surface-alt);border:0;border-radius:10px;padding:7px 12px 7px 30px;font-family:inherit;font-size:12px;color:var(--jim-text);width:170px;outline:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23a0846b' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/></svg>");background-repeat:no-repeat;background-position:10px center}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl thead{background:var(--jim-surface-alt)}
+  .tbl th{text-align:left;padding:10px 22px;font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--jim-muted);font-weight:700;white-space:nowrap}
+  .tbl th:last-child,.tbl td:last-child{text-align:right}
+  .tbl td{padding:14px 22px;border-top:1px solid var(--jim-beige-mid);color:var(--jim-text);vertical-align:middle}
+  .tbl tr:hover td{background:rgba(253,246,237,.6)}
+  .tbl .who{display:flex;align-items:center;gap:10px}
+  .tbl .who .av{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--jim-primary),var(--jim-accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:10.5px;flex-shrink:0}
+  .tbl .who .av.g2{background:linear-gradient(135deg,#3b82f6,#7c3aed)}
+  .tbl .who .av.g3{background:linear-gradient(135deg,#059669,#0d9488)}
+  .tbl .who .av.g4{background:linear-gradient(135deg,#f59e0b,#f97316)}
+  .tbl .who-n{font-weight:600;font-size:13px;letter-spacing:-.005em;white-space:nowrap}
+  .tbl .who-s{font-size:10px;color:var(--jim-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:1px;font-weight:600}
+  .tbl .amt{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .tbl .amt.pos{color:var(--jim-success)}
+  .tbl .ref{font-family:ui-monospace,monospace;font-size:11px;color:var(--jim-muted);white-space:nowrap}
+  .tbl .actions{display:inline-flex;gap:4px;justify-content:flex-end}
+  .r-act{width:30px;height:30px;border-radius:8px;background:var(--jim-surface-alt);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--jim-text-body)}
+  .r-act:hover{background:var(--jim-beige-mid);color:var(--jim-text)}
+  .tbl-foot{padding:12px 22px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--jim-muted);border-top:1px solid var(--jim-border);background:var(--jim-surface-alt)}
+  .tbl-pagination{display:inline-flex;gap:4px}
+  .pg{width:28px;height:28px;border-radius:8px;background:#fff;border:1px solid var(--jim-beige-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--jim-text-body);font-weight:600}
+  .pg.active{background:var(--jim-primary);color:#fff;border-color:var(--jim-primary)}
+
+  /* IBAN / receipts sidebar */
+  .side-col{display:flex;flex-direction:column;gap:12px}
+  .iban-card{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .iban-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .iban-logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#635bff,#7a6bff);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+  .iban-top-body{flex:1;min-width:0}
+  .iban-top-body h4{margin:0;font-size:13px;font-weight:700;letter-spacing:-.005em;display:inline-flex;align-items:center;gap:7px}
+  .iban-top-body .ok{color:var(--jim-success);display:inline-flex;align-items:center;gap:3px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:9px;background:#dcfce7;padding:2px 6px;border-radius:999px}
+  .iban-top-body p{margin:3px 0 0;font-size:11px;color:var(--jim-muted)}
+  .iban-body{background:var(--jim-surface-alt);border-radius:12px;padding:14px;font-family:ui-monospace,"JetBrains Mono",monospace;font-size:13px;letter-spacing:.06em;color:var(--jim-text);margin-bottom:12px;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .iban-body .lbl{font-family:var(--font-sans);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--jim-muted);font-weight:700;margin-bottom:6px;letter-spacing:.14em}
+  .iban-body .copy{position:absolute;top:10px;right:10px;background:#fff;border:1px solid var(--jim-beige-mid);padding:5px 8px;border-radius:8px;font-family:var(--font-sans);font-size:10px;font-weight:600;color:var(--jim-text-body);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .iban-meta{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--jim-muted);flex-wrap:wrap}
+  .iban-meta b{color:var(--jim-text);font-weight:700}
+
+  .receipts-card{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .receipt{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px dashed var(--jim-beige-mid)}
+  .receipt:last-child{border-bottom:0}
+  .receipt-ico{width:34px;height:34px;border-radius:10px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .receipt-body{flex:1;min-width:0}
+  .receipt-t{font-size:12.5px;font-weight:600;color:var(--jim-text);margin:0;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .receipt-s{font-size:10px;color:var(--jim-muted);margin:2px 0 0;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+  .receipt-actions{display:flex;gap:5px}
+
+  .trust-card{background:linear-gradient(135deg,#fff8f2,#fef0e4);border:1px solid var(--jim-primary-pale);border-radius:18px;padding:18px;display:flex;gap:12px;align-items:flex-start}
+  .trust-ico{width:36px;height:36px;border-radius:10px;background:var(--jim-primary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .trust-card h4{margin:0;font-size:13px;font-weight:700;letter-spacing:-.005em}
+  .trust-card p{margin:5px 0 0;font-size:11.5px;color:var(--jim-text-body);line-height:1.5}
+  .trust-card p b{color:var(--jim-text);font-weight:700}
+
+  /* ════════════ V3 — STORYBOARD ════════════ */
+  .v3-hero{background:linear-gradient(135deg,#fff8f2,#fef0e4);border:1px solid var(--jim-primary-pale);border-radius:24px;padding:28px;margin-bottom:22px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+  @media(max-width:780px){.v3-hero{grid-template-columns:1fr}}
+  .v3-hero-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--jim-primary);margin-bottom:10px}
+  .v3-hero h2{font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0 0 10px;color:var(--jim-text);max-width:520px}
+  .v3-hero h2 em{font-weight:800;color:var(--jim-primary)}
+  .v3-hero p{font-size:14px;color:var(--jim-text-body);max-width:500px;line-height:1.55;margin:0 0 16px}
+  .v3-hero-bal{background:#fff;border:1px solid var(--jim-border);border-radius:18px;padding:20px 22px;min-width:220px;text-align:right}
+  .v3-hero-bal .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--jim-muted);font-weight:700;margin-bottom:6px}
+  .v3-hero-bal .n{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--jim-text);font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+  .v3-hero-bal .n em{font-weight:800;font-size:.5em;color:var(--jim-primary)}
+  .v3-hero-bal .sub{font-size:11px;color:var(--jim-muted);margin-top:6px}
+
+  .story-head{margin:36px 0 18px}
+  .story-head .eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--jim-muted);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  .story-head .eyebrow::before{content:"";width:28px;height:1px;background:var(--jim-primary)}
+  .story-head h2{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.03em}
+  .story-head h2 em{font-weight:800;color:var(--jim-primary)}
+
+  .story{display:grid;grid-template-columns:260px 1fr;gap:36px;align-items:start}
+  @media(max-width:880px){.story{grid-template-columns:1fr;gap:22px}}
+  .story-side{position:sticky;top:80px}
+  .story-side h3{font-size:14px;font-weight:700;color:var(--jim-text);margin:0 0 10px;letter-spacing:-.005em}
+  .story-side p{font-size:12px;color:var(--jim-muted);line-height:1.55;margin:0}
+  .story-side .mission{background:#fff;border:1px solid var(--jim-border);border-radius:14px;padding:14px;margin-top:14px;box-shadow:0 1px 2px rgba(58,31,8,.03)}
+  .mission-title{font-size:12.5px;font-weight:700;letter-spacing:-.005em;margin:0}
+  .mission-sub{font-size:11px;color:var(--jim-muted);margin:3px 0 10px}
+  .mission-row{display:flex;justify-content:space-between;font-size:11.5px;padding:6px 0;border-top:1px dashed var(--jim-beige-mid)}
+  .mission-row:first-of-type{border-top:0}
+  .mission-row .l{color:var(--jim-muted);white-space:nowrap}
+  .mission-row .r{font-weight:700;color:var(--jim-text);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mission-row .r.em{color:var(--jim-primary)}
+
+  .steps{position:relative;padding-left:38px}
+  .steps::before{content:"";position:absolute;top:14px;bottom:14px;left:12px;width:2px;background:linear-gradient(to bottom,var(--jim-success) 0%,var(--jim-success) 60%,var(--jim-primary) 60%,var(--jim-primary) 78%,var(--jim-beige-mid) 78%,var(--jim-beige-mid) 100%)}
+  .step{position:relative;padding:0 0 26px 0}
+  .step:last-child{padding-bottom:0}
+  .step-mark{position:absolute;left:-38px;top:0;width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--jim-beige-mid);display:flex;align-items:center;justify-content:center;color:var(--jim-muted);z-index:2}
+  .step.done .step-mark{background:var(--jim-success);border-color:var(--jim-success);color:#fff}
+  .step.active .step-mark{background:var(--jim-primary);border-color:var(--jim-primary);color:#fff}
+  .step.active .step-mark::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--jim-primary);opacity:.3;animation:ring 1.8s ease-out infinite}
+  @keyframes ring{0%{transform:scale(.8);opacity:.6}100%{transform:scale(1.4);opacity:0}}
+
+  .step-card{background:#fff;border:1px solid var(--jim-border);border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 14px rgba(58,31,8,.05)}
+  .step.pending .step-card{background:transparent;border-style:dashed;box-shadow:none}
+  .step-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+  .step-t{font-size:15px;font-weight:800;color:var(--jim-text);margin:0;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;min-width:0}
+  .step-t svg{flex-shrink:0}
+  .step.pending .step-t{color:var(--jim-muted)}
+  .step-date{font-size:11px;color:var(--jim-muted);font-family:ui-monospace,monospace;white-space:nowrap}
+  .step-s{font-size:13px;color:var(--jim-text-body);line-height:1.55;margin:0}
+  .step-s b{color:var(--jim-text);font-weight:700}
+  .step-extras{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--jim-surface-alt);border-radius:9px;font-size:11.5px;font-weight:600;color:var(--jim-text);letter-spacing:-.005em;white-space:nowrap}
+  .chip.success{background:#dcfce7;color:#166534}
+  .chip.coral{background:var(--jim-primary-pale);color:var(--jim-primary)}
+  .chip.amount{font-variant-numeric:tabular-nums;font-weight:800}
+
+  /* ════════════ V2 — DENSE TABLE ════════════ */
+  .v2-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  @media(max-width:1100px){.v2-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header-wrap">
+  <header class="header">
+    <a href="index.html" class="brand" aria-label="JIM — Job. In. Med."><svg class="brand-mark" viewBox="270 377 662 330" aria-hidden="true" focusable="false" style="height:26px;width:auto;display:block;fill:#F58869"><path d="M 355.00 383.00 L 354.00 384.00 L 349.00 384.00 L 349.00 385.00 L 346.00 385.00 L 346.00 386.00 L 340.00 388.00 L 331.00 397.00 L 331.00 399.00 L 329.00 401.00 L 329.00 404.00 L 328.00 404.00 L 328.00 407.00 L 327.00 407.00 L 327.00 414.00 L 326.00 414.00 L 327.00 415.00 L 327.00 422.00 L 328.00 422.00 L 330.00 430.00 L 332.00 431.00 L 332.00 433.00 L 339.00 440.00 L 341.00 440.00 L 341.00 441.00 L 343.00 441.00 L 343.00 442.00 L 345.00 442.00 L 347.00 444.00 L 350.00 444.00 L 350.00 445.00 L 365.00 445.00 L 365.00 444.00 L 368.00 444.00 L 368.00 443.00 L 376.00 440.00 L 383.00 433.00 L 384.00 429.00 L 386.00 428.00 L 387.00 422.00 L 388.00 422.00 L 389.00 412.00 L 388.00 412.00 L 387.00 403.00 L 386.00 403.00 L 384.00 397.00 L 381.00 395.00 L 381.00 393.00 L 379.00 391.00 L 377.00 391.00 L 375.00 388.00 L 373.00 388.00 L 373.00 387.00 L 371.00 387.00 L 369.00 385.00 L 361.00 384.00 L 361.00 383.00 L 356.00 383.00 Z"/><path d="M 513.00 383.00 L 512.00 384.00 L 507.00 384.00 L 507.00 385.00 L 504.00 385.00 L 504.00 386.00 L 498.00 388.00 L 490.00 396.00 L 490.00 398.00 L 487.00 401.00 L 486.00 407.00 L 485.00 407.00 L 485.00 422.00 L 486.00 422.00 L 487.00 428.00 L 489.00 429.00 L 490.00 433.00 L 497.00 440.00 L 499.00 440.00 L 499.00 441.00 L 501.00 441.00 L 501.00 442.00 L 503.00 442.00 L 505.00 444.00 L 508.00 444.00 L 508.00 445.00 L 523.00 445.00 L 523.00 444.00 L 529.00 443.00 L 530.00 441.00 L 534.00 440.00 L 541.00 433.00 L 541.00 431.00 L 543.00 430.00 L 543.00 428.00 L 545.00 426.00 L 547.00 412.00 L 546.00 412.00 L 545.00 403.00 L 544.00 403.00 L 542.00 397.00 L 539.00 395.00 L 539.00 393.00 L 537.00 391.00 L 535.00 391.00 L 533.00 388.00 L 531.00 388.00 L 531.00 387.00 L 529.00 387.00 L 527.00 385.00 L 519.00 384.00 L 519.00 383.00 L 514.00 383.00 Z"/><path d="M 762.00 451.00 L 761.00 452.00 L 755.00 452.00 L 755.00 453.00 L 750.00 453.00 L 750.00 454.00 L 744.00 455.00 L 744.00 456.00 L 736.00 459.00 L 735.00 461.00 L 733.00 461.00 L 731.00 464.00 L 729.00 464.00 L 720.00 473.00 L 720.00 475.00 L 717.00 477.00 L 717.00 479.00 L 715.00 480.00 L 714.00 484.00 L 712.00 485.00 L 710.00 491.00 L 709.00 491.00 L 709.00 488.00 L 708.00 488.00 L 708.00 475.00 L 707.00 475.00 L 706.00 456.00 L 637.00 456.00 L 631.00 642.00 L 725.00 642.00 L 723.00 554.00 L 724.00 554.00 L 724.00 551.00 L 726.00 549.00 L 731.00 548.00 L 731.00 547.00 L 737.00 548.00 L 739.00 553.00 L 740.00 553.00 L 740.00 556.00 L 741.00 556.00 L 742.00 642.00 L 825.00 642.00 L 825.00 553.00 L 826.00 553.00 L 826.00 551.00 L 828.00 549.00 L 833.00 548.00 L 833.00 547.00 L 837.00 547.00 L 841.00 551.00 L 842.00 560.00 L 843.00 560.00 L 843.00 642.00 L 926.00 642.00 L 926.00 518.00 L 925.00 518.00 L 925.00 508.00 L 924.00 508.00 L 924.00 501.00 L 923.00 501.00 L 923.00 496.00 L 922.00 496.00 L 921.00 488.00 L 920.00 488.00 L 920.00 485.00 L 918.00 483.00 L 918.00 480.00 L 917.00 480.00 L 915.00 474.00 L 910.00 469.00 L 910.00 467.00 L 905.00 462.00 L 903.00 462.00 L 901.00 459.00 L 899.00 459.00 L 899.00 458.00 L 897.00 458.00 L 897.00 457.00 L 895.00 457.00 L 893.00 455.00 L 890.00 455.00 L 888.00 453.00 L 876.00 452.00 L 876.00 451.00 L 857.00 452.00 L 857.00 453.00 L 852.00 453.00 L 852.00 454.00 L 846.00 455.00 L 846.00 456.00 L 838.00 459.00 L 837.00 461.00 L 835.00 461.00 L 833.00 464.00 L 831.00 464.00 L 822.00 473.00 L 822.00 475.00 L 816.00 481.00 L 816.00 479.00 L 815.00 479.00 L 813.00 473.00 L 811.00 472.00 L 811.00 470.00 L 807.00 467.00 L 807.00 465.00 L 805.00 463.00 L 803.00 463.00 L 798.00 458.00 L 796.00 458.00 L 796.00 457.00 L 794.00 457.00 L 792.00 455.00 L 786.00 454.00 L 786.00 453.00 L 782.00 453.00 L 782.00 452.00 L 763.00 451.00 Z"/><path d="M 277.00 455.00 L 276.00 455.00 L 276.00 526.00 L 308.00 528.00 L 308.00 529.00 L 319.00 529.00 L 319.00 539.00 L 318.00 539.00 L 316.00 617.00 L 315.00 617.00 L 314.00 622.00 L 309.00 627.00 L 304.00 628.00 L 304.00 629.00 L 292.00 630.00 L 292.00 629.00 L 285.00 629.00 L 285.00 628.00 L 282.00 628.00 L 282.00 627.00 L 279.00 627.00 L 279.00 626.00 L 276.00 625.00 L 276.00 688.00 L 281.00 690.00 L 281.00 691.00 L 283.00 691.00 L 283.00 692.00 L 285.00 692.00 L 285.00 693.00 L 287.00 693.00 L 287.00 694.00 L 290.00 694.00 L 290.00 695.00 L 298.00 697.00 L 298.00 698.00 L 306.00 699.00 L 306.00 700.00 L 313.00 700.00 L 313.00 701.00 L 339.00 700.00 L 339.00 699.00 L 342.00 699.00 L 342.00 698.00 L 346.00 698.00 L 346.00 697.00 L 352.00 696.00 L 352.00 695.00 L 354.00 695.00 L 356.00 693.00 L 359.00 693.00 L 360.00 691.00 L 362.00 691.00 L 365.00 688.00 L 367.00 688.00 L 368.00 686.00 L 370.00 686.00 L 373.00 682.00 L 375.00 682.00 L 378.00 679.00 L 378.00 677.00 L 384.00 672.00 L 384.00 670.00 L 387.00 668.00 L 387.00 666.00 L 389.00 665.00 L 389.00 663.00 L 390.00 663.00 L 390.00 661.00 L 391.00 661.00 L 391.00 659.00 L 392.00 659.00 L 392.00 657.00 L 394.00 655.00 L 396.00 646.00 L 397.00 646.00 L 397.00 642.00 L 398.00 642.00 L 398.00 638.00 L 399.00 638.00 L 399.00 631.00 L 400.00 631.00 L 401.00 474.00 L 402.00 474.00 L 402.00 456.00 L 401.00 455.00 L 278.00 455.00 Z"/><path d="M 477.00 456.00 L 476.00 456.00 L 476.00 464.00 L 475.00 464.00 L 475.00 494.00 L 474.00 494.00 L 474.00 525.00 L 473.00 525.00 L 473.00 555.00 L 472.00 555.00 L 470.00 642.00 L 563.00 642.00 L 561.00 556.00 L 560.00 556.00 L 560.00 524.00 L 559.00 524.00 L 559.00 491.00 L 558.00 491.00 L 558.00 459.00 L 557.00 459.00 L 557.00 456.00 L 478.00 456.00 Z"/></svg></a>
+    <nav class="nav" id="nav">
+      <span class="nav-pill" id="navPill" aria-hidden="true"></span>
+      <a href="index.html" class="active">Missions</a>
+    </nav>
+    <div class="header-right">
+      <a href="#" class="publish-cta" aria-label="Publier une annonce">
+        <span class="pc-circle" aria-hidden="true"></span>
+        <span class="pc-ico" aria-hidden="true"><i data-lucide="plus" width="18" height="18" stroke-width="2.6"></i></span>
+        <span class="pc-lbl">Publier une annonce</span>
+      </a>
+      <div class="search-shell">
+        <div class="search-bar">
+          <button type="button" class="sb-field" data-pop="loc" aria-label="Où">
+            <span class="sb-l">Où</span>
+            <input type="text" placeholder="Ville, code postal" readonly>
+          </button>
+          <span class="sb-divider" aria-hidden="true"></span>
+          <button type="button" class="sb-field" data-pop="dates" aria-label="Quand">
+            <span class="sb-l">Quand</span>
+            <input type="text" placeholder="Ajouter dates" readonly>
+          </button>
+          <button type="button" class="sb-cta" aria-label="Rechercher">
+            <span class="circle" aria-hidden="true"></span>
+            <span class="ico" aria-hidden="true"><i data-lucide="search" width="16" height="16" stroke-width="2.4"></i></span>
+            <span class="lbl">Rechercher</span>
+          </button>
+        </div>
+      </div>
+      <div class="me-wrap">
+        <div class="nav-me" id="meAv" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="Mon compte">NB</div>
+        <div class="me-menu" id="meMenu" role="menu" aria-label="Mon compte">
+          <div class="me-head">
+            <div class="me-av">NB</div>
+            <div class="me-head-txt">
+              <p class="me-name">Nicolas B.</p>
+              <p class="me-role">Kiné · Paris 11e</p>
+            </div>
+          </div>
+          <a href="mission-detail-v2.html" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="briefcase" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Missions</span><span class="me-s">Mes remplacements en cours</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+          <a href="paiements.html" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="euro" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Paiements</span><span class="me-s">Rétrocessions & factures</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+          <a href="messagerie.html" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="message-circle" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Messages</span><span class="me-s">Conversations & contrats</span></span>
+            <span class="me-badge">3</span>
+          </a>
+          <a href="#" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="settings" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Paramètres</span><span class="me-s">Compte & préférences</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-head-l">
+      <div class="crumbs"><span>Dashboard</span><span class="sep">/</span><span class="cur">Paiements</span></div>
+      <div class="page-title-wrap">
+        <h1>Mes <em>paiements</em>.</h1>
+      </div>
+    </div>
+    <div class="page-actions">
+      <div class="range-switch">
+        <button class="range-btn">7j</button>
+        <button class="range-btn">30j</button>
+        <button class="range-btn active">12 mois</button>
+        <button class="range-btn">Tout</button>
+      </div>
+      <button class="btn ghost sm"><i data-lucide="download" width="13" height="13"></i>Exporter</button>
+      <div class="var-switch" role="tablist">
+        <button class="var-btn active" data-var="v1"><span class="num">01</span>Dashboard</button>
+        <button class="var-btn" data-var="v2"><span class="num">02</span>Tableau</button>
+        <button class="var-btn" data-var="v3"><span class="num">03</span>Storyboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI row — shared across all variations -->
+  <div class="kpi-row">
+    <div class="kpi hero">
+      <div class="kpi-head">
+        <span class="kpi-l"><div class="kpi-ico"><i data-lucide="wallet" width="13" height="13" stroke-width="2.25"></i></div>Solde libérable</span>
+        <span class="kpi-delta up"><i data-lucide="arrow-up-right" width="10" height="10"></i>+17%</span>
+      </div>
+      <div class="kpi-n">1 931 <em>€</em></div>
+      <div class="kpi-d">vs 1 651 € en mars</div>
+      <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <defs><linearGradient id="sp1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF7C5C" stop-opacity=".35"/><stop offset="100%" stop-color="#FF7C5C" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0,22 L10,18 L20,24 L30,15 L40,19 L50,12 L60,14 L70,8 L80,11 L90,5 L100,7 L100,32 L0,32 Z" fill="url(#sp1)"/>
+        <path d="M0,22 L10,18 L20,24 L30,15 L40,19 L50,12 L60,14 L70,8 L80,11 L90,5 L100,7" fill="none" stroke="#FF7C5C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="kpi">
+      <div class="kpi-head">
+        <span class="kpi-l"><div class="kpi-ico" style="background:#fff4ea;color:#b45309"><i data-lucide="lock" width="13" height="13" stroke-width="2.25"></i></div>En séquestre</span>
+        <span class="kpi-delta neutral">2 miss.</span>
+      </div>
+      <div class="kpi-n">1 516 <em>€</em></div>
+      <div class="kpi-d">libération 27 mai · 8j</div>
+      <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <path d="M0,24 L15,22 L30,16 L45,18 L60,14 L75,12 L100,10" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="kpi">
+      <div class="kpi-head">
+        <span class="kpi-l"><div class="kpi-ico" style="background:#dcfce7;color:#166534"><i data-lucide="trending-up" width="13" height="13" stroke-width="2.25"></i></div>Total 2026</span>
+        <span class="kpi-delta up"><i data-lucide="arrow-up-right" width="10" height="10"></i>+32%</span>
+      </div>
+      <div class="kpi-n">14 288 <em>€</em></div>
+      <div class="kpi-d">12 missions · moy. 1 191 €</div>
+      <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <path d="M0,26 L8,24 L16,20 L24,22 L32,17 L40,19 L48,13 L56,15 L64,9 L72,11 L80,6 L88,8 L100,3" fill="none" stroke="#166534" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <g fill="#166534"><circle cx="0" cy="26" r="1.5"/><circle cx="24" cy="22" r="1.5"/><circle cx="48" cy="13" r="1.5"/><circle cx="72" cy="11" r="1.5"/><circle cx="100" cy="3" r="1.8"/></g>
+      </svg>
+    </div>
+    <div class="kpi">
+      <div class="kpi-head">
+        <span class="kpi-l"><div class="kpi-ico" style="background:#dbeafe;color:#1e40af"><i data-lucide="percent" width="13" height="13" stroke-width="2.25"></i></div>Rétro. moyenne</span>
+        <span class="kpi-delta down"><i data-lucide="arrow-down-right" width="10" height="10"></i>-0,3pt</span>
+      </div>
+      <div class="kpi-n">68,4 <em>%</em></div>
+      <div class="kpi-d">vs 68,7 % marché</div>
+      <svg class="kpi-spark" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <path d="M0,10 L15,12 L30,8 L45,14 L60,11 L75,16 L100,14" fill="none" stroke="#1e40af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══════════════ V1 — DASHBOARD ═══════════════ -->
+  <section class="variation active" data-var="v1">
+
+    <!-- ═ §1 Revenus & projection ═ -->
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-hd-n">01</span>
+        <h2 class="sec-hd-t">Revenus & projection</h2>
+        <span class="sec-hd-line"></span>
+        <span class="sec-hd-s">12 mois</span>
+      </div>
+
+      <div class="dash-grid">
+
+      <!-- Cashflow chart -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <h3>Cashflow <em>12 mois</em></h3>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-dot paid">Versé</span>
+            <span class="legend-dot escrow">Séquestre</span>
+            <span class="legend-dot proj">Projection</span>
+          </div>
+        </div>
+
+        <div class="chart-canvas" id="cashflow">
+          <svg viewBox="0 0 800 260" preserveAspectRatio="none">
+            <!-- grid lines -->
+            <g stroke="#f0e6d7" stroke-width="1">
+              <line x1="0" y1="40" x2="800" y2="40"/>
+              <line x1="0" y1="100" x2="800" y2="100"/>
+              <line x1="0" y1="160" x2="800" y2="160"/>
+              <line x1="0" y1="220" x2="800" y2="220"/>
+            </g>
+            <!-- y labels -->
+            <g fill="#a0846b" font-size="10" font-family="Manrope,sans-serif" font-weight="600">
+              <text x="0" y="38">3k</text>
+              <text x="0" y="98">2k</text>
+              <text x="0" y="158">1k</text>
+              <text x="0" y="218">0</text>
+            </g>
+
+            <!-- bars (12 months) -->
+            <!-- data: mai25 jun25 jul25 aou25 sep25 oct25 nov25 dec25 jan26 fev26 mar26 avr26 mai26(proj) -->
+            <g font-family="Manrope,sans-serif">
+              <!-- each month: 50px slot, 2 bars (paid/escrow) stacked -->
+              <!-- mai25 -->
+              <g transform="translate(50,0)"><rect x="-14" y="180" width="28" height="40" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(110,0)"><rect x="-14" y="166" width="28" height="54" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(170,0)"><rect x="-14" y="150" width="28" height="70" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(230,0)"><rect x="-14" y="176" width="28" height="44" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(290,0)"><rect x="-14" y="138" width="28" height="82" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(350,0)"><rect x="-14" y="124" width="28" height="96" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(410,0)"><rect x="-14" y="118" width="28" height="102" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(470,0)"><rect x="-14" y="108" width="28" height="112" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(530,0)"><rect x="-14" y="92" width="28" height="128" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(590,0)"><rect x="-14" y="110" width="28" height="110" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <g transform="translate(650,0)"><rect x="-14" y="88" width="28" height="132" rx="4" fill="#FF7C5C" opacity=".85"/></g>
+              <!-- current month: paid + escrow stacked -->
+              <g transform="translate(710,0)">
+                <rect x="-14" y="72" width="28" height="90" rx="4" fill="#FF7C5C"/>
+                <rect x="-14" y="58" width="28" height="14" rx="2" fill="#f59e0b"/>
+                <!-- highlight ring -->
+                <rect x="-19" y="50" width="38" height="175" rx="10" fill="none" stroke="#FF7C5C" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+              </g>
+              <!-- projected: dashed outline -->
+              <g transform="translate(770,0)">
+                <rect x="-14" y="78" width="28" height="142" rx="4" fill="none" stroke="#3A1F08" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>
+                <text x="0" y="70" fill="#a0846b" font-size="9" font-weight="700" text-anchor="middle">proj.</text>
+              </g>
+            </g>
+
+            <!-- Trend line through bar tops (paid) -->
+            <path d="M 50,180 L 110,166 L 170,150 L 230,176 L 290,138 L 350,124 L 410,118 L 470,108 L 530,92 L 590,110 L 650,88 L 710,72"
+              fill="none" stroke="#3A1F08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/>
+
+            <!-- x labels -->
+            <g fill="#a0846b" font-size="10" font-family="Manrope,sans-serif" font-weight="600" text-anchor="middle">
+              <text x="50" y="250">mai</text>
+              <text x="110" y="250">juin</text>
+              <text x="170" y="250">juil</text>
+              <text x="230" y="250">août</text>
+              <text x="290" y="250">sept</text>
+              <text x="350" y="250">oct</text>
+              <text x="410" y="250">nov</text>
+              <text x="470" y="250">déc</text>
+              <text x="530" y="250">janv</text>
+              <text x="590" y="250">fév</text>
+              <text x="650" y="250">mars</text>
+              <text x="710" y="250" fill="#FF7C5C" font-weight="800">avr</text>
+              <text x="770" y="250">mai</text>
+            </g>
+
+            <!-- label on current month -->
+            <g transform="translate(710,40)">
+              <rect x="-28" y="-18" width="56" height="22" rx="6" fill="#3A1F08"/>
+              <text x="0" y="-3" fill="#fff" font-size="11" font-weight="800" font-family="Manrope,sans-serif" text-anchor="middle">2 229 €</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="chart-summary">
+          <div><div class="cs-t">Versé cette année</div><div class="cs-n">14 288 €</div><div class="cs-d">12 missions terminées</div></div>
+          <div><div class="cs-t">Meilleur mois</div><div class="cs-n">2 924 €</div><div class="cs-d">Mars 2026 · 3 missions</div></div>
+          <div><div class="cs-t">Projection Q2</div><div class="cs-n">≈ 7 800 €</div><div class="cs-d">3 missions signées</div></div>
+        </div>
+      </div>
+
+      <!-- Sidebar column -->
+      <div class="dash-side">
+
+        <div class="balance-card">
+          <div class="balance-eyebrow"><span class="live"></span>Solde · temps réel</div>
+          <div class="balance-n">3 447 <em>€</em></div>
+          <button class="balance-cta"><i data-lucide="arrow-down-to-line" width="14" height="14" stroke-width="2.25"></i>Retirer 1 931 €</button>
+          <div class="balance-split">
+            <div class="bs">
+              <div class="bs-l"><span class="dot"></span>Libérable</div>
+              <div class="bs-n">1 931 €</div>
+              <div class="bs-s">2j · 0 frais</div>
+            </div>
+            <div class="bs">
+              <div class="bs-l"><span class="dot esc"></span>Séquestre</div>
+              <div class="bs-n">1 516 €</div>
+              <div class="bs-s">dans 8 jours</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mix donut -->
+        <div class="mix-card">
+          <h4 class="card-title">Mix par spécialité <span class="link">12 mois</span></h4>
+          <div class="mix-grid">
+            <div class="donut">
+              <svg viewBox="0 0 42 42">
+                <!-- donut segments; circumference ≈ 100 when r=15.9155 -->
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#fef0e4" stroke-width="6"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#FF7C5C" stroke-width="6" stroke-dasharray="38 62" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="26 74" stroke-dashoffset="-13" transform="rotate(-90 21 21)"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#3b82f6" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-39" transform="rotate(-90 21 21)"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#059669" stroke-width="6" stroke-dasharray="16 84" stroke-dashoffset="-59" transform="rotate(-90 21 21)"/>
+              </svg>
+              <div class="donut-center">
+                <div class="n">14 288 €</div>
+                <div class="l">Revenus</div>
+              </div>
+            </div>
+            <div class="mix-list">
+              <div class="mix-item"><span class="dot" style="background:#FF7C5C"></span><span class="l">Orthopédie</span><span class="v">38% · 5 431€</span></div>
+              <div class="mix-item"><span class="dot" style="background:#f59e0b"></span><span class="l">Neuro</span><span class="v">26% · 3 715€</span></div>
+              <div class="mix-item"><span class="dot" style="background:#3b82f6"></span><span class="l">Respiratoire</span><span class="v">20% · 2 858€</span></div>
+              <div class="mix-item"><span class="dot" style="background:#059669"></span><span class="l">Pédiatrie</span><span class="v">16% · 2 284€</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Escrow queue -->
+        <div class="escrow-queue">
+          <h4 class="card-title">File de séquestre <span class="link">2 actifs</span></h4>
+
+          <div class="eq-item">
+            <div class="eq-av">SM</div>
+            <div class="eq-body">
+              <p class="eq-t">Dr Moreau · Ortho Lyon</p>
+              <div class="eq-progress"><div class="bar" style="width:62%"></div></div>
+              <div class="eq-s"><span>8 j restants · libération 27 mai</span><b>62%</b></div>
+            </div>
+            <div class="eq-n">1 516 €</div>
+          </div>
+
+          <div class="eq-item">
+            <div class="eq-av g2">CD</div>
+            <div class="eq-body">
+              <p class="eq-t">Clara Dufresne · Neuro Paris</p>
+              <div class="eq-progress neutral"><div class="bar" style="width:12%"></div></div>
+              <div class="eq-s"><span>Démarre 2 juin · J-14</span><b>Prog.</b></div>
+            </div>
+            <div class="eq-n">1 240 €</div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    </div>
+    <!-- /§1 -->
+
+    <!-- ═ §2 Simulateur fiscal ═ -->
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-hd-n">02</span>
+        <h2 class="sec-hd-t">Simulateur de rétrocession</h2>
+        <span class="sec-hd-line"></span>
+        <span class="sec-hd-s">Micro-BNC · 2026</span>
+      </div>
+
+      <div class="calc-card" id="calc">
+        <div class="calc-left">
+          <div class="calc-eyebrow"><span class="bdg">SIM</span>Simulation personnalisée</div>
+          <h2 class="calc-h">Simulation pour <em>kinésithérapeute libéral</em> en micro-BNC</h2>
+
+          <div class="calc-profile">
+            <div class="calc-profile-row" role="radiogroup" aria-label="Profession">
+              <button class="calc-chip active" data-prof="kine">Kiné</button>
+              <button class="calc-chip" data-prof="ortho">Orthophoniste</button>
+              <button class="calc-chip" data-prof="infirmier">Infirmier</button>
+            </div>
+            <div class="calc-profile-row" role="radiogroup" aria-label="Régime">
+              <button class="calc-chip active" data-reg="microbnc">Micro-BNC</button>
+              <button class="calc-chip" data-reg="bnc">Déclaration contrôlée</button>
+            </div>
+          </div>
+
+          <div class="calc-slider-wrap">
+            <div class="calc-slider-lbl"><span>CA annuel</span><span>Année 2026</span></div>
+            <div class="calc-slider-val"><span id="caVal">75 000</span><em>€</em></div>
+            <input type="range" class="calc-slider" id="caSlider" min="20000" max="120000" step="1000" value="75000">
+            <div class="calc-slider-scale"><span>20 k€</span><span>70 k€</span><span>120 k€</span></div>
+          </div>
+        </div>
+
+        <div class="calc-right">
+          <div class="calc-title">
+            <h3>Décomposition mensuelle</h3>
+            <small>Après cotisations & charges</small>
+          </div>
+
+          <div class="calc-row base">
+            <div class="ico"><i data-lucide="landmark" width="13" height="13"></i></div>
+            <div class="lbl-wrap"><span class="lbl">CA annuel</span><span class="sub">base de calcul</span></div>
+            <div class="val" id="cRowBase">75 000 €</div>
+          </div>
+
+          <div class="calc-row">
+            <div class="ico" style="background:#fff4ea;color:#b45309"><i data-lucide="building-2" width="13" height="13"></i></div>
+            <div class="lbl-wrap"><span class="lbl">Cotisations URSSAF</span><span class="sub"><span id="cRateUrssaf">21,9</span> % · PAMC</span></div>
+            <div class="val neg" id="cRowUrssaf">− 16 425 €</div>
+          </div>
+
+          <div class="calc-row">
+            <div class="ico" style="background:#fef3c7;color:#92400e"><i data-lucide="heart-pulse" width="13" height="13"></i></div>
+            <div class="lbl-wrap"><span class="lbl">Cotisations CARPIMKO</span><span class="sub"><span id="cRateCar">9,1</span> % · retraite & prévoyance</span></div>
+            <div class="val neg" id="cRowCar">− 6 800 €</div>
+          </div>
+
+          <div class="calc-row">
+            <div class="ico" style="background:#f3f0fb;color:#6d28d9"><i data-lucide="briefcase" width="13" height="13"></i></div>
+            <div class="lbl-wrap"><span class="lbl">Charges professionnelles</span><span class="sub">local · CFE · matériel</span></div>
+            <div class="val neg" id="cRowCharges">− 12 000 €</div>
+          </div>
+
+          <div class="calc-row">
+            <div class="ico" style="background:#dbeafe;color:#1e40af"><i data-lucide="receipt-text" width="13" height="13"></i></div>
+            <div class="lbl-wrap"><span class="lbl">Impôt sur le revenu</span><span class="sub"><span id="cRateIr">8</span> % · versement libératoire</span></div>
+            <div class="val neg" id="cRowIr">− 6 000 €</div>
+          </div>
+
+          <div class="calc-row total">
+            <div class="lbl">Revenu net estimé / mois</div>
+            <div class="val"><span id="cRowNet">2 815</span><em>€</em></div>
+          </div>
+
+          <div class="calc-reg">
+            <div class="l"><i data-lucide="alert-circle" width="14" height="14"></i>Régularisation N+1 estimée</div>
+            <div class="v"><span id="cRowReg">4 100</span> €</div>
+          </div>
+
+          <div class="calc-foot">
+            <span class="src"><i data-lucide="info" width="11" height="11"></i>Taux 2026 · URSSAF PAMC + CARPIMKO</span>
+            <button class="btn ghost sm"><i data-lucide="download" width="11" height="11"></i>PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /§2 -->
+
+    <!-- ═ §3 Historique & compte ═ -->
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-hd-n">03</span>
+        <h2 class="sec-hd-t">Historique & compte</h2>
+        <span class="sec-hd-line"></span>
+        <span class="sec-hd-s">26 transactions</span>
+      </div>
+
+      <!-- history table + setup side cols -->
+      <div class="lower-grid">
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd">
+          <h3>Transactions récentes <small>5 dernières sur 26</small></h3>
+          <div class="tbl-tools">
+            <input class="tbl-search" placeholder="Rechercher…">
+            <button class="btn ghost sm"><i data-lucide="filter" width="13" height="13"></i>Filtres</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Contrepartie</th><th>Référence</th><th>Statut</th><th>Net versé</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>18 avr</td><td><div class="who"><div class="av">SM</div><div><div class="who-n">Dr Moreau</div><div class="who-s">Lyon 6e · Ortho</div></div></div></td><td><span class="ref">#JIM-4821</span></td><td><span class="status escrow">Séquestre</span></td><td class="amt">1 516 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button></td></tr>
+              <tr><td>04 avr</td><td><div class="who"><div class="av g3">AB</div><div><div class="who-n">Dr Amélie Brun</div><div class="who-s">Nantes · Neuro</div></div></div></td><td><span class="ref">#JIM-4817</span></td><td><span class="status paid">Payé</span></td><td class="amt pos">1 931 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>22 mars</td><td><div class="who"><div class="av g4">CD</div><div><div class="who-n">Cabinet Delcroix</div><div class="who-s">Bordeaux · Respi.</div></div></div></td><td><span class="ref">#JIM-4788</span></td><td><span class="status paid">Payé</span></td><td class="amt pos">852 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>15 mars</td><td><div class="who"><div class="av g2">NL</div><div><div class="who-n">Dr N. Lemaire</div><div class="who-s">Strasbourg · Pédia.</div></div></div></td><td><span class="ref">#JIM-4756</span></td><td><span class="status paid">Payé</span></td><td class="amt pos">320 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>28 fév</td><td><div class="who"><div class="av g3">LT</div><div><div class="who-n">Cabinet Tessier</div><div class="who-s">Marseille 8e · Ortho</div></div></div></td><td><span class="ref">#JIM-4702</span></td><td><span class="status paid">Payé</span></td><td class="amt pos">1 724 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-foot">
+          <span>5 sur 26 transactions</span>
+          <button class="btn ghost sm">Voir tout l'historique<i data-lucide="arrow-right" width="12" height="12"></i></button>
+        </div>
+      </div>
+
+      <div class="side-col">
+
+        <div class="iban-card">
+          <h4 class="card-title">Compte bancaire <span class="link">Gérer</span></h4>
+          <div class="iban-top">
+            <div class="iban-logo">S</div>
+            <div class="iban-top-body">
+              <h4>Stripe Connect <span class="ok"><i data-lucide="shield-check" width="10" height="10" stroke-width="2.5"></i>KYC OK</span></h4>
+            </div>
+          </div>
+          <div class="iban-body">
+            <div class="lbl">IBAN · Crédit Agricole</div>
+            FR76 •••• •••• •••• 4821
+            <button class="copy"><i data-lucide="copy" width="10" height="10"></i>Copier</button>
+          </div>
+          <div class="iban-meta">
+            <span>Titulaire <b>Nicolas Bernard</b></span>
+            <span>BIC <b>AGRIFRPP881</b></span>
+          </div>
+        </div>
+
+        <div class="receipts-card">
+          <h4 class="card-title">Factures récentes <span class="link">Tout voir<i data-lucide="arrow-up-right" width="10" height="10"></i></span></h4>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0412.pdf</p><p class="receipt-s">04 avr · 1 931 €</p></div>
+            <div class="receipt-actions"><button class="r-act"><i data-lucide="eye" width="12" height="12"></i></button><button class="r-act"><i data-lucide="download" width="12" height="12"></i></button></div>
+          </div>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0388.pdf</p><p class="receipt-s">22 mars · 852 €</p></div>
+            <div class="receipt-actions"><button class="r-act"><i data-lucide="eye" width="12" height="12"></i></button><button class="r-act"><i data-lucide="download" width="12" height="12"></i></button></div>
+          </div>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0356.pdf</p><p class="receipt-s">15 mars · 320 €</p></div>
+            <div class="receipt-actions"><button class="r-act"><i data-lucide="eye" width="12" height="12"></i></button><button class="r-act"><i data-lucide="download" width="12" height="12"></i></button></div>
+          </div>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-ico"><i data-lucide="shield-check" width="18" height="18"></i></div>
+          <div>
+            <h4>Séquestre <b>ACPR</b></h4>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+    </div>
+    <!-- /§3 -->
+
+  </section>
+
+  <!-- ═══════════════ V2 — DENSE TABLEAU ═══════════════ -->
+  <section class="variation" data-var="v2">
+
+    <div class="v2-grid">
+
+      <div class="tbl-wrap">
+        <div class="tbl-hd">
+          <h3>Toutes les transactions <small>26 résultats</small></h3>
+          <div class="tbl-tools">
+            <input class="tbl-search" placeholder="Rechercher…">
+            <button class="btn ghost sm"><i data-lucide="filter" width="13" height="13"></i>Filtres</button>
+            <button class="btn sm"><i data-lucide="download" width="13" height="13"></i>Exporter</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Contrepartie</th><th>Référence</th><th>Statut</th><th>Brut</th><th>Net versé</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>18 avr 2026</td><td><div class="who"><div class="av">SM</div><div><div class="who-n">Dr Moreau</div><div class="who-s">Lyon 6e · Ortho</div></div></div></td><td><span class="ref">#JIM-4821</span></td><td><span class="status escrow">Séquestre</span></td><td class="amt">2 229 €</td><td class="amt pos">1 516 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>12 avr 2026</td><td><div class="who"><div class="av g2">CD</div><div><div class="who-n">Clara Dufresne</div><div class="who-s">Paris 11e · Neuro</div></div></div></td><td><span class="ref">#JIM-4819</span></td><td><span class="status scheduled">Programmé</span></td><td class="amt">—</td><td class="amt">—</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button></td></tr>
+              <tr><td>04 avr 2026</td><td><div class="who"><div class="av g3">AB</div><div><div class="who-n">Dr Amélie Brun</div><div class="who-s">Nantes · Neuro</div></div></div></td><td><span class="ref">#JIM-4817</span></td><td><span class="status paid">Payé</span></td><td class="amt">2 840 €</td><td class="amt pos">1 931 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>22 mars 2026</td><td><div class="who"><div class="av g4">CD</div><div><div class="who-n">Cabinet Delcroix</div><div class="who-s">Bordeaux · Respi.</div></div></div></td><td><span class="ref">#JIM-4788</span></td><td><span class="status paid">Payé</span></td><td class="amt">1 217 €</td><td class="amt pos">852 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>15 mars 2026</td><td><div class="who"><div class="av g2">NL</div><div><div class="who-n">Dr N. Lemaire</div><div class="who-s">Strasbourg · Pédia.</div></div></div></td><td><span class="ref">#JIM-4756</span></td><td><span class="status paid">Payé</span></td><td class="amt">492 €</td><td class="amt pos">320 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>28 fév 2026</td><td><div class="who"><div class="av g3">LT</div><div><div class="who-n">Cabinet Tessier</div><div class="who-s">Marseille 8e · Ortho</div></div></div></td><td><span class="ref">#JIM-4702</span></td><td><span class="status paid">Payé</span></td><td class="amt">2 535 €</td><td class="amt pos">1 724 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+              <tr><td>14 fév 2026</td><td><div class="who"><div class="av g4">ET</div><div><div class="who-n">EHPAD Les Tilleuls</div><div class="who-s">Lyon · Gériatrie</div></div></div></td><td><span class="ref">#JIM-4651</span></td><td><span class="status paid">Payé</span></td><td class="amt">850 €</td><td class="amt pos">612 €</td><td class="actions"><button class="r-act"><i data-lucide="eye" width="13" height="13"></i></button><button class="r-act"><i data-lucide="download" width="13" height="13"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl-foot">
+          <span>7 transactions sur 26</span>
+          <div class="tbl-pagination">
+            <button class="pg"><i data-lucide="chevron-left" width="12" height="12"></i></button>
+            <button class="pg active">1</button><button class="pg">2</button><button class="pg">3</button>
+            <button class="pg"><i data-lucide="chevron-right" width="12" height="12"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side-col">
+        <div class="iban-card">
+          <h4 class="card-title">Virement sur IBAN</h4>
+          <div class="iban-top">
+            <div class="iban-logo">S</div>
+            <div class="iban-top-body">
+              <h4>Stripe · Vérifié</h4>
+              <p>FR76 •••• 4821 · Crédit Agricole</p>
+            </div>
+          </div>
+          <button class="btn primary" style="width:100%;justify-content:center"><i data-lucide="arrow-down-to-line" width="14" height="14" stroke-width="2.25"></i>Retirer 1 931 €</button>
+          <p style="margin:10px 0 0;font-size:10.5px;color:var(--jim-muted);line-height:1.45;text-align:center">Arrivée sous 2 jours ouvrés · 0 frais</p>
+        </div>
+
+        <div class="receipts-card">
+          <h4 class="card-title">Factures <span class="link">Tout voir</span></h4>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0412.pdf</p><p class="receipt-s">04 avr · 1 931 €</p></div>
+            <button class="r-act"><i data-lucide="download" width="13" height="13"></i></button>
+          </div>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0388.pdf</p><p class="receipt-s">22 mars · 852 €</p></div>
+            <button class="r-act"><i data-lucide="download" width="13" height="13"></i></button>
+          </div>
+          <div class="receipt">
+            <div class="receipt-ico"><i data-lucide="file-text" width="15" height="15"></i></div>
+            <div class="receipt-body"><p class="receipt-t">F-2026-0356.pdf</p><p class="receipt-s">15 mars · 320 €</p></div>
+            <button class="r-act"><i data-lucide="download" width="13" height="13"></i></button>
+          </div>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-ico"><i data-lucide="shield-check" width="18" height="18"></i></div>
+          <div>
+            <h4>Séquestre ACPR</h4>
+            <p>Vos fonds sont conservés chez <b>Treezor</b>, agréé ACPR, jusqu'à la fin de mission.</p>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+  </section>
+
+  <!-- ═══════════════ V3 — STORYBOARD ═══════════════ -->
+  <section class="variation" data-var="v3">
+
+    <div class="v3-hero">
+      <div>
+        <div class="v3-hero-eyebrow">Mission en cours · #JIM-4821</div>
+        <h2>Paiement en cours <em>sécurisé</em>.</h2>
+        <p>JIM utilise un séquestre agréé ACPR : vos honoraires sont sécurisés dès la signature et libérés automatiquement à la fin de mission. Zéro frais de gestion.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary"><i data-lucide="arrow-down-to-line" width="14" height="14" stroke-width="2.25"></i>Retirer mon solde (1 931 €)</button><button class="btn ghost"><i data-lucide="file-text" width="13" height="13"></i>Toutes les missions</button></div>
+      </div>
+      <div class="v3-hero-bal">
+        <div class="lbl">Prochain virement</div>
+        <div class="n">1 516 <em>€</em></div>
+        <div class="sub">Libération <b>27 mai · 09h00</b></div>
+      </div>
+    </div>
+
+    <div class="story-head">
+      <div class="eyebrow">Parcours du paiement · 4 étapes</div>
+      <h2>Du contrat au virement, <em>en 4 étapes</em>.</h2>
+    </div>
+
+    <div class="story">
+
+      <aside class="story-side">
+        <h3>Remplacement Ortho</h3>
+        <p>Chaque mission suit les mêmes 4 étapes. Vous pouvez suivre l'état de chacune en temps réel.</p>
+        <div class="mission">
+          <p class="mission-title">Dr Moreau · Lyon 6e</p>
+          <p class="mission-sub">12 — 26 mai 2026 · 2 semaines</p>
+          <div class="mission-row"><span class="l">Honoraires</span><span class="r">2 229 €</span></div>
+          <div class="mission-row"><span class="l">Rétro. 68 %</span><span class="r em">1 516 €</span></div>
+          <div class="mission-row"><span class="l">Frais de gestion JIM</span><span class="r">0 €</span></div>
+          <div class="mission-row"><span class="l">Frais Stripe</span><span class="r">0 €</span></div>
+        </div>
+      </aside>
+
+      <div class="steps">
+
+        <div class="step done">
+          <div class="step-mark"><i data-lucide="check" width="13" height="13" stroke-width="3"></i></div>
+          <div class="step-card">
+            <div class="step-top"><h3 class="step-t"><i data-lucide="file-signature" width="16" height="16" stroke-width="2"></i>Contrat signé</h3><span class="step-date">18 avr · 22:14</span></div>
+            <p class="step-s">Signature électronique par <b>Dr Moreau</b> puis vous. Le contrat est horodaté et archivé à valeur probante.</p>
+            <div class="step-extras"><span class="chip success"><i data-lucide="shield-check" width="12" height="12"></i>eIDAS</span><span class="chip">2 signataires</span></div>
+          </div>
+        </div>
+
+        <div class="step done">
+          <div class="step-mark"><i data-lucide="check" width="13" height="13" stroke-width="3"></i></div>
+          <div class="step-card">
+            <div class="step-top"><h3 class="step-t"><i data-lucide="lock" width="16" height="16" stroke-width="2"></i>Fonds en séquestre</h3><span class="step-date">18 avr · 22:16</span></div>
+            <p class="step-s"><b>1 516 €</b> transférés depuis Dr Moreau vers notre partenaire agréé <b>ACPR</b>. Aucune partie ne peut y accéder avant la fin de mission.</p>
+            <div class="step-extras"><span class="chip amount">1 516 €</span><span class="chip success"><i data-lucide="badge-check" width="12" height="12"></i>ACPR</span><span class="chip">Treezor</span></div>
+          </div>
+        </div>
+
+        <div class="step active">
+          <div class="step-mark"><i data-lucide="clock" width="13" height="13" stroke-width="2.5"></i></div>
+          <div class="step-card">
+            <div class="step-top"><h3 class="step-t"><i data-lucide="activity" width="16" height="16" stroke-width="2"></i>Mission en cours</h3><span class="step-date">8 jours restants</span></div>
+            <p class="step-s">Vous exercez au cabinet. Les fonds restent bloqués jusqu'à la date de fin contractuelle. En cas de litige, JIM arbitre sous 48h.</p>
+            <div class="step-extras"><span class="chip coral">Libération auto <b>27 mai 09h</b></span><span class="chip">Arbitrage JIM</span></div>
+          </div>
+        </div>
+
+        <div class="step pending">
+          <div class="step-mark"><i data-lucide="arrow-down-to-line" width="13" height="13" stroke-width="2.5"></i></div>
+          <div class="step-card">
+            <div class="step-top"><h3 class="step-t"><i data-lucide="landmark" width="16" height="16" stroke-width="2"></i>Virement IBAN</h3><span class="step-date">Prévu 27 mai</span></div>
+            <p class="step-s">Une fois la mission terminée sans litige, les 1 516 € sont automatiquement versés sur votre compte Stripe Connect, puis sur votre IBAN sous 2 jours ouvrés.</p>
+            <div class="step-extras"><span class="chip">FR76 •••• 4821</span><span class="chip">2 jours ouvrés</span><span class="chip">0 frais</span></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  lucide.createIcons();
+  // Profile dropdown — anchored to NB avatar
+  (function(){
+    const av = document.getElementById('meAv');
+    const menu = document.getElementById('meMenu');
+    if(!av || !menu) return;
+    const setOpen = v => {
+      menu.classList.toggle('open', v);
+      av.classList.toggle('open', v);
+      av.setAttribute('aria-expanded', v ? 'true' : 'false');
+    };
+    av.addEventListener('click', e => { e.stopPropagation(); setOpen(!menu.classList.contains('open')); });
+    av.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setOpen(!menu.classList.contains('open')); }
+    });
+    menu.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') setOpen(false); });
+  })();
+  // Pill nav — sliding corail indicator
+  (function(){
+    const nav = document.getElementById('nav');
+    const pill = document.getElementById('navPill');
+    if(!nav || !pill) return;
+    const items = [...nav.querySelectorAll('a')];
+    const moveTo = (el) => {
+      if(!el) return;
+      pill.style.width = el.offsetWidth + 'px';
+      pill.style.transform = `translateX(${el.offsetLeft}px)`;
+      pill.classList.add('ready');
+    };
+    const reset = () => {
+      const active = nav.querySelector('a.active');
+      if(active) moveTo(active);
+    };
+    items.forEach(a => {
+      a.addEventListener('mouseenter', () => moveTo(a));
+      a.addEventListener('focus',      () => moveTo(a));
+    });
+    nav.addEventListener('mouseleave', reset);
+    window.addEventListener('load', reset);
+    window.addEventListener('resize', reset);
+    requestAnimationFrame(reset);
+  })();
+  document.querySelectorAll('.var-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.var;
+      document.querySelectorAll('.var-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.variation').forEach(s => s.classList.toggle('active', s.dataset.var === v));
+      window.scrollTo({top:0,behavior:'smooth'});
+      localStorage.setItem('jim-pay-var', v);
+    });
+  });
+  const saved = localStorage.getItem('jim-pay-var');
+  if (saved) document.querySelector(`.var-btn[data-var="${saved}"]`)?.click();
+
+  // ═══ Calculator (micro-BNC simulator) ═══
+  // Taux indicatifs 2026 — URSSAF PAMC + CARPIMKO pour kiné libéral
+  // Sources: docaly.fr, urssaf.fr — arrondis; simulation, pas conseil fiscal
+  const calc = {
+    irRate:     0.08,    // versement libératoire 2,2% + IR moyen TMI 11%
+    urssafRate: 0.219,   // URSSAF PAMC — maladie + allocations + CSG/CRDS
+    carRate:    0.0907,  // CARPIMKO — retraite de base + complémentaire + invalidité
+    chargesRate:0.16,    // charges pro moyennes (local, matériel, CFE, assurance)
+    profRates: {
+      kine:       {urssaf:0.219, car:0.0907, charges:0.16,  label:'Kiné'},
+      ortho:      {urssaf:0.214, car:0.0890, charges:0.12,  label:'Orthophoniste'},
+      infirmier:  {urssaf:0.221, car:0.0930, charges:0.14,  label:'Infirmier IDEL'}
+    },
+    regimeMult: {microbnc:1, bnc:0.94}, // BNC réel ≈ légèrement moins (abattement frais réels)
+    curProf:'kine', curReg:'microbnc'
+  };
+
+  const fmt = n => Math.round(n).toLocaleString('fr-FR').replace(/,/g,' ');
+  const slider = document.getElementById('caSlider');
+  const caVal  = document.getElementById('caVal');
+
+  function computeCalc() {
+    const ca = +slider.value;
+    const p  = calc.profRates[calc.curProf];
+    const m  = calc.regimeMult[calc.curReg];
+    const urssaf  = ca * p.urssaf;
+    const carp    = ca * p.car;
+    const charges = ca * p.charges;
+    const ir      = ca * calc.irRate;
+    const netYear = (ca - urssaf - carp - charges - ir) * m;
+    const netMonth= netYear / 12;
+    // régularisation N+1 ≈ 5-6 % du CA (écart cotisations provisoires / définitives)
+    const reg     = ca * 0.055;
+
+    caVal.textContent            = fmt(ca);
+    document.getElementById('cRowBase').textContent     = fmt(ca) + ' €';
+    document.getElementById('cRowUrssaf').textContent   = '− ' + fmt(urssaf) + ' €';
+    document.getElementById('cRowCar').textContent      = '− ' + fmt(carp) + ' €';
+    document.getElementById('cRowCharges').textContent  = '− ' + fmt(charges) + ' €';
+    document.getElementById('cRowIr').textContent       = '− ' + fmt(ir) + ' €';
+    document.getElementById('cRowNet').textContent      = fmt(netMonth);
+    document.getElementById('cRowReg').textContent      = fmt(reg);
+    document.getElementById('cRateUrssaf').textContent  = (p.urssaf*100).toFixed(1).replace('.',',');
+    document.getElementById('cRateCar').textContent     = (p.car*100).toFixed(1).replace('.',',');
+  }
+
+  slider.addEventListener('input', computeCalc);
+  document.querySelectorAll('[data-prof]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-prof]').forEach(x => x.classList.toggle('active', x===b));
+    calc.curProf = b.dataset.prof; computeCalc();
+  }));
+  document.querySelectorAll('[data-reg]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-reg]').forEach(x => x.classList.toggle('active', x===b));
+    calc.curReg = b.dataset.reg; computeCalc();
+  }));
+  computeCalc();
+
+  // Cashflow tooltips (simple hover labels)
+  const chart = document.getElementById('cashflow');
+  if (chart) {
+    const data = [
+      {m:'mai 25',p:1000,e:0},{m:'juin 25',p:1350,e:0},{m:'juil 25',p:1750,e:0},{m:'août 25',p:1100,e:0},
+      {m:'sept 25',p:2050,e:0},{m:'oct 25',p:2400,e:0},{m:'nov 25',p:2550,e:0},{m:'déc 25',p:2800,e:0},
+      {m:'janv 26',p:3200,e:0},{m:'fév 26',p:2750,e:0},{m:'mars 26',p:3300,e:0},{m:'avr 26',p:2229,e:350}
+    ];
+  }
+</script>
+</body>
+</html>
