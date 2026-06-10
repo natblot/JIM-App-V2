@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIM — Page introuvable</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--jim-background);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* ─── Décor : blobs corail + grille de points + grain ─── */
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+  .blob-tl{top:-12vh;left:-10vw;width:38vw;height:38vw;background:radial-gradient(circle, rgba(255,124,92,0.18), transparent 70%)}
+  .blob-br{bottom:-15vh;right:-8vw;width:42vw;height:42vw;background:radial-gradient(circle, rgba(245,184,106,0.16), transparent 70%)}
+  .blob-bl{bottom:-10vh;left:-6vw;width:28vw;height:28vw;background:radial-gradient(circle, rgba(255,124,92,0.10), transparent 70%)}
+  .dots{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.06;
+    background-image:radial-gradient(circle, rgba(58,31,8,1) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0.035;mix-blend-mode:multiply}
+
+  /* ─── Contenu central ─── */
+  .stage{
+    position:relative;z-index:2;height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:0 24px 10vh;
+  }
+  .code{
+    font-weight:800;
+    font-size:clamp(7rem, 18vw, 13.5rem);
+    line-height:0.9;
+    letter-spacing:-0.05em;
+    color:var(--jim-text);
+    margin:0;
+  }
+  .code .zero{color:var(--jim-primary)}
+  .headline{
+    margin-top:20px;
+    font-size:clamp(1.375rem, 2.6vw, 1.875rem);
+    font-weight:800;
+    letter-spacing:-0.02em;
+    color:var(--jim-text);
+  }
+  .headline em{font-style:normal;font-weight:800;color:var(--jim-primary)}
+  .sub{
+    margin-top:14px;
+    max-width:520px;
+    font-size:1.0625rem;
+    line-height:1.55;
+    color:var(--jim-muted);
+    text-wrap:pretty;
+  }
+  .cta{
+    margin-top:36px;
+    display:inline-flex;align-items:center;gap:10px;
+    min-height:52px;padding:0 32px;
+    background:var(--jim-primary);
+    color:#fff;font-family:var(--font-sans);
+    font-size:1.0625rem;font-weight:700;
+    border:none;border-radius:var(--jim-radius-full);
+    box-shadow:0 6px 22px rgba(232,132,74,0.40);
+    cursor:pointer;text-decoration:none;
+    transition:background var(--jim-duration-normal) var(--jim-ease),
+               transform var(--jim-duration-fast) var(--jim-ease),
+               box-shadow var(--jim-duration-normal) var(--jim-ease);
+  }
+  .cta:hover{background:var(--jim-accent);color:#fff;transform:translateY(-1px);box-shadow:0 8px 28px rgba(232,132,74,0.45)}
+  .cta:active{transform:scale(0.98)}
+  .cta:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(255,124,92,0.4)}
+  .cta svg{flex:none}
+
+  /* ─── Câble débranché ─── */
+  .cable{
+    position:fixed;left:0;right:0;bottom:4vh;z-index:1;
+    width:100%;height:auto;pointer-events:none;
+  }
+
+  /* ─── Animations d'entrée ─── */
+  @media (prefers-reduced-motion: no-preference){
+    .fade-up{animation:fadeUp 0.7s var(--jim-ease-fade)}
+    .d1{animation-delay:0.05s}.d2{animation-delay:0.15s}.d3{animation-delay:0.25s}.d4{animation-delay:0.35s}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+    /* séquence : branché → tension → débranchement sec → repos */
+    .half-l{animation:unplugL 2.6s var(--jim-ease-out)}
+    .half-r{animation:unplugR 2.6s var(--jim-ease-out)}
+    @keyframes unplugL{
+      0%,36%{transform:translate(78px,0)}
+      46%{transform:translate(71px,0);animation-timing-function:cubic-bezier(0.5,0,0.9,0.4)}
+      58%{transform:translate(-18px,4px);animation-timing-function:var(--jim-ease-spring)}
+      74%{transform:translate(7px,-2px)}
+      100%{transform:translate(0,0)}
+    }
+    @keyframes unplugR{
+      0%,36%{transform:translate(-79px,0)}
+      46%{transform:translate(-72px,0);animation-timing-function:cubic-bezier(0.5,0,0.9,0.4)}
+      58%{transform:translate(18px,-4px);animation-timing-function:var(--jim-ease-spring)}
+      74%{transform:translate(-7px,2px)}
+      100%{transform:translate(0,0)}
+    }
+    /* étincelles : invisibles tant que branché, burst au débranchement, puis pulse */
+    .spark{
+      transform-box:fill-box;transform-origin:center;
+      animation:sparkIntro 2.6s ease-out, sparkPulse 2s ease-in-out 2.6s infinite;
+    }
+    .spark.s2{animation:sparkIntro 2.6s ease-out, sparkPulse 2s ease-in-out 3.1s infinite}
+    .spark.s3{animation:sparkIntro 2.6s ease-out, sparkPulse 2s ease-in-out 3.6s infinite}
+    @keyframes sparkIntro{
+      0%,54%{opacity:0;transform:scale(0.2)}
+      62%{opacity:1;transform:scale(1.45)}
+      76%{transform:scale(0.95)}
+      100%{opacity:1;transform:scale(1)}
+    }
+    @keyframes sparkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.25;transform:scale(0.85)}}
+  }
+</style>
+</head>
+<body data-screen-label="Erreur 404">
+
+  <div class="blob blob-tl"></div>
+  <div class="blob blob-br"></div>
+  <div class="blob blob-bl"></div>
+  <div class="dots"></div>
+  <svg class="grain" width="100%" height="100%"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#n)"></rect></svg>
+
+  <main class="stage">
+    <h1 class="code fade-up d1" aria-label="Erreur 404">4<span class="zero">0</span>4</h1>
+    <div class="headline fade-up d2">Cette page n'est pas encore <em>branchée</em>.</div>
+    <p class="sub fade-up d3">On s'en occupe. En attendant, le cabinet ne s'arrête pas&nbsp;— retournez à l'accueil pour retrouver vos missions.</p>
+    <a class="cta fade-up d4" href="index.html">
+      Retour à l'accueil
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>
+    </a>
+  </main>
+
+  <!-- Câble qui se débranche -->
+  <svg class="cable" viewBox="0 0 1440 260" fill="none" aria-hidden="true">
+    <!-- moitié gauche : fil + prise mâle -->
+    <g class="half-l">
+      <path d="M -220 150 C 140 100, 260 210, 400 175 C 480 157, 545 140, 598 140"
+            stroke="#5a3418" stroke-width="3" stroke-linecap="round"></path>
+      <g transform="translate(598,140)">
+        <rect x="0" y="-13" width="34" height="26" rx="9" fill="#ff7c5c"></rect>
+        <rect x="30" y="-10" width="10" height="20" rx="4" fill="#e06245"></rect>
+        <rect x="40" y="-7" width="13" height="4" rx="2" fill="#5a3418"></rect>
+        <rect x="40" y="3" width="13" height="4" rx="2" fill="#5a3418"></rect>
+      </g>
+    </g>
+
+    <!-- moitié droite : prise femelle + fil -->
+    <g class="half-r">
+      <path d="M 1660 190 C 1280 130, 1150 105, 1010 130 C 945 141, 888 140, 838 140"
+            stroke="#5a3418" stroke-width="3" stroke-linecap="round"></path>
+      <g transform="translate(838,140)">
+        <rect x="-34" y="-14" width="34" height="28" rx="9" fill="#ff7c5c"></rect>
+        <rect x="-40" y="-11" width="9" height="22" rx="4" fill="#e06245"></rect>
+        <circle cx="-36" cy="-5" r="1.8" fill="#3a1f08"></circle>
+        <circle cx="-36" cy="5" r="1.8" fill="#3a1f08"></circle>
+      </g>
+    </g>
+
+    <!-- étincelles -->
+    <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path class="spark"    d="M 668 100 l 7 -10 l -3 9 l 8 -2 l -10 11 l 2 -8 z" fill="#ff7c5c" stroke="none"></path>
+      <path class="spark s2" d="M 648 168 l -8 9 l 4 -8 l -9 3 l 11 -12 l -2 8 z" fill="#f5b86a" stroke="none"></path>
+      <path class="spark s3" d="M 782 96 l 8 -9 l -4 8 l 9 -3 l -11 12 l 2 -8 z" fill="#f5b86a" stroke="none"></path>
+      <path class="spark"    d="M 768 165 l -7 10 l 3 -9 l -8 2 l 10 -11 l -2 8 z" fill="#ff7c5c" stroke="none"></path>
+      <path class="spark s2" d="M 718 128 a 3 3 0 1 1 -0.1 0" fill="#ffc5b3" stroke="none"></path>
+    </g>
+  </svg>
+
+</body>
+</html>

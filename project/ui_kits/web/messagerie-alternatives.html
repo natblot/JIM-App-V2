@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIM — Messagerie · 5 alternatives</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="messagerie-alternatives.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="alt-mission-room.jsx"></script>
+<script type="text/babel" src="alt-triage-inbox.jsx"></script>
+<script type="text/babel" src="alt-nego-first.jsx"></script>
+<script type="text/babel" src="alt-timeline.jsx"></script>
+<script type="text/babel" src="alt-ai-copilot.jsx"></script>
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard, DCPostIt } = window;
+
+  function App() {
+    React.useEffect(() => {
+      const i = setInterval(() => window.lucide && window.lucide.createIcons(), 200);
+      return () => clearInterval(i);
+    }, []);
+    return (
+      <DesignCanvas>
+        <DCSection
+          id="alts"
+          title="Messagerie — 5 directions"
+          subtitle="Chaque artboard est une réponse à un irritant différent : contexte mission trop discret, manque d'outils côté titulaire, format trop classique."
+        >
+          <DCArtboard id="mission-room" label="A · Mission Room" width={1440} height={900}>
+            <window.MissionRoomAlt />
+          </DCArtboard>
+          <DCArtboard id="triage" label="B · Triage titulaire" width={1440} height={900}>
+            <window.TriageInboxAlt />
+          </DCArtboard>
+          <DCArtboard id="nego-first" label="C · Deal canvas" width={1440} height={900}>
+            <window.NegoFirstAlt />
+          </DCArtboard>
+          <DCArtboard id="timeline" label="D · Timeline mission" width={1440} height={900}>
+            <window.TimelineAlt />
+          </DCArtboard>
+          <DCArtboard id="ai-copilot" label="E · JIM AI co-pilot" width={1440} height={900}>
+            <window.AICopilotAlt />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
