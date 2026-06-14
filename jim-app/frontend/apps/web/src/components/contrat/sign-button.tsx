@@ -33,7 +33,7 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
   if (contrat.statut === 'brouillon' && isTitulaire) {
     return (
       <div className="space-y-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-jim-muted">
           En finalisant, le contrat sera envoye au remplacant pour signature.
         </p>
         <button
@@ -75,9 +75,9 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
             type="checkbox"
             checked={accepted}
             onChange={(e) => setAccepted(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#ff7c5c] focus:ring-[#ff7c5c] accent-[#ff7c5c]"
+            className="mt-0.5 h-4 w-4 rounded border-jim-beige-dark text-[#ff7c5c] focus:ring-[#ff7c5c] accent-[#ff7c5c]"
           />
-          <span className="text-sm text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors">
+          <span className="text-sm text-jim-text-body leading-relaxed group-hover:text-jim-text transition-colors">
             Je certifie avoir lu et accepte l&apos;ensemble des clauses de ce contrat de remplacement.
           </span>
         </label>
@@ -119,13 +119,13 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
   // En attente — vue titulaire (en attente de l'autre partie)
   if (contrat.statut === 'en_attente_remplacant' && isTitulaire) {
     return (
-      <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 bg-jim-warning-bg border border-[#edd9c4] rounded-xl p-4">
+        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center flex-shrink-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
-            className="h-4 w-4 text-amber-600"
+            className="h-4 w-4 text-jim-warning"
           >
             <path
               fillRule="evenodd"
@@ -135,10 +135,10 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-amber-800">
+          <p className="text-sm font-semibold text-jim-warning">
             En attente de la signature de {contrat.donnees.remplacant.first_name}
           </p>
-          <p className="text-xs text-amber-600 mt-0.5">
+          <p className="text-xs text-jim-warning mt-0.5">
             Le contrat a ete envoye au remplacant pour validation.
           </p>
         </div>
@@ -149,13 +149,13 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
   // Confirme — les deux parties ont signe
   if (contrat.statut === 'confirme') {
     return (
-      <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-center gap-3 bg-jim-success-bg border border-[#cfe3d2] rounded-xl p-4">
+        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center flex-shrink-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
-            className="h-4 w-4 text-green-600"
+            className="h-4 w-4 text-jim-success"
           >
             <path
               fillRule="evenodd"
@@ -165,8 +165,8 @@ export function SignButton({ contrat, currentUserId, onSign, isLoading }: SignBu
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-green-800">Contrat signe par les deux parties</p>
-          <p className="text-xs text-green-600 mt-0.5">
+          <p className="text-sm font-semibold text-jim-success">Contrat signe par les deux parties</p>
+          <p className="text-xs text-jim-success mt-0.5">
             Le contrat est officiel. Vous pouvez le telecharger en PDF.
           </p>
         </div>

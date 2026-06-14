@@ -1,0 +1,15 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>
+  body{margin:0;padding:28px;background:var(--jim-background);display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--jim-muted);width:82px;flex-shrink:0}
+  button{font-family:var(--font-sans);border:0;cursor:pointer;font-weight:700;letter-spacing:-.01em}
+  .primary{background:var(--jim-primary);color:#fff;padding:12px 22px;border-radius:14px;font-size:14px;box-shadow:0 6px 22px rgba(255,124,92,.35)}
+  .dark{background:var(--jim-text);color:#fff;padding:13px 24px;border-radius:18px;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+  .ghost{background:transparent;color:var(--jim-primary);padding:11px 20px;border:1.5px solid var(--jim-primary-soft);border-radius:14px;font-size:13px}
+  .pill{background:#fff;color:var(--jim-primary);padding:10px 18px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;box-shadow:var(--jim-shadow-sm)}
+  .pill-off{background:rgba(255,255,255,.6);color:var(--jim-muted);padding:10px 18px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+</style></head><body>
+  <div class="row"><span class="lbl">Primary</span><button class="primary">Rechercher</button><button class="dark">Rechercher ↗</button></div>
+  <div class="row"><span class="lbl">Ghost</span><button class="ghost">Connexion</button><button class="ghost" style="color:var(--jim-text);border-color:var(--jim-beige-mid)">Annuler</button></div>
+  <div class="row"><span class="lbl">Pills</span><button class="pill">Urgentes</button><button class="pill-off">Collaboration</button><button class="pill-off">Cession</button></div>
+</body></html>

@@ -1544,6 +1544,7 @@ export type Database = {
           rcp_verified: boolean | null
           region: string | null
           role: string | null
+          rpps_number: string | null
           rpps_verified: boolean | null
           rpps_verified_at: string | null
           specialties: string[] | null
@@ -1567,6 +1568,7 @@ export type Database = {
           rcp_verified?: boolean | null
           region?: string | null
           role?: string | null
+          rpps_number?: string | null
           rpps_verified?: boolean | null
           rpps_verified_at?: string | null
           specialties?: string[] | null
@@ -1590,6 +1592,7 @@ export type Database = {
           rcp_verified?: boolean | null
           region?: string | null
           role?: string | null
+          rpps_number?: string | null
           rpps_verified?: boolean | null
           rpps_verified_at?: string | null
           specialties?: string[] | null

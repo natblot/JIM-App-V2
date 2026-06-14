@@ -1,0 +1,25 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>
+  body{margin:0;padding:24px;background:var(--jim-background);display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .sem{border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+  .dot{display:flex;align-items:center;gap:8px}
+  .d{width:12px;height:12px;border-radius:50%}
+  .lbl{font-size:12px;font-weight:700;color:var(--jim-text)}
+  .hex{font-family:var(--font-mono);font-size:10px;color:var(--jim-muted)}
+  .ex{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;align-self:flex-start}
+</style></head><body>
+  <div class="sem" style="background:#eaf3eb">
+    <div class="dot"><span class="d" style="background:#5d8f66"></span><span class="lbl">success</span></div>
+    <div class="hex">#5d8f66 · bg #eaf3eb</div>
+    <span class="ex" style="background:#5d8f66;color:#fff">Contrat signé</span>
+  </div>
+  <div class="sem" style="background:#fbf0dc">
+    <div class="dot"><span class="d" style="background:#b07824"></span><span class="lbl">warning</span></div>
+    <div class="hex">#b07824 · bg #fbf0dc</div>
+    <span class="ex" style="background:#b07824;color:#fff">En attente RPPS</span>
+  </div>
+  <div class="sem" style="background:#faebe8">
+    <div class="dot"><span class="d" style="background:#b84030"></span><span class="lbl">destructive</span></div>
+    <div class="hex">#b84030 · bg #faebe8</div>
+    <span class="ex" style="background:#b84030;color:#fff">Paiement échoué</span>
+  </div>
+</body></html>

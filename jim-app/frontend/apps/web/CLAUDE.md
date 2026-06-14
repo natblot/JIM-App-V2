@@ -44,13 +44,32 @@
 - Footer `fixed bottom-0` sur landing, `static` sur les autres pages
 - Kanban colonnes : `flex-col lg:flex-row` — vertical empile <1024px
 
-## Dashboard — Design retenu
+## Dashboard — Design retenu (DA template jim-design-system, variante A)
 
-- Sidebar : `bg-[#f9f3eb]`, item actif coral (`bg-[#ff7c5c] text-white shadow-lg`)
-- Header sticky : search + bell + CTA "Disponibilite" coral, `backdrop-blur-md`
+- Navbar UNIFIEE sur tout le site : `components/layout/header.tsx` (celle de la page
+  d'accueil — logo, pill "Missions", CTA "Publier" anime, search sombre, dropdown profil).
+  Les pages (app) la rendent via `app-shell/app-page.tsx` ou directement (dashboard,
+  paiement). `app-navbar.tsx` est supprime — ne pas le recreer.
+- Onglets pilotes par `?tab=` (deep links conserves), pills EN PAGE (desktop, sous le
+  fil d'ariane) + bottom bar mobile — plus de sidebar ni de pills dans la navbar
+- Backdrop papier chaud : fond `#fdf6ed`, radial corail + dot-grid, fil d'ariane pill
+- Palette chaude uniquement : texte `#3a1f08`, muted `#7a5434`, bordures `#edd9c4`,
+  corail `#ff7c5c` — JAMAIS de bleu ni de gris froid (regle template)
 - Overview : hero cards KPI + timeline activite + alertes + paiements recents
-- Mobile : bottom nav pill flottante `bottom-6`, `z-[100]`
+- Mobile : bottom nav pill flottante `bottom-6`, `z-[100]`, bordures beige
+- Regle styled-jsx : un className pose sur un composant React (<Link>) n'a pas la classe
+  de scope jsx-* — le cibler via `:global(...)` depuis un parent HTML natif
+
+## Detail mission — /contrat/[id]
+
+- Design : `mission-detail-v2` (template jim-design-system, "Détail mission · dashboard V2")
+- Composant : `components/contrat/mission-detail-v2.tsx` — en-tete mission + 4 hero stats
+  (durée / rétrocession / signatures / étape) + parcours 6 étapes + 3 mini-cartes
+  (Contrat / Transmissions / Messagerie), detail en overlay (Échap pour fermer)
+- Reutilise `contract-clauses.tsx` + `sign-button.tsx` (recolores tokens chauds) ;
+  query + mutations identiques a l'ancien `contract-detail.tsx` (supprime)
+- PDF : Blob URL + auto-print (jamais `document.write`)
 
 ## Build actuel
 
-27 pages + middleware, 0 erreurs TS, 8 tests web.
+28 routes + middleware, 0 erreurs TS, 301 tests monorepo verts.

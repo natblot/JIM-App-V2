@@ -1,0 +1,30 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>
+  body{margin:0;padding:24px;background:var(--jim-background);display:flex;gap:14px;justify-content:center}
+  .card{background:#fff;border-radius:24px;padding:16px;width:310px;box-shadow:var(--jim-shadow-sm);border:1px solid rgba(58,31,8,.04)}
+  .img{height:110px;border-radius:12px;margin-bottom:14px;position:relative;overflow:hidden;background:linear-gradient(135deg,#f7ede0,#edd9c4)}
+  .img::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 30%,rgba(255,124,92,.25),transparent 60%)}
+  .badge-u{position:absolute;top:8px;left:8px;background:#ff7c5c;color:#fff;padding:3px 9px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;z-index:2}
+  .badge-r{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);padding:3px 8px;border-radius:999px;font-size:9px;font-weight:600;color:var(--jim-text);z-index:2;display:flex;align-items:center;gap:3px}
+  .badge-r::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--jim-success)}
+  .title-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .title{font-size:14px;font-weight:700;color:var(--jim-text)}
+  .retro{font-size:14px;font-weight:700;color:var(--jim-text)}
+  .retro small{font-weight:400;color:var(--jim-muted);font-size:10px;margin-left:2px}
+  .desc{font-size:11px;color:var(--jim-muted);margin-bottom:10px;display:flex;align-items:center;gap:4px}
+  .desc::before{content:"◉";color:var(--jim-beige-dark);font-size:10px}
+  .pills{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{font-size:9px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--jim-primary-pale);color:var(--jim-primary);text-transform:capitalize}
+</style></head><body>
+  <div class="card">
+    <div class="img"><span class="badge-u">⚡ Urgent</span><span class="badge-r">RPPS</span></div>
+    <div class="title-row"><span class="title">Lyon 6e, France</span><span class="retro">72%<small>retro.</small></span></div>
+    <div class="desc">Cabinet 4 kinés · 2 semaines en ortho</div>
+    <div class="pills"><span class="pill">ortho</span><span class="pill">neuro</span></div>
+  </div>
+  <div class="card">
+    <div class="img" style="background:linear-gradient(135deg,#fff0ea,#ffc5b3)"><span class="badge-r">RPPS</span></div>
+    <div class="title-row"><span class="title">Marseille, France</span><span class="retro">68%<small>retro.</small></span></div>
+    <div class="desc">Cabinet libéral · 3 semaines tout type</div>
+    <div class="pills"><span class="pill">respi</span><span class="pill">sport</span><span class="pill">pédiatrie</span></div>
+  </div>
+</body></html>

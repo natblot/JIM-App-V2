@@ -73,10 +73,12 @@ async function fetchConversations(
       .select('user_id, first_name, last_name, avatar_url')
       .in('user_id', otherIds);
     profileMap = new Map(
-      (profs ?? []).map((p) => [
-        p.user_id,
-        { first_name: p.first_name ?? null, last_name: p.last_name ?? null, avatar_url: p.avatar_url ?? null },
-      ])
+      (profs ?? [])
+        .filter((p) => p.user_id !== null)
+        .map((p) => [
+          p.user_id as string,
+          { first_name: p.first_name ?? null, last_name: p.last_name ?? null, avatar_url: p.avatar_url ?? null },
+        ])
     );
   }
 

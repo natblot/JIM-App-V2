@@ -55,12 +55,12 @@ export function ContractClauses({
       {/* Clauses obligatoires */}
       {clausesObligatoires.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-jim-text uppercase tracking-wider mb-4 flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="h-4 w-4 text-gray-400"
+              className="h-4 w-4 text-jim-muted"
             >
               <path
                 fillRule="evenodd"
@@ -76,17 +76,17 @@ export function ContractClauses({
               return (
                 <div
                   key={clause.id}
-                  className="border-l-4 border-gray-300 pl-4 py-3 bg-gray-50/50 rounded-r-lg"
+                  className="border-l-4 border-jim-beige-dark pl-4 py-3 bg-jim-surface-alt/60 rounded-r-lg"
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold text-gray-400 uppercase">
+                    <span className="text-xs font-bold text-jim-muted uppercase">
                       Article {articleIndex}
                     </span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 16 16"
                       fill="currentColor"
-                      className="h-3 w-3 text-gray-400"
+                      className="h-3 w-3 text-jim-muted"
                     >
                       <path
                         fillRule="evenodd"
@@ -95,10 +95,10 @@ export function ContractClauses({
                       />
                     </svg>
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                  <h4 className="text-sm font-semibold text-jim-text mb-1">
                     {clause.titre}
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-jim-text-body leading-relaxed whitespace-pre-wrap">
                     {clause.contenu}
                   </p>
                 </div>
@@ -111,7 +111,7 @@ export function ContractClauses({
       {/* Clauses optionnelles */}
       {clausesOptionnelles.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-jim-text uppercase tracking-wider mb-4 flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -135,11 +135,11 @@ export function ContractClauses({
                 <div
                   key={clause.id}
                   className={`border-l-4 pl-4 py-3 rounded-r-lg ${
-                    editable ? 'border-[#ff7c5c] bg-[#ff7c5c]/5' : 'border-gray-200 bg-gray-50/30'
+                    editable ? 'border-[#ff7c5c] bg-[#ff7c5c]/5' : 'border-jim-beige-mid bg-jim-surface-alt/40'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold text-gray-400 uppercase">
+                    <span className="text-xs font-bold text-jim-muted uppercase">
                       Article {articleIndex}
                     </span>
                     {editable && (
@@ -154,7 +154,7 @@ export function ContractClauses({
                       </svg>
                     )}
                   </div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                  <h4 className="text-sm font-semibold text-jim-text mb-1">
                     {clause.titre}
                   </h4>
                   {editable ? (
@@ -162,10 +162,10 @@ export function ContractClauses({
                       value={clause.contenu}
                       onChange={(e) => handleClauseChange(clause.id, e.target.value)}
                       rows={4}
-                      className="w-full text-sm text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#ff7c5c]/30 focus:border-[#ff7c5c] resize-y"
+                      className="w-full text-sm text-jim-text-body leading-relaxed bg-white border border-jim-beige-mid rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#ff7c5c]/30 focus:border-[#ff7c5c] resize-y"
                     />
                   ) : (
-                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm text-jim-text-body leading-relaxed whitespace-pre-wrap">
                       {clause.contenu}
                     </p>
                   )}
@@ -181,7 +181,7 @@ export function ContractClauses({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-gray-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-jim-text text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-jim-text-body transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSaving && (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -195,7 +195,7 @@ export function ContractClauses({
 
       {/* Message si aucune clause */}
       {clausesObligatoires.length === 0 && clausesOptionnelles.length === 0 && (
-        <div className="text-center py-8 text-gray-400 text-sm">
+        <div className="text-center py-8 text-jim-muted text-sm">
           Aucune clause disponible pour ce contrat.
         </div>
       )}

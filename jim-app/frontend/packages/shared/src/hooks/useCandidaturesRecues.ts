@@ -61,7 +61,11 @@ export function useCandidaturesRecues(supabase: Supabase, annonceId: string) {
           .select('user_id, first_name, last_name, rpps_number, rpps_verified, specialties, mobility_radius_km, avatar_url')
           .in('user_id', userIds);
         if (profErr) throw new Error(profErr.message);
-        profileMap = new Map((profs ?? []).map((p) => [p.user_id, p as Record<string, unknown>]));
+        profileMap = new Map(
+          (profs ?? [])
+            .filter((p) => p.user_id !== null)
+            .map((p) => [p.user_id as string, p as Record<string, unknown>])
+        );
       }
 
       // Re-injecte le profil sous la cle "profiles" pour preserver la shape attendue par

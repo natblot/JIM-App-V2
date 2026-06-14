@@ -8,10 +8,20 @@ import {
   annonceUpdateSchema,
 } from './annonce.schema';
 
+// Dates dynamiques — le schema refuse les date_debut passees, donc des dates
+// en dur perimaient les tests avec le temps. On genere J+20 / J+50.
+function isoDaysFromNow(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+const FUTURE_START = isoDaysFromNow(20);
+const FUTURE_END = isoDaysFromNow(50);
+
 const validBase = {
   type_annonce: 'remplacement' as const,
-  date_debut: '2026-06-01',
-  date_fin: '2026-06-30',
+  date_debut: FUTURE_START,
+  date_fin: FUTURE_END,
   retrocession: 82,
   ville: 'Lyon',
   specialites: [],
@@ -40,8 +50,8 @@ describe('annonceSchema', () => {
   it('rejette date_fin avant date_debut', () => {
     const result = annonceSchema.safeParse({
       ...validBase,
-      date_debut: '2026-06-30',
-      date_fin: '2026-06-01',
+      date_debut: FUTURE_END,
+      date_fin: FUTURE_START,
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -107,8 +117,8 @@ describe('annonceStep1Schema', () => {
   it("valide les données de l'étape 1", () => {
     const result = annonceStep1Schema.safeParse({
       type_annonce: 'remplacement',
-      date_debut: '2026-06-01',
-      date_fin: '2026-06-30',
+      date_debut: FUTURE_START,
+      date_fin: FUTURE_END,
       is_urgent: false,
     });
     expect(result.success).toBe(true);
@@ -117,8 +127,8 @@ describe('annonceStep1Schema', () => {
   it('rejette un type_annonce manquant (sans default)', () => {
     // Le schéma step1 est un pick, les defaults de l'objet de base s'appliquent
     const result = annonceStep1Schema.safeParse({
-      date_debut: '2026-06-01',
-      date_fin: '2026-06-30',
+      date_debut: FUTURE_START,
+      date_fin: FUTURE_END,
       is_urgent: false,
     });
     // type_annonce a un default('remplacement') donc il est valide même absent

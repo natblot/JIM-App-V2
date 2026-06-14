@@ -1,9 +1,12 @@
 'use client';
 
-// Shell principal du dashboard — sidebar + contenu principal
-// Affiche les onglets selon le role (titulaire/remplacant)
+// Shell principal du dashboard — navbar unifiee (Header de la page d'accueil) + contenu.
+// DA template jim-design-system (variante A) : papier chaud, dot-grid, corail.
+// Les onglets restent pilotes par ?tab= (deep links conserves) via une rangee
+// de pills dans la page (desktop) et la bottom bar (mobile).
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -12,26 +15,22 @@ import {
   ScrollText,
   CreditCard,
   User,
-  Search,
-  Bell,
-  Plus,
 } from 'lucide-react';
 import { useCurrentProfile } from '@jim/shared';
 import { useAuthContext } from '../providers/auth-provider';
-import { Sidebar } from './sidebar';
+import { Header } from '../layout/header';
 import { Overview } from './overview';
 import { MyListings } from './my-listings';
 import { Candidatures } from './candidatures';
 import { ContractsList } from './contracts-list';
-import { PaymentsList } from './payments-list';
 
 // Onglets du dashboard
+// Note : 'paiements' n'est plus un onglet interne — la page vit a la route /paiement
 export type DashboardTab =
   | 'overview'
   | 'annonces'
   | 'candidatures'
   | 'contrats'
-  | 'paiements'
   | 'profil';
 
 // Onglets de la bottom bar mobile
@@ -45,7 +44,6 @@ const MOBILE_TABS: Array<{
   { id: 'annonces', icon: FileText, label: 'Annonces', titulairOnly: true },
   { id: 'candidatures', icon: Inbox, label: 'Candidatures' },
   { id: 'contrats', icon: ScrollText, label: 'Contrats' },
-  { id: 'paiements', icon: CreditCard, label: 'Paiements' },
 ];
 
 const VALID_TABS: readonly DashboardTab[] = [
@@ -53,9 +51,17 @@ const VALID_TABS: readonly DashboardTab[] = [
   'annonces',
   'candidatures',
   'contrats',
-  'paiements',
   'profil',
 ];
+
+// Libelle du fil d'ariane par onglet (null = racine "Tableau de bord")
+const TAB_CRUMB: Record<DashboardTab, string | null> = {
+  overview: null,
+  annonces: 'Mes annonces',
+  candidatures: 'Candidatures',
+  contrats: 'Contrats',
+  profil: 'Mon profil',
+};
 
 function isValidTab(value: string | null): value is DashboardTab {
   return value !== null && (VALID_TABS as readonly string[]).includes(value);
@@ -67,7 +73,7 @@ export function DashboardLayout() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Lire l'onglet depuis l'URL (?tab=paiements) — permet la deep link
+  // Lire l'onglet depuis l'URL (?tab=candidatures) — permet la deep link
   const tabFromUrl = searchParams.get('tab');
   const initialTab: DashboardTab = isValidTab(tabFromUrl) ? tabFromUrl : 'overview';
   const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
@@ -80,7 +86,7 @@ export function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabFromUrl]);
 
-  // Quand l'utilisateur change d'onglet via la sidebar, on met l'URL a jour
+  // Quand l'utilisateur change d'onglet via la navbar, on met l'URL a jour
   function handleTabChange(tab: DashboardTab) {
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
@@ -103,80 +109,78 @@ export function DashboardLayout() {
       <div className="flex h-screen items-center justify-center bg-[#fdf6ed]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#ff7c5c] border-t-transparent" />
-          <p className="text-sm text-gray-500 font-medium">Chargement...</p>
+          <p className="text-sm text-[#7a5434] font-medium">Chargement...</p>
         </div>
       </div>
     );
   }
 
+  // Pills de navigation desktop — onglets internes + page Paiements
+  const tabPills: Array<{ id: string; label: string; onClick?: () => void; href?: string }> = [
+    { id: 'overview', label: 'Tableau de bord', onClick: () => handleTabChange('overview') },
+    ...(role === 'titulaire'
+      ? [{ id: 'annonces', label: 'Mes annonces', onClick: () => handleTabChange('annonces') }]
+      : []),
+    { id: 'candidatures', label: 'Candidatures', onClick: () => handleTabChange('candidatures') },
+    { id: 'contrats', label: 'Contrats', onClick: () => handleTabChange('contrats') },
+    { id: 'paiements', label: 'Paiements', href: '/paiement' },
+  ];
+
+  const crumb = TAB_CRUMB[activeTab];
+
   return (
-    <div className="flex h-screen bg-[#fdf6ed]">
-      {/* Sidebar desktop (>= lg) */}
-      <div className="hidden lg:block w-64 flex-shrink-0">
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          role={role}
-          profile={profile ? {
-            first_name: profile.first_name ?? null,
-            last_name: profile.last_name ?? null,
-            ville: (profile.city as string | null) ?? null,
-            specialites: (profile.specialties as string[] | null) ?? null,
-            avatar_url: profile.avatar_url ?? null,
-          } : null}
-        />
+    <div className="dash-root">
+      {/* Navbar unifiee — la meme que la page d'accueil */}
+      <Header />
+
+      <div className="page">
+        {/* Fil d'ariane pill */}
+        <div className="crumbs">
+          <span className={crumb ? undefined : 'cur'}>Tableau de bord</span>
+          {crumb && (
+            <>
+              <span className="sep">/</span>
+              <span className="cur">{crumb}</span>
+            </>
+          )}
+        </div>
+
+        {/* Onglets du dashboard — pills en page (desktop) */}
+        <div className="tab-pills" role="tablist" aria-label="Sections du tableau de bord">
+          {tabPills.map((pill) =>
+            pill.href ? (
+              <Link key={pill.id} href={pill.href} className="tab-pill">
+                {pill.label}
+              </Link>
+            ) : (
+              <button
+                key={pill.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === pill.id}
+                onClick={pill.onClick}
+                className={`tab-pill${activeTab === pill.id ? ' active' : ''}`}
+              >
+                {pill.label}
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Contenu de l'onglet actif */}
+        <div className="space-y-10">
+          <DashboardContent
+            tab={activeTab}
+            role={role}
+            userId={user?.id ?? ''}
+            supabase={supabase}
+            profileName={profile?.first_name as string | undefined}
+          />
+        </div>
       </div>
 
-      {/* Contenu principal */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Header sticky avec recherche et actions */}
-        <header className="flex justify-between items-center px-4 lg:px-8 py-4 w-full top-0 sticky bg-[#fdf6ed]/80 backdrop-blur-md z-40">
-          <div className="flex items-center gap-6 flex-1">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                className="w-full pl-10 pr-4 py-2.5 bg-[#f3ede5] rounded-full border-none focus:ring-2 focus:ring-[#ff7c5c] text-sm placeholder:text-gray-400/60"
-                placeholder="Trouver une mission..."
-                type="text"
-                readOnly
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              title="Notifications"
-              className="p-2.5 text-gray-500 hover:bg-[#FFF0EA] hover:text-[#ff7c5c] rounded-full transition-all"
-            >
-              <Bell size={20} />
-            </button>
-            <button
-              type="button"
-              className="px-4 py-2 bg-[#ff7c5c] text-white text-sm font-bold rounded-full shadow-md hover:brightness-105 transition-all flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Disponibilité
-            </button>
-          </div>
-        </header>
-
-        {/* Zone scrollable du contenu */}
-        <div className="flex-1 overflow-y-auto pb-20 lg:pb-10">
-          <div className="p-4 lg:p-8 space-y-10 max-w-7xl mx-auto w-full">
-            {/* Contenu de l'onglet actif */}
-            <DashboardContent
-              tab={activeTab}
-              role={role}
-              userId={user?.id ?? ''}
-              supabase={supabase}
-              profileName={profile?.first_name as string | undefined}
-            />
-          </div>
-        </div>
-      </main>
-
       {/* Bottom tab bar mobile (< lg) — floating pill avec icones seules */}
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md lg:hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-2 flex justify-between items-center z-[100] border border-gray-200">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md lg:hidden bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_18px_50px_-20px_rgba(58,31,8,0.4)] p-2 flex justify-between items-center z-[100] border border-[#edd9c4]">
         {visibleMobileTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -187,16 +191,135 @@ export function DashboardLayout() {
               title={tab.label}
               onClick={() => handleTabChange(tab.id)}
               className={`p-3 rounded-xl transition-all ${
-                isActive
-                  ? 'text-[#ff7c5c] bg-[#FFF0EA]'
-                  : 'text-gray-400'
+                isActive ? 'text-[#ff7c5c] bg-[#fff0ea]' : 'text-[#bca183]'
               }`}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
             </button>
           );
         })}
+        {/* Paiements — page autonome /paiement (hors onglets internes) */}
+        <Link
+          href="/paiement"
+          title="Paiements"
+          className="p-3 rounded-xl transition-all text-[#bca183]"
+        >
+          <CreditCard size={20} strokeWidth={1.5} />
+        </Link>
       </nav>
+
+      {/* ════════════ Chrome DA (port de paiements-split.html) ════════════ */}
+      <style jsx>{`
+        .dash-root {
+          position: relative;
+          min-height: 100vh;
+          background: #fdf6ed;
+          color: #3a1f08;
+          font-family: var(--font-manrope), 'Manrope', system-ui, -apple-system, sans-serif;
+        }
+
+        /* warm brand backdrop */
+        .dash-root::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          background-image: radial-gradient(
+              circle at 14% 12%,
+              rgba(255, 124, 92, 0.08) 0%,
+              transparent 42%
+            ),
+            radial-gradient(circle at 88% 78%, rgba(245, 184, 106, 0.06) 0%, transparent 50%);
+        }
+        .dash-root::after {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          background-image: radial-gradient(circle, rgba(58, 31, 8, 1) 1px, transparent 1px);
+          background-size: 28px 28px;
+          opacity: 0.045;
+        }
+
+        .page {
+          position: relative;
+          z-index: 1;
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 30px 24px 70px;
+        }
+        @media (max-width: 1023px) {
+          .page {
+            padding: 24px 16px 130px;
+          }
+        }
+
+        .crumbs {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          color: #7a5434;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 12px;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid #edd9c4;
+          border-radius: 999px;
+          white-space: nowrap;
+          margin-bottom: 22px;
+        }
+        .crumbs .cur {
+          color: #3a1f08;
+        }
+        .crumbs .sep {
+          opacity: 0.4;
+        }
+
+        /* Onglets en page — pills blanches glass, actif corail pale */
+        .tab-pills {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px;
+          margin: 0 0 26px;
+          background: rgba(255, 255, 255, 0.78);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(58, 31, 8, 0.06);
+          border-radius: 999px;
+          box-shadow: 0 1px 3px rgba(58, 31, 8, 0.06);
+        }
+        .tab-pills :global(.tab-pill) {
+          font-size: 13.5px;
+          font-weight: 600;
+          font-family: inherit;
+          color: #3a1f08;
+          text-decoration: none;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          padding: 9px 16px;
+          border-radius: 999px;
+          white-space: nowrap;
+          transition: color 0.25s, background 0.2s;
+        }
+        .tab-pills :global(.tab-pill:hover) {
+          background: #f7ede0;
+        }
+        .tab-pills :global(.tab-pill.active) {
+          color: #ff7c5c;
+          font-weight: 700;
+          background: #fff0ea;
+        }
+        @media (max-width: 1023px) {
+          .tab-pills {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -229,14 +352,12 @@ function DashboardContent({
       return <Candidatures role={role} userId={userId} supabase={supabase} />;
     case 'contrats':
       return <ContractsList userId={userId} supabase={supabase} />;
-    case 'paiements':
-      return <PaymentsList role={role} userId={userId} supabase={supabase} />;
     case 'profil':
       // Placeholder profil — a completer dans un sprint futur
       return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-          <User size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500 text-sm">
+        <div className="bg-white rounded-[20px] border border-[#edd9c4] shadow-[0_1px_2px_rgba(58,31,8,0.04),0_4px_16px_rgba(58,31,8,0.05)] p-8 text-center">
+          <User size={48} className="mx-auto text-[#dcbfa0] mb-3" />
+          <p className="text-[#7a5434] text-sm">
             La gestion du profil sera disponible prochainement.
           </p>
         </div>

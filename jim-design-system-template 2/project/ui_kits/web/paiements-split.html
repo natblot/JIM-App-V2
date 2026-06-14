@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIM — Paiements</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="search-bar.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="search-bar.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--jim-background);color:var(--jim-text);font-family:var(--font-sans);min-height:100vh}
+
+  /* warm brand backdrop */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      radial-gradient(circle at 14% 12%, rgba(255,124,92,0.08) 0%, transparent 42%),
+      radial-gradient(circle at 88% 78%, rgba(245,184,106,0.06) 0%, transparent 50%);}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(circle, rgba(58,31,8,1) 1px, transparent 1px);
+    background-size:28px 28px;opacity:.045;}
+  .header-wrap,.page{position:relative;z-index:1}
+
+  /* ════════════ Shared navbar (identique aux autres pages) ════════════ */
+  .header-wrap{position:sticky;top:0;z-index:40;padding:18px 24px 0;display:flex;justify-content:center;pointer-events:none}
+  .header{pointer-events:auto;display:inline-flex;align-items:center;gap:10px;padding:7px 7px 7px 22px;background:rgba(255,255,255,.78);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(58,31,8,.06);border-radius:999px;box-shadow:0 18px 50px -20px rgba(58,31,8,.25),0 2px 6px rgba(58,31,8,.04)}
+  .brand{display:inline-flex;align-items:center;text-decoration:none;margin-right:8px}
+  .brand img{height:26px;width:auto;display:block;margin:0}
+  .nav{position:relative;display:flex;gap:2px;padding:0;border-radius:999px}
+  .nav-pill{position:absolute;top:0;left:0;height:100%;background:var(--jim-primary-pale);border-radius:999px;transition:transform .4s cubic-bezier(.22,1,.36,1),width .4s cubic-bezier(.22,1,.36,1),opacity .25s;pointer-events:none;z-index:0;opacity:0;will-change:transform,width}
+  .nav-pill.ready{opacity:1}
+  .nav a{position:relative;font-size:14px;font-weight:600;color:var(--jim-text);text-decoration:none;padding:10px 18px;border-radius:999px;transition:color .25s,font-weight .25s;z-index:1;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .nav a.active{color:var(--jim-primary);font-weight:700}
+  .header-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .publish-cta{position:relative;height:44px;width:44px;border-radius:999px;background:var(--jim-text);overflow:hidden;flex-shrink:0;cursor:pointer;text-decoration:none;outline:0;will-change:width;transition:width .5s cubic-bezier(.16,1,.3,1),box-shadow .35s}
+  .publish-cta:hover,.publish-cta:focus-visible{width:218px;box-shadow:0 10px 26px -6px rgba(58,31,8,.4)}
+  .pc-circle{position:absolute;top:4px;left:4px;width:36px;height:36px;background:var(--jim-primary);border-radius:999px;box-shadow:0 4px 12px rgba(255,124,92,.5);transition:box-shadow .3s}
+  .publish-cta:hover .pc-circle,.publish-cta:focus-visible .pc-circle{box-shadow:0 4px 16px rgba(255,124,92,.65)}
+  .pc-circle::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--jim-primary);opacity:0;animation:pcPulse 2.6s cubic-bezier(.16,1,.3,1) infinite}
+  .publish-cta:hover .pc-circle::after,.publish-cta:focus-visible .pc-circle::after{animation-play-state:paused;opacity:0}
+  @keyframes pcPulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.55);opacity:0}100%{transform:scale(1.55);opacity:0}}
+  .pc-ico{position:absolute;top:50%;left:22px;transform:translate(-50%,-50%);color:#fff;display:inline-flex}
+  .pc-lbl{position:absolute;top:50%;left:50px;transform:translateY(-50%) translateX(-6px);white-space:nowrap;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:-.01em;color:#fff;opacity:0;transition:opacity .35s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+  .publish-cta:hover .pc-lbl,.publish-cta:focus-visible .pc-lbl{opacity:1;transform:translateY(-50%) translateX(0);transition:opacity .4s ease .08s,transform .5s cubic-bezier(.16,1,.3,1) .04s}
+  @media(max-width:640px){.publish-cta:hover,.publish-cta:focus-visible{width:44px}.publish-cta:hover .pc-lbl,.publish-cta:focus-visible .pc-lbl{opacity:0}}
+  .nav-me{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--jim-primary),var(--jim-accent));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;line-height:1;letter-spacing:.02em;flex-shrink:0;transition:box-shadow .2s}
+  .nav-me:hover{box-shadow:0 0 0 3px var(--jim-primary-soft)}
+  .me-wrap{position:relative;flex-shrink:0}
+  .nav-me.open{box-shadow:0 0 0 3px var(--jim-primary-soft),0 6px 18px -6px rgba(255,124,92,.5)}
+  .me-menu{position:absolute;top:calc(100% + 20px);right:0;width:256px;background:rgba(255,255,255,.9);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(58,31,8,.07);border-radius:18px;box-shadow:0 24px 60px -18px rgba(58,31,8,.32),0 2px 8px rgba(58,31,8,.06);padding:7px;z-index:60;transform-origin:top right;opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;will-change:transform,opacity;transition:opacity .16s ease,transform .28s cubic-bezier(.22,1,.36,1)}
+  .me-menu.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;transition:opacity .2s ease,transform .34s cubic-bezier(.22,1,.36,1)}
+  .me-menu:not(.open){backdrop-filter:none;-webkit-backdrop-filter:none}
+  .me-head{display:flex;align-items:center;gap:11px;padding:10px 11px 12px;margin:0 0 5px;border-bottom:1px solid var(--jim-beige-light)}
+  .me-head .me-av{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--jim-primary),var(--jim-accent));color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+  .me-head-txt{min-width:0}
+  .me-name{font-size:14px;font-weight:700;color:var(--jim-text);margin:0;letter-spacing:-.01em;line-height:1.2}
+  .me-role{font-size:11px;color:var(--jim-muted);margin:2px 0 0;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+  .me-item{display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:12px;text-decoration:none;cursor:pointer;opacity:0;transform:translateY(6px);will-change:transform,opacity;transition:opacity .22s ease,transform .34s cubic-bezier(.22,1,.36,1),background .18s}
+  .me-menu.open .me-item{opacity:1;transform:translateY(0)}
+  .me-menu.open .me-item:nth-of-type(1){transition-delay:.04s}
+  .me-menu.open .me-item:nth-of-type(2){transition-delay:.07s}
+  .me-menu.open .me-item:nth-of-type(3){transition-delay:.1s}
+  .me-menu.open .me-item:nth-of-type(4){transition-delay:.13s}
+  .me-item:hover{background:var(--jim-surface-alt)}
+  .me-item.current{background:var(--jim-primary-pale)}
+  .me-ico{width:34px;height:34px;border-radius:10px;background:var(--jim-surface-alt);color:var(--jim-text-body);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .18s,color .18s}
+  .me-item:hover .me-ico,.me-item.current .me-ico{background:var(--jim-primary-pale);color:var(--jim-primary)}
+  .me-item.current .me-ico{background:#fff}
+  .me-tt{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  .me-t{font-size:14px;font-weight:600;color:var(--jim-text);letter-spacing:-.01em}
+  .me-item.current .me-t{color:var(--jim-primary);font-weight:700}
+  .me-s{font-size:11px;font-weight:500;color:var(--jim-muted);margin-top:1px}
+  .me-badge{margin-left:auto;background:var(--jim-primary);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;flex-shrink:0}
+  .me-chev{margin-left:auto;color:var(--jim-beige-dark);flex-shrink:0;transition:transform .2s,color .18s}
+  .me-item:hover .me-chev{color:var(--jim-primary);transform:translateX(2px)}
+  @media(max-width:980px){.nav{display:none}}
+  @media(max-width:640px){.header-wrap{padding:12px 12px 0}.header{padding:6px 6px 6px 14px;gap:6px}.nav-me{display:none}}
+  /* le sheet de recherche ne doit pas voiler la page tant qu'il est fermé */
+  .sb-sheet:not(.open) .sb-sheet-bd{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .sb-sheet:not(.open) .sb-sheet-panel{visibility:hidden}
+  .sb-sheet.open .sb-sheet-panel{visibility:visible}
+
+  /* ════════════ Page chrome ════════════ */
+  .page{max-width:1180px;margin:0 auto;padding:30px 24px 70px}
+  @media(max-width:760px){.page{padding:24px 16px 60px}}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  .page-head-l{display:flex;flex-direction:column;gap:12px}
+  .crumbs{font-size:10px;text-transform:uppercase;letter-spacing:.18em;color:var(--jim-muted);font-weight:700;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;background:rgba(255,255,255,.6);border:1px solid var(--jim-beige-mid);border-radius:999px;white-space:nowrap;align-self:flex-start}
+  .crumbs .cur{color:var(--jim-text)}
+  .crumbs .sep{opacity:.4}
+  .page-title-wrap h1{font-size:clamp(28px,3.4vw,40px);font-weight:800;letter-spacing:-.04em;line-height:.98;color:var(--jim-text);margin:0}
+  .page-title-wrap h1 em{font-weight:800;color:var(--jim-primary);font-style:normal}
+  .page-title-wrap p{font-size:13px;color:var(--jim-muted);margin:8px 0 0}
+  .page-head-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .range-switch{display:inline-flex;background:rgba(255,255,255,.7);border:1px solid var(--jim-beige-mid);border-radius:12px;padding:3px}
+  .range-btn{background:transparent;border:0;padding:8px 13px;border-radius:9px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--jim-muted);cursor:pointer;white-space:nowrap;transition:color .15s}
+  .range-btn:hover{color:var(--jim-text)}
+  .range-btn.active{background:var(--jim-text);color:#fff}
+  .ghost-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.7);color:var(--jim-text);border:1px solid var(--jim-beige-mid);padding:9px 14px;border-radius:11px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+  .ghost-btn:hover{background:var(--jim-surface-alt)}
+
+  /* ════════════ Split — deux colonnes (split-check) ════════════ */
+  .v-split{container-type:inline-size}
+  .sp-split-body{display:grid;grid-template-columns:312px 1fr;gap:18px;align-items:start}
+
+  .sp-card{background:var(--jim-surface);border:1px solid var(--jim-border);border-radius:20px;box-shadow:0 1px 2px rgba(58,31,8,.04),0 4px 16px rgba(58,31,8,.05)}
+  .sp-pad{padding:24px}
+
+  .sp-split-side{display:flex;flex-direction:column;gap:14px}
+  .sp-balance-card{display:flex;flex-direction:column;gap:18px}
+  .sp-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.2em;font-weight:700;color:var(--jim-muted)}
+  .sp-balance{font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--jim-text);font-variant-numeric:tabular-nums;margin:11px 0 0;font-size:42px}
+  .sp-balance .cur{color:var(--jim-primary);font-size:.46em;font-weight:800;margin-left:7px;letter-spacing:0}
+  .sp-balance-sub{font-size:12px;color:var(--jim-muted);margin-top:10px;line-height:1.4}
+
+  .sp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--jim-primary);color:#fff;border:0;padding:13px 18px;border-radius:13px;font-family:inherit;font-size:13.5px;font-weight:700;letter-spacing:-.01em;cursor:pointer;box-shadow:0 6px 16px rgba(255,124,92,.3);transition:background .2s,transform .15s,box-shadow .2s;width:100%}
+  .sp-btn:hover{background:var(--jim-accent);transform:translateY(-1px);box-shadow:0 9px 22px rgba(255,124,92,.38)}
+  .sp-btn:active{transform:translateY(0)}
+
+  .sp-seq{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--jim-surface-alt);border:1px solid var(--jim-beige-mid);border-radius:14px}
+  .sp-seq-ico{width:32px;height:32px;border-radius:10px;background:var(--jim-warning-bg);color:var(--jim-warning);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sp-seq-txt{flex:1;min-width:0}
+  .sp-seq-n{font-size:14px;font-weight:800;color:var(--jim-text);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .sp-seq-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--jim-muted);margin-left:7px}
+  .sp-seq-s{font-size:11px;color:var(--jim-muted);margin-top:2px}
+
+  .sp-year-card{display:flex;flex-direction:column}
+  .sp-stat-l{font-size:10px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;color:var(--jim-muted)}
+  .sp-year-n{font-size:24px;font-weight:800;color:var(--jim-text);font-variant-numeric:tabular-nums;letter-spacing:-.03em;margin-top:6px}
+  .sp-year-n .cur{color:var(--jim-primary);font-size:.6em}
+  .sp-year-sub{font-size:11px;color:var(--jim-muted);margin-top:4px}
+
+  .sp-split-main{padding:22px 24px 12px;display:flex;flex-direction:column;min-width:0}
+  .sp-split-main-hd{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--jim-beige-mid);flex-wrap:wrap}
+  .sp-h{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--jim-text)}
+  .sp-split-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .sp-search{display:flex;align-items:center;gap:8px;background:var(--jim-surface-alt);border:1px solid var(--jim-beige-mid);border-radius:10px;padding:8px 12px;width:210px;transition:border-color .15s,box-shadow .15s}
+  .sp-search:focus-within{border-color:var(--jim-primary-soft);box-shadow:0 0 0 3px rgba(255,124,92,.16)}
+  .sp-search input{border:0;outline:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--jim-text);width:100%}
+  .sp-search input::placeholder{color:var(--jim-muted)}
+  .sp-search svg{color:var(--jim-muted);flex-shrink:0}
+  .sp-chips{display:flex;gap:6px}
+  .sp-chip{padding:7px 14px;border-radius:999px;font-size:11.5px;font-weight:700;background:transparent;border:1px solid var(--jim-beige-mid);color:var(--jim-muted);cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:-.005em;white-space:nowrap}
+  .sp-chip:hover{color:var(--jim-text);border-color:var(--jim-beige-dark)}
+  .sp-chip.active{background:var(--jim-text);color:#fff;border-color:var(--jim-text)}
+
+  .sp-split-list{padding-top:2px}
+  .sp-month{font-size:10px;text-transform:uppercase;letter-spacing:.16em;font-weight:700;color:var(--jim-muted);padding:16px 0 4px}
+  .sp-group:first-child .sp-month{padding-top:6px}
+  .sp-row{display:flex;align-items:center;gap:13px;padding:14px 0;border-top:1px solid var(--jim-beige-light)}
+  .sp-month + .sp-row{border-top:0}
+  .sp-row-ico{width:38px;height:38px;border-radius:11px;background:var(--jim-surface-alt);color:var(--jim-text-body);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;letter-spacing:.02em}
+  .sp-row-body{flex:1;min-width:0}
+  .sp-row-t{font-size:13.5px;font-weight:700;color:var(--jim-text);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp-row-s{font-size:11.5px;color:var(--jim-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp-row-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;text-align:right}
+  .sp-row-meta{display:flex;align-items:center;gap:6px}
+  .sp-row-date{font-size:11px;color:var(--jim-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sp-amt{font-size:14.5px;font-weight:800;color:var(--jim-text);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}
+  .sp-amt.pos{color:var(--jim-success)}
+  .sp-amt-cur{font-size:.82em}
+  .sp-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:-.005em}
+  .sp-status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .sp-status.paid{color:var(--jim-success)}
+  .sp-status.pending{color:var(--jim-warning)}
+  .sp-status.escrow{color:var(--jim-primary)}
+  .sp-pdf{width:32px;height:32px;border-radius:9px;background:var(--jim-surface-alt);border:1px solid transparent;color:var(--jim-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s;flex-shrink:0}
+  .sp-pdf:hover{background:var(--jim-primary-pale);color:var(--jim-primary)}
+  .sp-empty{font-size:13px;color:var(--jim-muted);padding:30px 0;text-align:center;display:none}
+
+  /* entrée douce des cartes — état de base toujours visible, motion seulement si autorisé */
+  @keyframes spUp{from{transform:translateY(16px)}to{transform:none}}
+  @media (prefers-reduced-motion: no-preference){
+    .sp-split-side > *,.sp-split-main{animation:spUp .5s cubic-bezier(.16,1,.3,1) both}
+    .sp-split-side > *:nth-child(2){animation-delay:.06s}
+    .sp-split-side > *:nth-child(3){animation-delay:.12s}
+    .sp-split-main{animation-delay:.08s}
+  }
+
+  /* bascule mobile : empilement sous 720px */
+  @container (max-width:720px){
+    .sp-split-body{grid-template-columns:1fr}
+    .sp-split-main{padding:20px 18px 8px}
+    .sp-split-main-hd{flex-direction:column;align-items:stretch;gap:13px}
+    .sp-split-tools{flex-direction:column;align-items:stretch;justify-content:flex-start}
+    .sp-search{width:100%}
+    .sp-chips{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .sp-chip{flex-shrink:0}
+  }
+
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div class="header-wrap">
+  <header class="header">
+    <a href="index.html" class="brand" aria-label="JIM — Job. In. Med."><img src="../../assets/jim-mark.png" alt="JIM"></a>
+    <nav class="nav" id="nav">
+      <span class="nav-pill" id="navPill" aria-hidden="true"></span>
+      <a href="#" class="active">Missions</a>
+    </nav>
+    <div class="header-right">
+      <a href="#" class="publish-cta" aria-label="Publier une annonce">
+        <span class="pc-circle" aria-hidden="true"></span>
+        <span class="pc-ico" aria-hidden="true"><i data-lucide="plus" width="18" height="18" stroke-width="2.6"></i></span>
+        <span class="pc-lbl">Publier une annonce</span>
+      </a>
+      <div class="search-shell">
+        <div class="search-bar">
+          <button type="button" class="sb-field" data-pop="loc" aria-label="Où">
+            <span class="sb-l">Où</span>
+            <input type="text" placeholder="Ville, code postal" readonly>
+          </button>
+          <span class="sb-divider" aria-hidden="true"></span>
+          <button type="button" class="sb-field" data-pop="dates" aria-label="Quand">
+            <span class="sb-l">Quand</span>
+            <input type="text" placeholder="Ajouter dates" readonly>
+          </button>
+          <button type="button" class="sb-cta" aria-label="Rechercher">
+            <span class="circle" aria-hidden="true"></span>
+            <span class="ico" aria-hidden="true"><i data-lucide="search" width="16" height="16" stroke-width="2.4"></i></span>
+            <span class="lbl">Rechercher</span>
+          </button>
+        </div>
+      </div>
+      <div class="me-wrap">
+        <div class="nav-me" id="meAv" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="Mon compte">NB</div>
+        <div class="me-menu" id="meMenu" role="menu" aria-label="Mon compte">
+          <div class="me-head">
+            <div class="me-av">NB</div>
+            <div class="me-head-txt">
+              <p class="me-name">Nicolas B.</p>
+              <p class="me-role">Kiné · Paris 11e</p>
+            </div>
+          </div>
+          <a href="#" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="briefcase" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Missions</span><span class="me-s">Mes remplacements en cours</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+          <a href="paiements-split.html" class="me-item current" role="menuitem" aria-current="page">
+            <span class="me-ico"><i data-lucide="euro" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Paiements</span><span class="me-s">Rétrocessions & factures</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+          <a href="#" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="message-circle" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Messages</span><span class="me-s">Conversations & contrats</span></span>
+            <span class="me-badge">3</span>
+          </a>
+          <a href="#" class="me-item" role="menuitem">
+            <span class="me-ico"><i data-lucide="settings" width="17" height="17" stroke-width="1.9"></i></span>
+            <span class="me-tt"><span class="me-t">Paramètres</span><span class="me-s">Compte & préférences</span></span>
+            <i class="me-chev" data-lucide="chevron-right" width="16" height="16" stroke-width="2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-head-l">
+      <div class="crumbs"><span>Tableau de bord</span><span class="sep">/</span><span class="cur">Paiements</span></div>
+      <div class="page-title-wrap">
+        <h1>Mes <em>paiements</em>.</h1>
+        <p>Rétrocessions reçues, séquestre en cours et factures, au même endroit.</p>
+      </div>
+    </div>
+    <div class="page-head-r">
+      <div class="range-switch">
+        <button class="range-btn">30 j</button>
+        <button class="range-btn active">2026</button>
+        <button class="range-btn">Tout</button>
+      </div>
+      <button class="ghost-btn"><i data-lucide="download" width="13" height="13" stroke-width="2"></i>Exporter</button>
+    </div>
+  </div>
+
+  <div class="v-split">
+    <div class="sp-split-body">
+
+      <!-- ─── Colonne gauche : solde, séquestre, année ─── -->
+      <aside class="sp-split-side">
+        <div class="sp-card sp-pad sp-balance-card">
+          <div>
+            <div class="sp-eyebrow">Disponible</div>
+            <div class="sp-balance">1 931<span class="cur">€</span></div>
+            <div class="sp-balance-sub">Mis à jour aujourd’hui · 14:12</div>
+          </div>
+          <button class="sp-btn" type="button">
+            <i data-lucide="arrow-down-to-line" width="16" height="16" stroke-width="2.2"></i>Retirer 1 931 €
+          </button>
+        </div>
+
+        <div class="sp-seq">
+          <div class="sp-seq-ico"><i data-lucide="lock" width="15" height="15" stroke-width="2"></i></div>
+          <div class="sp-seq-txt">
+            <div class="sp-seq-n">1 516 €<span class="sp-seq-tag">en séquestre</span></div>
+            <div class="sp-seq-s">Libération le 27 mai · dans 8 j</div>
+          </div>
+        </div>
+
+        <div class="sp-card sp-pad sp-year-card">
+          <span class="sp-stat-l">Reçu en 2026</span>
+          <span class="sp-year-n">14 288 <span class="cur">€</span></span>
+          <span class="sp-year-sub">12 missions</span>
+        </div>
+      </aside>
+
+      <!-- ─── Colonne droite : factures ─── -->
+      <section class="sp-card sp-split-main">
+        <div class="sp-split-main-hd">
+          <span class="sp-h">Factures</span>
+          <div class="sp-split-tools">
+            <div class="sp-search">
+              <i data-lucide="search" width="14" height="14" stroke-width="2"></i>
+              <input id="facSearch" type="text" placeholder="Rechercher une facture…">
+            </div>
+            <div class="sp-chips" id="facChips">
+              <button class="sp-chip active" data-filter="all">Toutes</button>
+              <button class="sp-chip" data-filter="pending">En attente</button>
+              <button class="sp-chip" data-filter="paid">Reçues</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sp-split-list" id="facList">
+          <div class="sp-group">
+            <div class="sp-month">Mai 2026</div>
+            <div class="sp-row" data-status="paid" data-name="cabinet voltaire dr lefèvre">
+              <div class="sp-row-ico">CV</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet Voltaire</div>
+                <div class="sp-row-s">Dr Lefèvre · Paris 11e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+1 240<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status paid">Reçue</span><span class="sp-row-date">· 12 mai</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0512" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+            <div class="sp-row" data-status="pending" data-name="cabinet nation dr petit">
+              <div class="sp-row-ico">CN</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet Nation</div>
+                <div class="sp-row-s">Dr Petit · Paris 12e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+691<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status pending">En attente</span><span class="sp-row-date">· 6 mai</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0506" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+            <div class="sp-row" data-status="paid" data-name="cabinet bastille dr moreau">
+              <div class="sp-row-ico">CB</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet Bastille</div>
+                <div class="sp-row-s">Dr Moreau · Paris 11e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+820<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status paid">Reçue</span><span class="sp-row-date">· 2 mai</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0502" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+          </div>
+
+          <div class="sp-group">
+            <div class="sp-month">Avril 2026</div>
+            <div class="sp-row" data-status="escrow" data-name="cabinet république dr saïd">
+              <div class="sp-row-ico">CR</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet République</div>
+                <div class="sp-row-s">Dr Saïd · Paris 3e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+1 516<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status escrow">Séquestre</span><span class="sp-row-date">· 27 avr</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0427" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+            <div class="sp-row" data-status="paid" data-name="cabinet oberkampf dr lévy">
+              <div class="sp-row-ico">CO</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet Oberkampf</div>
+                <div class="sp-row-s">Dr Lévy · Paris 11e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+980<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status paid">Reçue</span><span class="sp-row-date">· 18 avr</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0418" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+            <div class="sp-row" data-status="paid" data-name="cabinet charonne dr roy">
+              <div class="sp-row-ico">CC</div>
+              <div class="sp-row-body">
+                <div class="sp-row-t">Cabinet Charonne</div>
+                <div class="sp-row-s">Dr Roy · Paris 20e</div>
+              </div>
+              <div class="sp-row-r">
+                <span class="sp-amt pos">+1 130<span class="sp-amt-cur"> €</span></span>
+                <div class="sp-row-meta"><span class="sp-status paid">Reçue</span><span class="sp-row-date">· 9 avr</span></div>
+              </div>
+              <button class="sp-pdf" title="Télécharger FAC-2026-0409" aria-label="Télécharger le PDF"><i data-lucide="download" width="15" height="15" stroke-width="2"></i></button>
+            </div>
+          </div>
+
+          <div class="sp-empty" id="facEmpty">Aucune facture dans cette catégorie.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#fdf6ed"/>
+    <rect x="28" y="28" width="44" height="44" rx="11" fill="#ff7c5c"/>
+    <text x="50" y="60" font-family="sans-serif" font-size="26" font-weight="800" fill="#fff" text-anchor="middle">€</text>
+  </svg>
+</template>
+
+<script>
+  if (window.lucide) lucide.createIcons();
+
+  /* ── Profil dropdown (NB) ── */
+  (function(){
+    const av = document.getElementById('meAv');
+    const menu = document.getElementById('meMenu');
+    if(!av || !menu) return;
+    const setOpen = v => {
+      menu.classList.toggle('open', v);
+      av.classList.toggle('open', v);
+      av.setAttribute('aria-expanded', v ? 'true' : 'false');
+    };
+    av.addEventListener('click', e => { e.stopPropagation(); setOpen(!menu.classList.contains('open')); });
+    av.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setOpen(!menu.classList.contains('open')); }
+    });
+    menu.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') setOpen(false); });
+  })();
+
+  /* ── Pill nav — indicateur corail glissant ── */
+  (function(){
+    const nav = document.getElementById('nav');
+    const pill = document.getElementById('navPill');
+    if(!nav || !pill) return;
+    const items = [...nav.querySelectorAll('a')];
+    const moveTo = el => {
+      if(!el) return;
+      pill.style.width = el.offsetWidth + 'px';
+      pill.style.transform = `translateX(${el.offsetLeft}px)`;
+      pill.classList.add('ready');
+    };
+    const reset = () => { const a = nav.querySelector('a.active'); if(a) moveTo(a); };
+    items.forEach(a => { a.addEventListener('mouseenter', () => moveTo(a)); a.addEventListener('focus', () => moveTo(a)); });
+    nav.addEventListener('mouseleave', reset);
+    window.addEventListener('load', reset);
+    window.addEventListener('resize', reset);
+    requestAnimationFrame(reset);
+  })();
+
+  /* ── Filtres factures (chips + recherche) ── */
+  (function(){
+    const chips = [...document.querySelectorAll('#facChips .sp-chip')];
+    const rows = [...document.querySelectorAll('#facList .sp-row')];
+    const groups = [...document.querySelectorAll('#facList .sp-group')];
+    const empty = document.getElementById('facEmpty');
+    const search = document.getElementById('facSearch');
+    let filter = 'all';
+
+    function apply(){
+      const q = (search.value || '').trim().toLowerCase();
+      let any = false;
+      rows.forEach(r => {
+        const okStatus = filter === 'all' || r.dataset.status === filter;
+        const okText = !q || r.dataset.name.indexOf(q) !== -1;
+        const show = okStatus && okText;
+        r.style.display = show ? '' : 'none';
+        if(show) any = true;
+      });
+      groups.forEach(g => {
+        const visible = [...g.querySelectorAll('.sp-row')].some(r => r.style.display !== 'none');
+        g.style.display = visible ? '' : 'none';
+      });
+      empty.style.display = any ? 'none' : 'block';
+    }
+
+    chips.forEach(c => c.addEventListener('click', () => {
+      chips.forEach(x => x.classList.toggle('active', x === c));
+      filter = c.dataset.filter;
+      apply();
+    }));
+    search.addEventListener('input', apply);
+  })();
+</script>
+</body>
+</html>

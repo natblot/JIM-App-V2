@@ -197,9 +197,9 @@ export function Header() {
                     {/* Items */}
                     {[
                       { icon: Briefcase, label: 'Missions', sub: 'Mes remplacements en cours', href: '/dashboard' },
-                      { icon: Euro, label: 'Paiements', sub: 'Rétrocessions & factures', href: '/dashboard?tab=paiements' },
+                      { icon: Euro, label: 'Paiements', sub: 'Rétrocessions & factures', href: '/paiement' },
                       { icon: MessageSquare, label: 'Messages', sub: 'Conversations & contrats', href: '/messages', badge: 0 },
-                      { icon: Settings, label: 'Paramètres', sub: 'Compte & préférences', href: '/dashboard?tab=parametres' },
+                      { icon: Settings, label: 'Paramètres', sub: 'Compte & préférences', href: '/dashboard?tab=profil' },
                     ].map(({ icon: Icon, label, sub, href, badge }) => (
                       <button
                         key={label}
@@ -307,7 +307,7 @@ export function Header() {
             { icon: Search, label: 'Missions', href: '/', active: pathname === '/' },
             { icon: LayoutDashboard, label: 'Tableau de bord', href: '/dashboard', active: false },
             { icon: MessageSquare, label: 'Messages', href: '/messages', active: false, badge: 0 },
-            { icon: Settings, label: 'Paramètres', href: '/dashboard?tab=parametres', active: false },
+            { icon: Settings, label: 'Paramètres', href: '/dashboard?tab=profil', active: false },
           ].map(({ icon: Icon, label, href, active, badge }) => (
             <a
               key={label}
