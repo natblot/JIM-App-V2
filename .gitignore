@@ -76,4 +76,5 @@ AUDIT/
 *.docx
 *.xlsx
 Statuts_SASU_JobInMed.pdf
-jim-design-system-template/project/uploads/
+# Design-tool reference uploads (captures, contrats) — jamais versionnees
+jim-design-system-template*/project/uploads/
