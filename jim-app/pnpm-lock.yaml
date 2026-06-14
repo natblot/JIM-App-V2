@@ -10,10 +10,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      '@dataconnect/generated':
-        specifier: link:src/dataconnect-generated
-        version: link:src/dataconnect-generated
     devDependencies:
       '@testing-library/react-native':
         specifier: ^13.3.3

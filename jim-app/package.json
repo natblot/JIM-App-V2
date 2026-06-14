@@ -24,7 +24,5 @@
     "jsdom": "^29.0.1",
     "vitest": "^4.1.0"
   },
-  "dependencies": {
-    "@dataconnect/generated": "link:src/dataconnect-generated"
-  }
+  "dependencies": {}
 }
