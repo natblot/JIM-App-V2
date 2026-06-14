@@ -26,7 +26,7 @@ jim-app/
 └── _bmad-output/planning-artifacts/  # prd.md, architecture.md, epics.md, ux-design-specification.md
 ```
 
-Images UX de reference : `/Users/nathanblottiaux/Desktop/JIM App V2/Image/`
+Images UX de reference : `../Image/` (racine du repo)
 
 ## Commandes
 
