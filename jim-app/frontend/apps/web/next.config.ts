@@ -1,8 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Contourne le bug Next.js 16.2 avec les espaces dans le chemin du projet
-  distDir: '/tmp/jim-next',
+  // Contourne le bug Next.js 16.2 avec les espaces dans le chemin du projet (local
+  // uniquement : "JIM App V2" contient un espace). Sur Vercel le chemin de checkout
+  // n'a pas d'espace ; on garde le `.next` par defaut, sinon un distDir absolu casse
+  // la detection de la sortie du build par Vercel.
+  ...(process.env.VERCEL ? {} : { distDir: '/tmp/jim-next' }),
   transpilePackages: ['@jim/shared', '@jim/ui'],
   images: {
     remotePatterns: [
