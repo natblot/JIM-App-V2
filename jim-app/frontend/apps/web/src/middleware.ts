@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   // Lire le token depuis les cookies Supabase Auth
   const accessToken = request.cookies.get(`sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`)?.value;
 
-  let user: { id: string; user_metadata?: Record<string, unknown> } | null = null;
+  let user: { id: string; app_metadata?: Record<string, unknown> } | null = null;
 
   if (accessToken) {
     try {
@@ -62,8 +62,12 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
-    // Verifier le role admin dans user_metadata
-    const role = user?.user_metadata?.role as string | undefined;
+    // Verifier le role admin dans app_metadata UNIQUEMENT.
+    // app_metadata n'est modifiable que par le service_role (admin API), contrairement
+    // a user_metadata que l'utilisateur peut editer lui-meme via auth.updateUser() —
+    // s'y fier serait une elevation de privilege triviale.
+    // Provisionner un admin : supabase.auth.admin.updateUserById(id, { app_metadata: { role: 'admin' } }).
+    const role = user?.app_metadata?.role as string | undefined;
     if (role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url));
     }

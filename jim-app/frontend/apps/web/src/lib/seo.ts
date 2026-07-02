@@ -29,6 +29,17 @@ export function buildAnnonceMetadata(annonce: {
   };
 }
 
+// Serialise un objet JSON-LD pour injection dans <script>. JSON.stringify n'echappe
+// ni "<" ni "/", donc une chaine "</script>" presente dans un champ (description, ville)
+// pourrait fermer la balise et injecter du HTML (XSS stockee). On neutralise les
+// caracteres dangereux en sequences unicode inertes — inoffensives pour les parseurs JSON.
+export function jsonLdSafe(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+}
+
 // Schema.org JobPosting pour les annonces
 export function buildJobPostingSchema(annonce: {
   id: string;

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { ArrowLeft, CheckCircle, MapPin, Calendar, Zap, Briefcase, ExternalLink, User, Star } from 'lucide-react';
 import { fetchAnnonceById, fetchAnnonceCoords } from '../../../../lib/supabase-server';
 import { MiniMap } from '../../../../components/annonce/mini-map';
-import { buildAnnonceMetadata, buildJobPostingSchema } from '../../../../lib/seo';
+import { buildAnnonceMetadata, buildJobPostingSchema, jsonLdSafe } from '../../../../lib/seo';
 import { StoreButtons } from '../../../../components/landing/store-buttons';
 import { PostulerButton } from '../../../../components/annonce/postuler-button';
 import { SimilarAnnonces } from '../../../../components/annonce/similar-annonces';
@@ -57,7 +57,7 @@ export default async function AnnoncePage({ params }: Props) {
 
   return (
     <main className="max-w-[1200px] mx-auto w-full px-6 md:px-10 pt-32 pb-28 lg:pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSafe(structuredData) }} />
 
       {/* Navigation — cible 44px cliquable (Fitts) */}
       <Link
